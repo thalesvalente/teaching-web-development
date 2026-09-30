@@ -54,12 +54,18 @@
     .btn.secondary{background:#fff;color:var(--green)}
     .btn.secondary:hover,.btn.secondary:focus-visible{background:#edf7f0}
     .tag{display:inline-block;margin-top:14px;padding:4px 8px;background:var(--soft);border:1px solid var(--line);font-size:.82rem;font-weight:700}
+    .guides{margin-top:34px}
+    .guide-card{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(240px,.7fr);gap:22px;align-items:center;padding:24px;background:#fff;border:1px solid var(--line);border-left:8px solid var(--green);border-radius:8px;box-shadow:var(--shadow)}
+    .guide-card h3{margin:6px 0 8px;font-size:1.45rem;line-height:1.15}
+    .guide-card p{margin:0;color:var(--muted)}
+    .guide-kicker{font-size:.82rem;font-weight:900;letter-spacing:.1em;text-transform:uppercase;color:var(--green)}
+    .guide-actions{display:flex;justify-content:flex-end;flex-wrap:wrap;gap:9px}
     footer{
       border-top:1px solid var(--line);background:#fff;padding:20px 0;
       color:var(--muted);font-size:.92rem
     }
     footer strong{color:var(--green)}
-    @media(max-width:850px){.grid{grid-template-columns:1fr}.card{min-height:0}}
+    @media(max-width:850px){.grid{grid-template-columns:1fr}.card{min-height:0}.guide-card{grid-template-columns:1fr}.guide-actions{justify-content:flex-start}}
   </style>
 </head>
 <body>
@@ -104,6 +110,21 @@
         <span class="tag">Apresentação interativa</span>
         <div class="actions">
           <a class="btn" href="./lessons/Aula_03_Web_v4.html">Abrir apresentação</a></div>
+      </article>
+    </section>
+
+    <section class="guides" aria-labelledby="guides-title">
+      <h2 class="section-title" id="guides-title">Guias rápidos</h2>
+      <article class="guide-card">
+        <div>
+          <span class="guide-kicker">Git e GitHub · passo a passo</span>
+          <h3>Como atualizar seu projeto sem perder seu código</h3>
+          <p>Aprenda a diferença entre <code>origin</code> e <code>upstream</code>, configure seu repositório e receba novas missões com segurança.</p>
+        </div>
+        <div class="guide-actions">
+          <a class="btn" href="./docs/guia-origin-upstream/">Abrir guia visual</a>
+          <a class="btn secondary" href="./docs/GUIA_ALUNO_ORIGIN_UPSTREAM.md">Ver versão em Markdown</a>
+        </div>
       </article>
     </section>
   </main>
