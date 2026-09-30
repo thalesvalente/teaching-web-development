@@ -1,0 +1,387 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="Guia do aluno para configurar origin e upstream e receber novas missões sem perder o código.">
+  <title>Guia Git · origin e upstream · IFMA</title>
+  <style>
+    :root{
+      --green:#006b3c;--green2:#239b45;--blue:#2573a1;--red:#d71920;
+      --amber:#a36d16;--ink:#21342a;--muted:#607067;--line:#d7e5dc;
+      --paper:#fff;--bg:#eef4f0;--soft:#f6faf7;--blue-soft:#edf6fb;
+      --amber-soft:#fff7e8;--red-soft:#fff2f2;--code:#14241d;--code2:#1d3328;
+      --shadow:0 16px 42px rgba(20,62,39,.10)
+    }
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{margin:0;font-family:Arial,"Liberation Sans",sans-serif;background:var(--bg);color:var(--ink);line-height:1.55}
+    a{color:inherit}
+    button{font:inherit}
+    .topline{height:8px;background:linear-gradient(90deg,var(--green) 0 78%,var(--green2) 78% 92%,var(--red) 92%)}
+    .wrap{width:min(1120px,calc(100% - 30px));margin:auto}
+    .crumbs{padding:18px 0;font-size:.92rem;color:var(--muted)}
+    .crumbs a{color:var(--green);font-weight:800;text-decoration:none}
+    header{padding:30px 0 38px}
+    .eyebrow{margin:0 0 8px;color:var(--green);font-size:.8rem;font-weight:900;letter-spacing:.12em;text-transform:uppercase}
+    h1{margin:0;max-width:900px;font-size:clamp(2.15rem,6vw,4.35rem);line-height:1.02;letter-spacing:-.035em;color:var(--green)}
+    .lead{max-width:820px;margin:18px 0 0;font-size:1.16rem;color:var(--muted)}
+    .hero-rule{margin-top:24px;padding:15px 18px;background:#fff;border-left:6px solid var(--green);box-shadow:var(--shadow);font-size:1.08rem}
+    .hero-rule strong{color:var(--green)}
+    .flow{display:grid;grid-template-columns:1fr auto 1fr auto 1fr;align-items:center;gap:12px;margin:28px 0 0}
+    .node{padding:18px;background:#fff;border:1px solid var(--line);border-top:6px solid var(--green);border-radius:7px;text-align:center;min-width:0}
+    .node.student{border-top-color:var(--blue)}
+    .node.local{border-top-color:var(--amber)}
+    .node b{display:block;font-size:1.05rem}
+    .node small{display:block;margin-top:5px;color:var(--muted)}
+    .arrow{text-align:center;color:var(--muted);font-weight:800}
+    .arrow span{display:block;font-size:.8rem;color:var(--green)}
+    main{padding-bottom:70px}
+    section{scroll-margin-top:18px}
+    .section{margin:28px 0;padding:28px;background:#fff;border:1px solid var(--line);border-radius:9px;box-shadow:0 8px 26px rgba(20,62,39,.05)}
+    h2{margin:0 0 8px;font-size:1.65rem;line-height:1.18;color:var(--ink)}
+    h3{margin:24px 0 9px;font-size:1.14rem;color:var(--green)}
+    .sub{margin:0 0 20px;color:var(--muted)}
+    .quickgrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+    .quick{padding:16px;border:1px solid var(--line);background:var(--soft);border-radius:6px}
+    .quick b{display:block;color:var(--green);margin-bottom:4px}
+    .quick code{font-weight:800}
+    .alert{margin:18px 0;padding:14px 16px;border-left:5px solid var(--amber);background:var(--amber-soft)}
+    .alert.danger{border-color:var(--red);background:var(--red-soft)}
+    .alert.good{border-color:var(--green2);background:#eff9f2}
+    .tabs{display:flex;gap:8px;flex-wrap:wrap;margin:20px 0 16px}
+    .tab{min-height:44px;padding:9px 13px;border:1px solid #b9cfc0;background:#fff;color:var(--green);font-weight:800;border-radius:5px;cursor:pointer}
+    .tab[aria-selected="true"]{background:var(--green);color:#fff}
+    .tabpanel{display:none}
+    .tabpanel.active{display:block}
+    .step{display:grid;grid-template-columns:42px minmax(0,1fr);gap:14px;margin:19px 0}
+    .stepnum{display:grid;place-items:center;width:38px;height:38px;border-radius:50%;background:var(--green);color:#fff;font-weight:900}
+    .step h3{margin:2px 0 7px;color:var(--ink)}
+    .step p{margin:0;color:var(--muted)}
+    .codebox{position:relative;margin:10px 0 4px;border-radius:7px;overflow:hidden;background:var(--code);color:#f4faf6}
+    .codehead{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 11px;background:var(--code2);font-size:.82rem;color:#d5e8dc}
+    .copy{border:1px solid #688778;background:#fff;color:#164c2e;border-radius:4px;padding:5px 8px;font-weight:800;cursor:pointer}
+    pre{margin:0;padding:13px 15px;overflow:auto;font:15px/1.55 Consolas,"Liberation Mono",monospace;white-space:pre-wrap;word-break:break-word}
+    code{font-family:Consolas,"Liberation Mono",monospace}
+    .expect{margin-top:8px;padding:10px 12px;background:var(--soft);border:1px solid var(--line);font-size:.94rem}
+    .path{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;margin-top:18px}
+    .path div{padding:12px 9px;text-align:center;background:var(--soft);border:1px solid var(--line);border-radius:5px;font-weight:800;font-size:.9rem}
+    .path div:nth-child(odd){border-top:4px solid var(--green)}
+    .path div:nth-child(even){border-top:4px solid var(--blue)}
+    .compare{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+    .compare article{padding:18px;border:1px solid var(--line);border-top:6px solid var(--green);background:var(--soft)}
+    .compare article.bad{border-top-color:var(--red);background:var(--red-soft)}
+    .compare h3{margin:0 0 8px;color:var(--ink)}
+    .compare p{margin:0;color:var(--muted)}
+    .daily{counter-reset:flow;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+    .daily article{position:relative;padding:15px 15px 15px 52px;border:1px solid var(--line);background:var(--soft);min-height:82px}
+    .daily article::before{counter-increment:flow;content:counter(flow);position:absolute;left:14px;top:14px;display:grid;place-items:center;width:27px;height:27px;background:var(--green);color:#fff;font-weight:900;border-radius:50%}
+    .daily b{display:block;margin-bottom:3px}
+    .daily code{font-size:.9rem}
+    .perm{width:100%;border-collapse:collapse;margin-top:15px}
+    .perm th,.perm td{padding:11px 12px;border-bottom:1px solid var(--line);text-align:left}
+    .perm th{background:var(--soft)}
+    .yes{color:#126b35;font-weight:900}.no{color:#ad2328;font-weight:900}
+    details{border:1px solid var(--line);background:#fff;margin:9px 0;border-radius:5px}
+    summary{cursor:pointer;padding:13px 15px;font-weight:800;color:var(--ink)}
+    details>div{padding:0 15px 15px;color:var(--muted)}
+    .cheat{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .cheat article{padding:13px;border:1px solid var(--line);background:var(--soft)}
+    .cheat b{display:block;margin-bottom:5px;color:var(--green)}
+    .checklist{display:grid;gap:9px}
+    .check{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border:1px solid var(--line);background:var(--soft);border-radius:5px}
+    .check input{margin-top:4px;transform:scale(1.2)}
+    .progress-note{margin-top:12px;font-weight:800;color:var(--green)}
+    .final{padding:23px;border:2px solid var(--green);background:#fff;text-align:center;font-size:1.17rem;border-radius:7px}
+    .final strong{color:var(--green)}
+    footer{padding:24px 0 34px;color:var(--muted);font-size:.9rem;text-align:center}
+    .topnav{display:flex;gap:10px;flex-wrap:wrap;margin:18px 0 0}
+    .topnav a{display:inline-flex;align-items:center;min-height:42px;padding:8px 12px;border:1px solid var(--line);background:#fff;text-decoration:none;font-weight:800;border-radius:5px;color:var(--green)}
+    @media(max-width:760px){
+      .flow{grid-template-columns:1fr}.arrow{transform:none}.arrow::before{content:"↓";display:block;font-size:1.3rem}.arrow{font-size:0}.arrow span{font-size:.8rem}
+      .quickgrid,.compare,.daily,.cheat{grid-template-columns:1fr}
+      .path{grid-template-columns:1fr}
+      .section{padding:20px}
+      .perm{font-size:.9rem}.perm th,.perm td{padding:9px 8px}
+    }
+  </style>
+</head>
+<body>
+  <div class="topline" aria-hidden="true"></div>
+  <div class="wrap">
+    <nav class="crumbs"><a href="../../">← Voltar ao portal da disciplina</a></nav>
+    <header>
+      <p class="eyebrow">Guia rápido do aluno · Git e GitHub</p>
+      <h1>Receba novas missões sem perder seu código</h1>
+      <p class="lead">Você continuará evoluindo o mesmo projeto Vue ao longo das aulas. O professor publica materiais e missões; você recebe as atualizações e entrega seus commits no seu próprio GitHub.</p>
+      <div class="hero-rule"><strong>Regra para lembrar:</strong> <code>upstream</code> serve para <strong>receber</strong>. <code>origin</code> serve para <strong>entregar</strong>.</div>
+
+      <div class="flow" aria-label="Fluxo entre professor, computador e GitHub do aluno">
+        <div class="node"><b>Professor</b><small><code>upstream</code><br>missões e materiais</small></div>
+        <div class="arrow">→<span>receber</span></div>
+        <div class="node local"><b>Seu computador</b><small>você desenvolve<br>em <code>src/</code></small></div>
+        <div class="arrow">→<span>entregar</span></div>
+        <div class="node student"><b>Seu GitHub</b><small><code>origin</code><br>seus commits</small></div>
+      </div>
+
+      <nav class="topnav" aria-label="Atalhos do guia">
+        <a href="#configurar">Configurar Git</a>
+        <a href="#missao">Receber missão</a>
+        <a href="#rotina">Fluxo da aula</a>
+        <a href="#problemas">Problemas comuns</a>
+        <a href="#checklist">Checklist final</a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="section" id="entenda">
+        <h2>1 · Antes de começar: quem controla o quê?</h2>
+        <p class="sub">O projeto-base da disciplina continua em <code>lessons/aula-02-vite-vue-componentizacao</code>. Quando o sistema de missões estiver habilitado, a divisão será esta:</p>
+        <div class="quickgrid">
+          <div class="quick"><b><code>course/</code></b>Missões e verificadores publicados pelo professor. <strong>Não edite</strong> sem orientação.</div>
+          <div class="quick"><b><code>src/</code></b>Seu código Vue. É aqui que você implementa e evolui a aplicação.</div>
+          <div class="quick"><b><code>origin</code> e <code>upstream</code></b>Dois endereços Git diferentes: um entrega; o outro recebe.</div>
+        </div>
+        <div class="alert good"><strong>Seu trabalho não é descartável.</strong> A partir da Aula 3, você continua no mesmo projeto e registra cada incremento com commits.</div>
+      </section>
+
+      <section class="section" id="configurar">
+        <h2>2 · Configure seu repositório</h2>
+        <p class="sub">Escolha abaixo a situação que corresponde ao seu computador. Não execute os três caminhos.</p>
+
+        <div class="tabs" role="tablist" aria-label="Situação do repositório">
+          <button class="tab" type="button" role="tab" aria-selected="true" aria-controls="case-fork" id="tab-fork">Vou configurar agora</button>
+          <button class="tab" type="button" role="tab" aria-selected="false" aria-controls="case-prof" id="tab-prof">Clonei o repositório do professor</button>
+          <button class="tab" type="button" role="tab" aria-selected="false" aria-controls="case-mine" id="tab-mine">Meu origin já é meu GitHub</button>
+        </div>
+
+        <div class="tabpanel active" id="case-fork" role="tabpanel" aria-labelledby="tab-fork">
+          <div class="step"><span class="stepnum">1</span><div><h3>Faça um Fork no GitHub</h3><p>Abra <strong>thalesvalente/teaching-web-development</strong>, clique em <strong>Fork</strong> e crie uma cópia na sua conta.</p></div></div>
+          <div class="step"><span class="stepnum">2</span><div><h3>Clone o SEU repositório</h3><div class="codebox"><div class="codehead"><span>PowerShell / terminal</span><button class="copy" type="button">Copiar</button></div><pre>git clone https://github.com/SEU_USUARIO/teaching-web-development.git
+cd teaching-web-development</pre></div></div></div>
+          <div class="step"><span class="stepnum">3</span><div><h3>Confira o <code>origin</code></h3><div class="codebox"><div class="codehead"><span>Conferência</span><button class="copy" type="button">Copiar</button></div><pre>git remote -v</pre></div><div class="expect">Esperado: <code>origin</code> aponta para <strong>SEU_USUARIO/teaching-web-development</strong>.</div></div></div>
+          <div class="step"><span class="stepnum">4</span><div><h3>Adicione o professor como <code>upstream</code></h3><div class="codebox"><div class="codehead"><span>Execute uma única vez</span><button class="copy" type="button">Copiar</button></div><pre>git remote add upstream https://github.com/thalesvalente/teaching-web-development.git
+git remote -v</pre></div><div class="expect">Ao final: <code>origin</code> = seu GitHub; <code>upstream</code> = GitHub do professor.</div></div></div>
+        </div>
+
+        <div class="tabpanel" id="case-prof" role="tabpanel" aria-labelledby="tab-prof">
+          <div class="alert">Use este caminho se você começou com <code>git clone https://github.com/thalesvalente/teaching-web-development.git</code>.</div>
+          <div class="step"><span class="stepnum">1</span><div><h3>Confira antes de alterar</h3><div class="codebox"><div class="codehead"><span>Diagnóstico</span><button class="copy" type="button">Copiar</button></div><pre>git remote -v</pre></div></div></div>
+          <div class="step"><span class="stepnum">2</span><div><h3>Renomeie o <code>origin</code> atual para <code>upstream</code></h3><div class="codebox"><div class="codehead"><span>Uma única vez</span><button class="copy" type="button">Copiar</button></div><pre>git remote rename origin upstream</pre></div></div></div>
+          <div class="step"><span class="stepnum">3</span><div><h3>Crie um repositório vazio na sua conta</h3><p>No GitHub, crie <code>teaching-web-development</code> sem README, sem <code>.gitignore</code> e sem licença.</p></div></div>
+          <div class="step"><span class="stepnum">4</span><div><h3>Adicione seu repositório como <code>origin</code></h3><div class="codebox"><div class="codehead"><span>Troque SEU_USUARIO</span><button class="copy" type="button">Copiar</button></div><pre>git remote add origin https://github.com/SEU_USUARIO/teaching-web-development.git
+git push -u origin main
+git remote -v</pre></div></div></div>
+        </div>
+
+        <div class="tabpanel" id="case-mine" role="tabpanel" aria-labelledby="tab-mine">
+          <div class="alert good">Se <code>git remote -v</code> já mostra o seu GitHub em <code>origin</code>, <strong>não mexa no origin</strong>.</div>
+          <div class="step"><span class="stepnum">1</span><div><h3>Confira</h3><div class="codebox"><div class="codehead"><span>Diagnóstico</span><button class="copy" type="button">Copiar</button></div><pre>git remote -v</pre></div></div></div>
+          <div class="step"><span class="stepnum">2</span><div><h3>Adicione somente o <code>upstream</code></h3><div class="codebox"><div class="codehead"><span>Execute uma única vez</span><button class="copy" type="button">Copiar</button></div><pre>git remote add upstream https://github.com/thalesvalente/teaching-web-development.git</pre></div></div></div>
+          <div class="alert">Se aparecer <strong>remote upstream already exists</strong>, não substitua automaticamente. Rode <code>git remote -v</code>; se o endereço estiver diferente do repositório da disciplina, chame o professor.</div>
+        </div>
+      </section>
+
+      <section class="section" id="missao">
+        <h2>3 · Onde executar os comandos das missões</h2>
+        <p class="sub">Entre primeiro no projeto Vue da Aula 2.</p>
+        <div class="codebox"><div class="codehead"><span>Entrar no projeto</span><button class="copy" type="button">Copiar</button></div><pre>cd lessons/aula-02-vite-vue-componentizacao
+dir</pre></div>
+        <div class="expect">Você deve encontrar <code>package.json</code>, <code>package-lock.json</code>, <code>src/</code> e <code>vite.config.js</code>.</div>
+
+        <h3>Antes de receber uma missão, salve seu trabalho</h3>
+        <div class="codebox"><div class="codehead"><span>Checkpoint obrigatório</span><button class="copy" type="button">Copiar</button></div><pre>git status
+git add .
+git commit -m "feat: salva progresso antes da nova missao"</pre></div>
+        <p class="sub">Se <code>git status</code> já estiver limpo, você não precisa criar um commit vazio.</p>
+
+        <h3>Quando o sistema de missões estiver disponível</h3>
+        <div class="codebox"><div class="codehead"><span>Receber novas missões</span><button class="copy" type="button">Copiar</button></div><pre>node course/runner.mjs update</pre></div>
+        <div class="alert good">O comportamento esperado do atualizador é trazer o conteúdo controlado pelo professor em <code>course/</code> e preservar seu trabalho em <code>src/</code>.</div>
+      </section>
+
+      <section class="section" id="pull">
+        <h2>4 · Por que não usar <code>git pull upstream main</code>?</h2>
+        <div class="compare">
+          <article class="bad">
+            <h3>❌ <code>git pull upstream main</code></h3>
+            <p>Busca e tenta integrar <strong>todo o repositório</strong>. Como você altera arquivos em <code>src/</code>, podem surgir conflitos desnecessários.</p>
+          </article>
+          <article>
+            <h3>✅ <code>runner update</code></h3>
+            <p>Quando habilitado na disciplina, o atualizador é o caminho previsto para buscar as novas missões preservando o código do aluno.</p>
+          </article>
+        </div>
+        <div class="alert danger"><strong>Não use <code>git pull upstream main</code></strong> salvo orientação explícita do professor.</div>
+      </section>
+
+      <section class="section" id="rotina">
+        <h2>5 · Fluxo normal de uma aula</h2>
+        <p class="sub">Quando o sistema de missões estiver ativo, este é o ciclo que você repetirá.</p>
+        <div class="daily">
+          <article><b>Entrar no projeto</b><code>cd lessons/aula-02-vite-vue-componentizacao</code></article>
+          <article><b>Conferir o Git</b><code>git status</code> e <code>git remote -v</code></article>
+          <article><b>Receber missões</b><code>node course/runner.mjs update</code></article>
+          <article><b>Ver missões</b><code>node course/runner.mjs status</code></article>
+          <article><b>Abrir a missão</b><code>node course/runner.mjs mission 03</code></article>
+          <article><b>Executar o projeto</b><code>npm ci</code> quando necessário; depois <code>npm run dev</code></article>
+          <article><b>Desenvolver</b>Edite os arquivos indicados, principalmente dentro de <code>src/</code>.</article>
+          <article><b>Conferir a missão</b><code>node course/runner.mjs check 03</code></article>
+          <article><b>Registrar o incremento</b><code>git add .</code> + <code>git commit</code></article>
+          <article><b>Entregar</b><code>git push origin main</code></article>
+        </div>
+        <div class="path" aria-label="Resumo do fluxo">
+          <div>Professor publica</div><div>update</div><div>você desenvolve</div><div>check</div><div>push no origin</div>
+        </div>
+      </section>
+
+      <section class="section" id="protecao">
+        <h2>6 · O que o atualizador pode e não pode fazer</h2>
+        <table class="perm">
+          <thead><tr><th>Ação</th><th>Esperado</th></tr></thead>
+          <tbody>
+            <tr><td>Atualizar <code>course/</code></td><td class="yes">✓ permitido</td></tr>
+            <tr><td>Buscar novas missões no professor</td><td class="yes">✓ permitido</td></tr>
+            <tr><td>Verificar seu código / executar build como verificação</td><td class="yes">✓ permitido</td></tr>
+            <tr><td>Alterar automaticamente <code>src/App.vue</code></td><td class="no">✕ não deve fazer</td></tr>
+            <tr><td>Substituir seu <code>ProjectCard.vue</code></td><td class="no">✕ não deve fazer</td></tr>
+            <tr><td>Apagar suas personalizações</td><td class="no">✕ não deve fazer</td></tr>
+            <tr><td>Enviar código ao professor ou fazer <code>push</code> por você</td><td class="no">✕ não deve fazer</td></tr>
+          </tbody>
+        </table>
+        <div class="alert good">O checker <strong>verifica</strong> a missão; ele não deve resolver a missão no seu lugar.</div>
+      </section>
+
+      <section class="section" id="outro-pc">
+        <h2>7 · Vai continuar em outro computador?</h2>
+        <p class="sub">Clone <strong>seu repositório</strong>, e não o do professor.</p>
+        <div class="codebox"><div class="codehead"><span>Novo computador</span><button class="copy" type="button">Copiar</button></div><pre>git clone https://github.com/SEU_USUARIO/teaching-web-development.git
+cd teaching-web-development
+git remote add upstream https://github.com/thalesvalente/teaching-web-development.git
+cd lessons/aula-02-vite-vue-componentizacao
+npm ci</pre></div>
+        <div class="expect">Assim você continua a partir do último commit enviado ao seu <code>origin</code>.</div>
+      </section>
+
+      <section class="section" id="problemas">
+        <h2>8 · Problemas comuns</h2>
+        <p class="sub">Abra somente o erro que apareceu no seu terminal.</p>
+
+        <details>
+          <summary><code>fatal: not a git repository</code></summary>
+          <div>Você está fora da pasta clonada. Entre novamente em <code>teaching-web-development</code> e rode <code>git status</code>.</div>
+        </details>
+
+        <details>
+          <summary><code>remote upstream already exists</code></summary>
+          <div>Não crie outro remote. Rode <code>git remote -v</code>. O <code>upstream</code> correto deve apontar para <code>https://github.com/thalesvalente/teaching-web-development.git</code>.</div>
+        </details>
+
+        <details>
+          <summary>Meu <code>origin</code> aponta para o professor</summary>
+          <div>
+            <div class="codebox"><div class="codehead"><span>Correção</span><button class="copy" type="button">Copiar</button></div><pre>git remote rename origin upstream
+git remote add origin https://github.com/SEU_USUARIO/teaching-web-development.git
+git push -u origin main</pre></div>
+          </div>
+        </details>
+
+        <details>
+          <summary>O atualizador informou alterações em <code>course/</code></summary>
+          <div>Confira primeiro com <code>git status</code>. Se você editou <code>course/</code> sem querer e não precisa dessas mudanças, use <code>git restore course</code> e tente o update novamente. Se houver algo importante em <code>course/</code>, fale com o professor antes de restaurar.</div>
+        </details>
+
+        <details>
+          <summary><code>node course/runner.mjs update</code> não encontra <code>course/</code></summary>
+          <div>Você pode estar na pasta errada, ou o professor ainda não publicou o sistema de missões para essa versão. O terminal deve estar em <code>teaching-web-development/lessons/aula-02-vite-vue-componentizacao</code>.</div>
+        </details>
+
+        <details>
+          <summary>Apareceram <code>&lt;&lt;&lt;&lt;&lt;&lt;&lt;</code>, <code>=======</code> e <code>&gt;&gt;&gt;&gt;&gt;&gt;&gt;</code></summary>
+          <div>Isso indica conflito de merge. Não apague as marcações aleatoriamente. Pare e mostre o resultado ao professor antes de continuar.</div>
+        </details>
+      </section>
+
+      <section class="section" id="comandos">
+        <h2>9 · Comandos que realmente importam</h2>
+        <p class="sub">Você não precisa decorar dezenas de comandos. Estes cobrem quase todo o fluxo da disciplina.</p>
+        <div class="cheat">
+          <article><b>Ver a situação</b><code>git status</code></article>
+          <article><b>Conferir os remotes</b><code>git remote -v</code></article>
+          <article><b>Receber missões</b><code>node course/runner.mjs update</code></article>
+          <article><b>Ver missões</b><code>node course/runner.mjs status</code></article>
+          <article><b>Abrir missão 03</b><code>node course/runner.mjs mission 03</code></article>
+          <article><b>Conferir missão 03</b><code>node course/runner.mjs check 03</code></article>
+          <article><b>Executar o app</b><code>npm run dev</code></article>
+          <article><b>Registrar</b><code>git add .</code> + <code>git commit</code></article>
+          <article><b>Entregar</b><code>git push origin main</code></article>
+          <article><b>Instalar dependências</b><code>npm ci</code> quando necessário</article>
+        </div>
+      </section>
+
+      <section class="section" id="checklist">
+        <h2>10 · Checklist antes de entregar</h2>
+        <p class="sub">Marque os itens enquanto confere. A lista é apenas uma ajuda visual desta página.</p>
+        <div class="checklist" id="checks">
+          <label class="check"><input type="checkbox"> <span><code>origin</code> aponta para <strong>meu repositório</strong>.</span></label>
+          <label class="check"><input type="checkbox"> <span><code>upstream</code> aponta para o repositório do professor.</span></label>
+          <label class="check"><input type="checkbox"> <span>Trabalhei em <code>lessons/aula-02-vite-vue-componentizacao</code>.</span></label>
+          <label class="check"><input type="checkbox"> <span>Não editei <code>course/</code> sem orientação.</span></label>
+          <label class="check"><input type="checkbox"> <span>A missão foi verificada pelo checker.</span></label>
+          <label class="check"><input type="checkbox"> <span><code>npm run build</code> funciona quando solicitado.</span></label>
+          <label class="check"><input type="checkbox"> <span><code>git status</code> não mostra arquivos esquecidos.</span></label>
+          <label class="check"><input type="checkbox"> <span>Criei um commit do meu incremento.</span></label>
+          <label class="check"><input type="checkbox"> <span>Executei <code>git push origin main</code>.</span></label>
+          <label class="check"><input type="checkbox"> <span>Conferi o commit no <strong>meu GitHub</strong>.</span></label>
+        </div>
+        <div class="progress-note" id="checkProgress" aria-live="polite">0 de 10 itens conferidos.</div>
+      </section>
+
+      <div class="final"><strong>Upstream recebe. Origin entrega.</strong><br>Professor → missões · Você → código · Seu GitHub → entrega.</div>
+    </main>
+
+    <footer>Desenvolvimento de Sistemas Web · IFMA Campus Itapecuru-Mirim · 2026.2</footer>
+  </div>
+
+  <script>
+    (() => {
+      const tabs = [...document.querySelectorAll('.tab')];
+      const panels = [...document.querySelectorAll('.tabpanel')];
+      tabs.forEach(tab => tab.addEventListener('click', () => {
+        tabs.forEach(t => t.setAttribute('aria-selected', String(t === tab)));
+        panels.forEach(p => p.classList.toggle('active', p.id === tab.getAttribute('aria-controls')));
+      }));
+
+      document.querySelectorAll('.copy').forEach(button => {
+        button.addEventListener('click', async () => {
+          const pre = button.closest('.codebox')?.querySelector('pre');
+          if (!pre) return;
+          const text = pre.innerText;
+          try {
+            await navigator.clipboard.writeText(text);
+            const old = button.textContent;
+            button.textContent = 'Copiado ✓';
+            setTimeout(() => button.textContent = old, 1400);
+          } catch {
+            const range = document.createRange();
+            range.selectNodeContents(pre);
+            const selection = window.getSelection();
+            selection.removeAllRanges();
+            selection.addRange(range);
+            button.textContent = 'Selecione e copie';
+          }
+        });
+      });
+
+      const checks = [...document.querySelectorAll('#checks input[type="checkbox"]')];
+      const progress = document.getElementById('checkProgress');
+      function updateProgress() {
+        const done = checks.filter(c => c.checked).length;
+        progress.textContent = done + ' de ' + checks.length + ' itens conferidos.' + (done === checks.length ? ' Pronto para entregar.' : '');
+      }
+      checks.forEach(c => c.addEventListener('change', updateProgress));
+      updateProgress();
+    })();
+  </script>
+</body>
+</html>
