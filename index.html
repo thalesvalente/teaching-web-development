@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="Materiais e aulas de Desenvolvimento de Sistemas Web do IFMA Campus Itapecuru-Mirim.">
+  <title>Desenvolvimento Web · IFMA</title>
+  <style>
+    :root{
+      --green:#006b3c;--green-2:#239b45;--red:#d71920;
+      --ink:#21342a;--muted:#607067;--line:#d9e5dc;
+      --paper:#ffffff;--bg:#eef4f0;--soft:#f6faf7;
+      --shadow:0 18px 50px rgba(20,62,39,.10)
+    }
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{
+      margin:0;font-family:Arial,"Liberation Sans",sans-serif;
+      color:var(--ink);background:var(--bg);line-height:1.5
+    }
+    .topbar{height:8px;background:linear-gradient(90deg,var(--green) 0 78%,var(--green-2) 78% 92%,var(--red) 92%)}
+    .wrap{width:min(1100px,calc(100% - 32px));margin:0 auto}
+    header{padding:64px 0 34px}
+    .eyebrow{
+      margin:0 0 10px;text-transform:uppercase;letter-spacing:.12em;
+      color:var(--green);font-size:.82rem;font-weight:800
+    }
+    h1{margin:0;color:var(--green);font-size:clamp(2rem,5vw,3.8rem);line-height:1.04;letter-spacing:-.03em}
+    .lead{max-width:760px;margin:18px 0 0;font-size:1.15rem;color:var(--muted)}
+    .notice{
+      margin:24px 0 0;padding:14px 16px;background:#fff8ef;
+      border-left:5px solid #b87918;border-radius:4px;color:#604719
+    }
+    main{padding:8px 0 72px}
+    .section-title{margin:0 0 18px;font-size:1.5rem;color:var(--ink)}
+    .grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
+    .card{
+      display:flex;flex-direction:column;min-height:330px;padding:24px;
+      background:var(--paper);border:1px solid var(--line);border-top:7px solid var(--green);
+      box-shadow:var(--shadow);border-radius:8px
+    }
+    .card:nth-child(2){border-top-color:#2573a1}
+    .card:nth-child(3){border-top-color:var(--red)}
+    .number{font-weight:900;font-size:.9rem;color:var(--green);letter-spacing:.08em}
+    .card h2{margin:10px 0 12px;font-size:1.55rem;line-height:1.15}
+    .card p{margin:0;color:var(--muted);flex:1}
+    .actions{display:flex;flex-wrap:wrap;gap:9px;margin-top:22px}
+    .btn{
+      display:inline-flex;align-items:center;justify-content:center;
+      min-height:44px;padding:10px 14px;border-radius:5px;text-decoration:none;
+      font-weight:800;border:1px solid var(--green);background:var(--green);color:#fff
+    }
+    .btn:hover,.btn:focus-visible{background:#00502e}
+    .btn.secondary{background:#fff;color:var(--green)}
+    .btn.secondary:hover,.btn.secondary:focus-visible{background:#edf7f0}
+    .tag{display:inline-block;margin-top:14px;padding:4px 8px;background:var(--soft);border:1px solid var(--line);font-size:.82rem;font-weight:700}
+    footer{
+      border-top:1px solid var(--line);background:#fff;padding:20px 0;
+      color:var(--muted);font-size:.92rem
+    }
+    footer strong{color:var(--green)}
+    @media(max-width:850px){.grid{grid-template-columns:1fr}.card{min-height:0}}
+  </style>
+</head>
+<body>
+  <div class="topbar" aria-hidden="true"></div>
+  <header>
+    <div class="wrap">
+      <p class="eyebrow">IFMA · Campus Itapecuru-Mirim</p>
+      <h1>Desenvolvimento de Sistemas Web</h1>
+      <p class="lead">Portal de materiais da disciplina. As apresentações HTML são abertas diretamente no navegador, sem exibir o código-fonte do repositório.</p>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <h2 class="section-title">Aulas disponíveis</h2>
+    <section class="grid" aria-label="Aulas">
+      <article class="card">
+        <span class="number">AULA 01</span>
+        <h2>Primeira página web</h2>
+        <p>Protótipo inicial para observar HTML, CSS, JavaScript, DOM e HTTP trabalhando juntos.</p>
+        <span class="tag">HTML + CSS + JavaScript</span>
+        <div class="actions">
+          <a class="btn" href="./lessons/aula-01-primeira-pagina-web/">Abrir protótipo</a>
+          <a class="btn secondary" href="./lessons/aula-01-primeira-pagina-web/01-primeira-pagina.pdf">Ver slides PDF</a>
+        </div>
+      </article>
+
+      <article class="card">
+        <span class="number">AULA 02</span>
+        <h2>Vite, Vue e componentização</h2>
+        <p>Continuidade do projeto com Vue 3 + Vite. O código-fonte da prática permanece no repositório e os slides podem ser consultados em PDF.</p>
+        <span class="tag">Vue 3 + Vite</span>
+        <div class="actions">
+          <a class="btn" href="./lessons/aula-02-vite-vue-componentizacao/02-html-semantico.pdf">Ver slides PDF</a>
+          <a class="btn secondary" href="https://github.com/thalesvalente/teaching-web-development/tree/main/lessons/aula-02-vite-vue-componentizacao">Abrir prática no GitHub</a>
+        </div>
+      </article>
+
+      <article class="card">
+        <span class="number">AULA 03</span>
+        <h2>Props, estado e eventos</h2>
+        <p>Apresentação HTML interativa com demos executáveis, código e resultado lado a lado, perguntas e depuração.</p>
+        <span class="tag">Apresentação interativa</span>
+        <div class="actions">
+          <a class="btn" href="./lessons/Aula_03_Web_v4.html">Abrir apresentação</a>
+          <a class="btn secondary" href="https://github.com/thalesvalente/teaching-web-development/blob/main/lessons/Aula_03_Web_v4.html">Ver código</a>
+        </div>
+      </article>
+    </section>
+  </main>
+
+  <footer>
+    <div class="wrap"><strong>Prof. Dr. Thales Levi Azevedo Valente</strong> · Instituto Federal do Maranhão · 2026.2</div>
+  </footer>
+</body>
+</html>
