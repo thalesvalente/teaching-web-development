@@ -1,0 +1,13 @@
+{
+  "version": "1.0.0",
+  "slides": 28,
+  "tests": 16,
+  "runtime": "Vue 3.5.13",
+  "specSha256": "50eb1f6f0b35be08a4b7452e8de781f92d95850d85f716004f6087c80525e289",
+  "outputs": [
+    "lessons/Aula_04_Web_v1.html",
+    "lessons/aula-04-formularios-validacao/index.html",
+    "docs/instalar-course.mjs"
+  ],
+  "noStudentSourceChanged": true
+}

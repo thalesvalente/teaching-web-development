@@ -1,0 +1,75 @@
+{
+  "schema": 1,
+  "version": "1.0.0",
+  "id": "04",
+  "title": "Uma sugestão que o sistema entende",
+  "lessonTitle": "Formulários e validação",
+  "institution": "Instituto Federal do Maranhão",
+  "campus": "Campus Itapecuru-Mirim",
+  "course": "Técnico em Informática Integrado ao Ensino Médio",
+  "subject": "INF031 — Desenvolvimento de Sistemas Web",
+  "teacher": "Prof. Dr. Thales Levi Azevedo Valente",
+  "period": "2026.2",
+  "applicationDate": null,
+  "deadline": null,
+  "instrument": "E3-I1",
+  "points": 2.5,
+  "project": "lessons/aula-02-vite-vue-componentizacao",
+  "studentComponent": "src/components/SuggestionForm.vue",
+  "event": "sugestao",
+  "fields": {
+    "titulo": {"label": "Título", "min": 5, "max": 60},
+    "descricao": {"label": "Descrição", "min": 15, "max": 300}
+  },
+  "example": {
+    "title": "Recado para a biblioteca",
+    "fields": {"assunto": {"min": 4, "max": 40}, "mensagem": {"min": 10, "max": 200}}
+  },
+  "rubric": [
+    {"name": "Funcionamento e atendimento ao enunciado", "points": 1, "evidence": "Formulário integrado, registro válido, resumo e funcionalidades anteriores preservadas."},
+    {"name": "Organização e legibilidade", "points": 0.5, "evidence": "Componente separado, responsabilidades claras e código compreensível."},
+    {"name": "Validação e tratamento de entradas", "points": 0.5, "evidence": "Vazio, espaços, limites e mensagens por campo tratados corretamente."},
+    {"name": "Explicação individual", "points": 0.5, "evidence": "Explica o fluxo e demonstra uma pequena alteração de regra."}
+  ],
+  "tests": [
+    ["T01", "Submeter título e descrição vazios.", "Dois erros, nenhum registro e total inalterado."],
+    ["T02", "Submeter somente espaços nos dois campos.", "Tratar como vazio; não registrar."],
+    ["T03", "Título com 4, 5, 60 e 61 caracteres; descrição válida.", "Rejeitar 4 e 61; aceitar 5 e 60."],
+    ["T04", "Descrição com 14, 15, 300 e 301 caracteres; título válido.", "Rejeitar 14 e 301; aceitar 15 e 300."],
+    ["T05", "Registrar textos com espaços externos e internos.", "Remover espaços externos; preservar os internos nos dados recebidos."],
+    ["T06", "Título inválido e descrição válida; depois inverter.", "Erro só no campo inválido; preservar os dois textos."],
+    ["T07", "Corrigir um campo após erro; submeter novamente.", "Apagar o erro antigo do campo editado; confirmar um registro válido."],
+    ["T08", "Registrar por clique e depois por Enter no input.", "Um incremento por submissão, sem recarregamento."],
+    ["T09", "Pressionar Enter no textarea.", "Inserir uma quebra de linha; não registrar."],
+    ["T10", "Limpar durante preenchimento ou após erros/sucesso.", "Campos e mensagens vazios; resumo do App preservado."],
+    ["T11", "Registrar válido e clicar novamente após a limpeza.", "Não duplicar; a segunda tentativa vazia não incrementa."],
+    ["T12", "Registrar duas sugestões diferentes.", "Total 2 e última sugestão igual ao segundo envio."],
+    ["T13", "Usar dois cartões de interesse antes/depois de registrar.", "Estados independentes, bloqueio por cartão e resumo de interesses preservados."],
+    ["T14", "Usar Tab, rótulos, mensagens e foco.", "Associação label/campo/erro correta; operação por teclado; foco perceptível."],
+    ["T15", "Recarregar o aplicativo.", "Estado da sessão reiniciado, sem persistência."],
+    ["T16", "Executar o build no ambiente preparado.", "Build concluído; indisponibilidade do ambiente é NÃO VERIFICADO, não aprovação." ]
+  ],
+  "selectors": {
+    "suggestion-form": "Elemento form do novo componente",
+    "title-input": "input de título",
+    "description-input": "textarea de descrição",
+    "title-error": "Mensagem de erro do título (v-if ou elemento vazio)",
+    "description-error": "Mensagem de erro da descrição",
+    "submit-suggestion": "Botão type=submit",
+    "clear-suggestion": "Botão type=button que limpa",
+    "suggestion-success": "Mensagem de sucesso",
+    "suggestion-total": "Elemento que contém somente o número do total de sugestões",
+    "suggestion-last-title": "Elemento que apresenta somente o título da última sugestão",
+    "suggestion-last-description": "Elemento que apresenta somente a descrição da última sugestão",
+    "interest-total": "Elemento com somente o total de interesses da Aula 3"
+  },
+  "references": [
+    ["Vue: Form Input Bindings", "https://vuejs.org/guide/essentials/forms.html"],
+    ["Vue: Event Handling", "https://vuejs.org/guide/essentials/event-handling.html"],
+    ["Vue: Component Events", "https://vuejs.org/guide/components/events.html"],
+    ["W3C WAI: User Notification", "https://www.w3.org/WAI/tutorials/forms/notifications/"],
+    ["W3C WAI: Validating Input", "https://www.w3.org/WAI/tutorials/forms/validation/"],
+    ["Playwright: Browsers", "https://playwright.dev/docs/browsers"],
+    ["Git: fetch", "https://git-scm.com/docs/git-fetch"]
+  ]
+}

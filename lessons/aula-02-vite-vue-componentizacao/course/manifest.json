@@ -1,0 +1,21 @@
+{
+  "schema": 1,
+  "courseId": "ifma-web",
+  "repository": "thalesvalente/teaching-web-development",
+  "version": "1.0.0",
+  "integrity": "sha256-utf8-lf",
+  "missions": [
+    {
+      "id": "04",
+      "title": "Uma sugestão que o sistema entende",
+      "status": "disponível; checker requer ambiente preparado"
+    }
+  ],
+  "files": {
+    "checkers/04.mjs": "9d810db2278aec033f64af4f632d86d9645bf59720efc5603890f724b4ad9338",
+    "lib/update.mjs": "1d6d7e56175ce4e36813d73520f25463a46dc0f12af6b4795cbfc54071d6fe51",
+    "missions/04/README.md": "7e4de51c115af7d08c3d6beb3156bf68efb4551bb4764630accb8b39bba33e7b",
+    "missions/04/mission.json": "26eab98d66fb6306ef19a30431f3ce7daa738a497433ed3c4101ee31c1214c18",
+    "runner.mjs": "0079f058f3a20693fb6ebd18b6db1b384decde5b86c47375684c2a5396480e74"
+  }
+}
