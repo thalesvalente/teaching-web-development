@@ -1,0 +1,65 @@
+name: Verificar publicacao da Aula 04
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/verify-aula04-pages.yml']
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    if: github.repository == 'thalesvalente/teaching-web-development'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Conferir HTTP e arquivos testados
+        env:
+          PYTHONUNBUFFERED: '1'
+        run: |
+          python3 - <<'PY'
+          import hashlib, os, time, urllib.request
+          from html.parser import HTMLParser
+          base = 'https://thalesvalente.github.io/teaching-web-development/'
+          files = {
+              'lessons/Aula_04_Web_v1.html': '5e558579bcb08b8c1ca01107c5adc634a40898c6502656b926eac916e16508b8',
+              'lessons/aula-04-formularios-validacao/index.html': '69271d04274eedbb1aec42811600572ec5c808378779a845a0b284dc2876387a',
+              'docs/instalar-course.mjs': 'acbe0380c486b7a073273da6ebf4105888dde35f929aa0cc25c60e48d56dd752',
+              'lessons/aula-02-vite-vue-componentizacao/course/manifest.json': '42b70503e69217fbdbf44ff9159afe3a6d81f3d86a7227e4f0236d2137951a68'
+          }
+          class Portal(HTMLParser):
+              def __init__(self):
+                  super().__init__(); self.links = []; self.lesson04 = False
+              def handle_starttag(self, tag, attrs):
+                  a = dict(attrs)
+                  if tag == 'a': self.links.append(a.get('href', ''))
+                  if a.get('data-lesson') == '04': self.lesson04 = True
+          def get(path):
+              url = base + path + '?verificacao=aula04-' + str(time.time_ns())
+              req = urllib.request.Request(url, headers={'User-Agent': 'IFMA-Aula04-Publication-QA', 'Cache-Control': 'no-cache'})
+              with urllib.request.urlopen(req, timeout=15) as r:
+                  if r.status != 200: raise RuntimeError('HTTP ' + str(r.status))
+                  return r.read(1000000)
+          failure = None
+          for attempt in range(1, 9):
+              try:
+                  portal = Portal(); portal.feed(get('').decode('utf-8'))
+                  assert portal.lesson04, 'Cartao da Aula 04 ausente'
+                  required = ['./lessons/Aula_03_Web_v4.html', './lessons/Aula_04_Web_v1.html', './lessons/aula-04-formularios-validacao/', './docs/guia-origin-upstream/']
+                  assert all(x in portal.links for x in required), 'Link esperado ausente'
+                  for path, expected in files.items():
+                      data = get(path)
+                      assert hashlib.sha256(data).hexdigest() == expected, 'Hash divergente: ' + path
+                      print('PASS HTTP 200 + SHA-256:', path)
+                  failure = None; break
+              except Exception as error:
+                  failure = error
+                  print('Aguardando publicacao, tentativa', attempt, ':', error)
+                  if attempt < 8: time.sleep(15)
+          if failure: raise SystemExit(str(failure))
+          print('PASS portal: Aula 04 + acessos anteriores preservados.')
+          with open(os.environ['GITHUB_STEP_SUMMARY'], 'a', encoding='utf-8') as out:
+              out.write('## Publicacao verificada\n\nPortal HTTP 200 com links da Aula 04, Aula 03 e guia.\n\nQuatro arquivos publicados correspondem por SHA-256 aos materiais testados localmente.\n\nEste teste confirma entrega HTTP; testes de interacao e limites do ambiente estao em docs/QA_AULA_04_WEB.md.\n')
+          PY
