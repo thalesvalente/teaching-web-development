@@ -1,0 +1,70 @@
+name: Publicacao | Aula 05 Pages
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/verify-aula05-pages.yml'
+      - 'lessons/aula-05-laboratorio-web-mobile/**'
+      - 'index.html'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: HTTP 200, links preservados e integridade da Aula 05
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from html.parser import HTMLParser
+          from pathlib import Path
+          import hashlib, os, time, urllib.request
+          base='https://thalesvalente.github.io/teaching-web-development/'
+          paths=[
+            'index.html',
+            'lessons/aula-05-laboratorio-web-mobile/index.html',
+            'lessons/aula-05-laboratorio-web-mobile/preview.html',
+            'lessons/aula-05-laboratorio-web-mobile/lab.js',
+            'lessons/aula-05-laboratorio-web-mobile/preview.js',
+            'lessons/aula-05-laboratorio-web-mobile/assets/vendor.js',
+            'lessons/aula-05-laboratorio-web-mobile/shared/ProjetoUniversal.tsx',
+          ]
+          class Links(HTMLParser):
+            def __init__(self): super().__init__();self.hrefs=[]
+            def handle_starttag(self,tag,attrs):
+              if tag=='a':self.hrefs.append(dict(attrs).get('href',''))
+          def fetch(rel):
+            req=urllib.request.Request(base+rel+'?qa='+str(time.time_ns()),headers={'User-Agent':'IFMA-Aula05-QA','Cache-Control':'no-cache'})
+            with urllib.request.urlopen(req,timeout=18) as response:
+              if response.status!=200:raise AssertionError(f'{rel}: HTTP {response.status}')
+              return response.read(4000000)
+          last=None
+          for attempt in range(1,10):
+            try:
+              for p in paths:
+                expected=hashlib.sha256(Path(p).read_bytes()).hexdigest()
+                actual=hashlib.sha256(fetch(p)).hexdigest()
+                if actual!=expected:raise AssertionError('SHA-256 diverge: '+p)
+                print('PASS HTTP 200 + SHA-256',p,flush=True)
+              portal=Links();portal.feed(Path('index.html').read_text())
+              if not all(h in portal.hrefs for h in [
+                './lessons/Aula_03_Web_v4.html',
+                './lessons/Aula_04_Web_v1.html',
+                './lessons/aula-05-laboratorio-web-mobile/',
+                './docs/guia-origin-upstream/',
+              ]): raise AssertionError('Links de aulas anteriores ou laboratorio ausentes')
+              last=None;break
+            except Exception as e:
+              last=e
+              print(f'Tentativa {attempt}/9: {e}',flush=True)
+              if attempt<9:time.sleep(15)
+          if last:raise SystemExit('Publicacao nao validada: '+str(last))
+          with open(os.environ['GITHUB_STEP_SUMMARY'],'a',encoding='utf-8') as f:
+            f.write('## Publicacao verificada\n\n7 arquivos HTTP 200 com hashes iguais aos do HEAD da main. Portal e links antigos preservados.\n')
+          print('AULA05_PAGES_PASS',flush=True)
+          PY
