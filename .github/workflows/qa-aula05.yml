@@ -1,0 +1,55 @@
+name: QA | Aula 05 Web e Mobile
+on:
+  pull_request:
+    paths:
+      - 'lessons/aula-05-laboratorio-web-mobile/**'
+      - '.github/workflows/qa-aula05.yml'
+      - 'index.html'
+  push:
+    branches: [main, feat/aula05-laboratorio-web-mobile]
+    paths:
+      - 'lessons/aula-05-laboratorio-web-mobile/**'
+      - '.github/workflows/qa-aula05.yml'
+      - 'index.html'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: qa-aula05-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  chromium:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: lessons/aula-05-laboratorio-web-mobile
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Node 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: lessons/aula-05-laboratorio-web-mobile/package-lock.json
+      - name: Dependencias reproduziveis
+        run: npm ci --no-audit --no-fund
+      - name: Compilar runtime React Native Web offline
+        run: npm run build
+      - name: Testes estruturais
+        run: npm run check:logic
+      - name: Chromium para testes reais
+        run: npx playwright install --with-deps chromium
+      - name: Interacao, XP e responsividade
+        run: npm run test:e2e
+      - name: Verificar build versionado sem alteracao
+        run: git diff --exit-code -- assets/vendor.js
+      - name: Resultado verificavel
+        run: |
+          printf '## Aula 05 — QA\n\n' >> "$GITHUB_STEP_SUMMARY"
+          printf 'Testes de lógica e Chromium executados em React Native Web.\n\n' >> "$GITHUB_STEP_SUMMARY"
+          printf 'Visualização estreita não equivale à validação nativa Android/iOS.\n' >> "$GITHUB_STEP_SUMMARY"
