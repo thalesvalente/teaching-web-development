@@ -5,3 +5,112 @@
 @media(max-width:660px){.shell{width:calc(100% - 24px)}.shell-wide{width:calc(100% - 18px)}.topbar{gap:13px}.toplinks{gap:12px}.toplinks a{font-size:11px}.hero h1{font-size:clamp(2.65rem,13vw,4.4rem)}.hero-actions .action{width:100%}.score-inner{grid-template-columns:1fr}.score-message{grid-column:auto}.score-flag{font-size:9px}.challenge-grid{grid-template-columns:1fr}.quiz-card{grid-column:auto}.preview-panel iframe{height:1270px}.source-container textarea,.readonly-source{height:470px;min-height:470px;font-size:12px;padding:12px}.file-tabs button{padding:9px 7px;font-size:11px}.panel-heading{flex-wrap:wrap}.evidence-form,.evidence-summary{padding:17px}.evidence-actions .action{width:100%}.bridge-card pre{font-size:11px}.tree{font-size:11px}.architecture{padding:18px}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{transition:none!important;scroll-behavior:auto!important}}
 @media print{html,body{background:#fff!important;color:#111!important;font:11pt/1.42 Arial,sans-serif}header,.hero-display,.score-bar,.workspace-section,.bridge-grid,.architecture,.challenge-grid,.activity-reminder,.hero-actions,.evidence-actions,footer,.privacy,.toplinks{display:none!important}.hero{display:block;padding:0!important}.hero h1{font-size:23pt!important;letter-spacing:0!important}.hero h1 br{display:none}.hero h1 span::before,.hero h1 span::after{content:' '}.hero-lead,.compact-note{font-size:10pt!important}.section-block{padding:8px 0!important}#ponte{display:none}.evidence-grid{display:block}.evidence-form,.evidence-summary{border:0;box-shadow:none;padding:0;overflow:visible}.evidence-form textarea{display:none}.evidence-summary .evidence-list{display:none}.evidence-summary .big-score{font-size:30pt}.evidence-summary p{display:none}.print-only{display:block!important;margin-top:14px;border-top:1px solid #777;padding-top:12px;white-space:pre-wrap;overflow-wrap:anywhere;font-size:10pt}.print-only h3{font-size:12pt}.print-only pre{white-space:pre-wrap;word-break:break-word;font-size:8pt;max-height:none}.shell{width:100%}main{padding:0 8mm}@page{size:A4;margin:16mm}}
+
+/* Aula 05 v2 — a trilha fica perto do código, nunca escondida nos cartões. */
+.learning-flow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 16px 17px;
+  margin-top: 22px;
+  border: 1px solid #b7d4c1;
+  background: #f0f8f2;
+  border-radius: 12px;
+}
+.learning-flow span {
+  flex: 1 1 126px;
+  padding: 10px 9px;
+  border-radius: 7px;
+  border: 1px solid #c5dccb;
+  text-align: center;
+  background: white;
+  color: #215b39;
+  font-size: 13px;
+  font-weight: 750;
+}
+.learning-flow b { color: #257951; font-size: 19px; }
+.flow-caption {font-size: 13px; color: #456b52; margin: 10px 0 0;}
+.bridge-card p code {background:#e7f3e9;padding:2px 3px;border-radius:4px;font-size:13px}
+.lab-guide {
+  background: #f0f7f0;
+  border-bottom: 2px solid #b5d6c1;
+  padding: 22px 23px 19px;
+}
+.guide-brow {display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;font-size:11px;color:#195335;font-weight:850;letter-spacing:.07em}
+.lab-guide h3 {font-size:clamp(19px,1.7vw,24px);margin:9px 0 13px;color:#143f2b;line-height:1.2}
+.guide-lineup p {font-size:14px;line-height:1.5;margin:5px 0;color:#244b34}
+.guide-lineup strong {color:#103e29}
+.guide-lineup .guide-why {color:#42654c;font-size:13px;margin-top:9px}
+.guide-location {font-size:12px;color:#396149;margin:12px 0 11px;font-family:ui-monospace,Consolas,monospace;overflow-wrap:anywhere}
+.guide-tools {display:flex;flex-wrap:wrap;gap:9px}
+.guide-tools .action {font-size:12px;min-height:40px;padding:9px 11px}
+.guide-locate {background:#fff;color:#136642;border-color:#34764e}
+.guide-test {background:#086b3d;color:#fff;border-color:#086b3d}
+.guide-tip {margin-top:10px;font-size:13px;color:#31563e}
+.guide-tip summary {cursor:pointer;font-weight:750;width:fit-content}
+.guide-tip p {border-left:3px solid #a8d0b8;padding:7px 11px;margin:6px 0 0;background:#fff;line-height:1.55}
+.guide-feedback {font-size:12px;color:#576b5e;min-height:24px;margin:12px 0 8px;line-height:1.5}
+.guide-feedback.success {color:#096d43;font-weight:750}
+.guide-feedback.failed {color:#992d25;font-weight:750}
+.guide-navigation {display:flex;justify-content:space-between;gap:10px;padding-top:11px;border-top:1px solid #d1e5d7}
+.guide-navigation button {border:1px solid #9cb8a4;border-radius:7px;background:#fff;color:#164a30;font-size:13px;padding:9px 12px;font-weight:750;cursor:pointer}
+.guide-navigation button:disabled {opacity:.45;cursor:not-allowed}
+.editor-notice {line-height:1.5}
+.source-container textarea, .readonly-source {font-size:14px;line-height:1.65}
+/* Os desafios permanecem consultáveis, mas a execução é conduzida pelo guia do editor. */
+.chapter-list {display:grid;gap:38px}
+.chapter {min-width:0}
+.chapter > h3 {font-size:clamp(20px,2vw,26px);color:#163f29;margin:0 0 5px}
+.chapter-description {font-size:15px;color:#506757;margin:0 0 18px}
+.chapter .challenge-grid {grid-template-columns:repeat(2,minmax(0,1fr));gap:17px}
+.challenge-card {padding:21px 22px 19px;gap:10px}
+.challenge-card h4 {font-size:19px;margin:0;color:#193f2b;line-height:1.27}
+.challenge-card.current {border-color:#266f9e;box-shadow:0 0 0 2px rgba(38,111,158,.15),var(--shadow)}
+.challenge-card .task-description {font-size:14px;margin:0;line-height:1.54;color:#294532}
+.challenge-card .task-observe {font-size:13px;margin:0;padding:10px;border-radius:6px;background:#f0f6f1;line-height:1.6;color:#355c42}
+.challenge-card .task-meta {font-size:11px;margin:0;font-weight:650;color:#5a6e5e}
+.task-hint {margin-top:1px;font-size:12px;background:#f9fcf9;border:1px solid #dfede1;border-radius:6px;padding:9px 11px}
+.task-hint summary {cursor:pointer;color:#1b6340;font-weight:750}
+.task-hint p {font-size:12px!important;line-height:1.54;margin:7px 0 0}
+.task-actions {display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin-top:auto}
+.task-actions .action {font-size:12px;line-height:1.3;min-height:43px;padding:9px 11px}
+.task-open {border-color:#4a7b60;color:#175638;background:#fff}
+.challenge-card fieldset {width:100%;padding:11px;margin:3px 0 0;border-radius:8px;border:1px solid #d8e7dd}
+.challenge-card legend {font-size:13px;font-weight:750;color:#204f33}
+.challenge-card fieldset label {display:flex;align-items:flex-start;gap:8px;padding:6px 3px;line-height:1.46;font-size:12px;color:#334c3c}
+.challenge-card fieldset input {width:18px;height:18px;accent-color:#13714d;margin:0;flex:0 0 18px}
+.challenge-card.passed {border-color:#0f8e56}
+.challenge-card.passed .reward {background:#e5f7e9;color:#0d6941}
+.challenge-card .challenge-feedback {font-size:12px!important;margin:0;padding-top:6px;min-height:24px}
+#legacy-export:not([hidden]) {border-color:#c1801c;color:#76541a;background:#fff8ea}
+/* Teclado e acessibilidade: foco perceptível nas tarefas e nos comandos do editor. */
+a:focus-visible,button:focus-visible,summary:focus-visible,input:focus-visible,
+textarea:focus-visible,[role="tab"]:focus-visible {
+  outline:3px solid #176fba!important;
+  outline-offset:3px!important;
+}
+button:disabled {cursor:not-allowed}
+@media(max-width:860px) {
+  .chapter .challenge-grid {grid-template-columns:1fr}
+  .lab-guide {padding:18px 17px}
+}
+@media(max-width:660px) {
+  .learning-flow b {display:none}
+  .learning-flow span {flex:1 1 145px}
+  .guide-tools .action {flex:1 1 165px}
+  .guide-brow {font-size:10px}
+  .lab-guide {padding:16px 12px}
+  .guide-navigation button {flex:1}
+  .chapter-description {font-size:13px}
+  .chapter .challenge-grid {grid-template-columns:1fr}
+  .challenge-card {padding:17px 15px}
+  .source-container textarea,.readonly-source {font-size:13px;line-height:1.65}
+}
+@media print {
+  #desafios,.learning-flow,.flow-caption,.chapter-list,.lab-guide {display:none!important}
+  .section-heading {break-inside:avoid}
+}
+.optional-task .task-meta {color:#735812}
+.optional-task .mission-number {color:#9f904c}

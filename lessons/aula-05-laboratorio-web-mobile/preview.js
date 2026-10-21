@@ -71,37 +71,125 @@
     if (!el) throw Error('Contador de registros não localizado.');
     return el.textContent.trim();
   }
+  // Cada missão inspeciona o CÓDIGO EXECUTADO e/ou a resposta da interface.
+  // Os testes com interação remontam as duas instâncias para não alterar
+  // os campos que o estudante está usando na prévia.
   async function check(stage) {
     if (!app) throw Error('Primeiro, execute o arquivo.');
+    const web = 'web-root', mobile = 'mobile-root';
     if (stage === 'run') {
-      return { ok: !!testId('web-root', 'app-universal') && !!testId('mobile-root', 'app-universal'), detail: 'Mesmo componente renderizado nas duas prévias.' };
+      const ok = !!testId(web, 'app-universal') && !!testId(mobile, 'app-universal');
+      return { ok, detail: ok ? 'O arquivo TSX gerou as duas interfaces.' : 'Confirme as duas interfaces e tente executar novamente.' };
+    }
+    if (stage === 'title') {
+      const title = app.TITULO_APLICACAO?.trim();
+      const ok = typeof title === 'string' && title.length >= 8 && title !== 'Memórias do campus' &&
+        [web, mobile].every(root => [...document.querySelectorAll(`#${root} [data-testid="app-universal"] *`)].some(el => el.textContent?.trim() === title));
+      return { ok, detail: ok ? 'Título atualizado nas duas renderizações.' : 'Edite TITULO_APLICACAO e confira o título Web e móvel.' };
+    }
+    if (stage === 'placeholder') {
+      const hint = app.DICA_CAMPO?.trim();
+      const ok = typeof hint === 'string' && hint.length >= 8 && hint !== 'Ex.: Feira de ciências' &&
+        [web, mobile].every(root => testId(root, 'campo-titulo')?.getAttribute('placeholder') === hint);
+      return { ok, detail: ok ? 'A dica foi atualizada nos dois campos.' : 'Edite DICA_CAMPO e confira o placeholder de ambos.' };
     }
     if (stage === 'limit') {
-      const test = app.validarTitulo;
-      const ok = app.MINIMO_CARACTERES === 7 && test(' abcdef ').valido === false && test(' abcdefg ').valido === true && test(' abcdefg ').texto === 'abcdefg' && test('   ').valido === false;
-      return { ok, detail: ok ? 'Limite 7, bordas 6/7 e normalização aprovados.' : 'Altere MINIMO_CARACTERES para 7 e mantenha a função de validação correta.' };
+      const fn = app.validarTitulo;
+      const ok = app.MINIMO_CARACTERES === 7 && fn(' abcdef ').valido === false && fn(' abcdefg ').valido === true &&
+        fn(' abcdefg ').texto === 'abcdefg' && fn('   ').valido === false;
+      return { ok, detail: ok ? 'Bordas 6/7 e remoção de espaços aprovadas.' : 'Use MINIMO_CARACTERES = 7 e mantenha validarTitulo funcionando.' };
+    }
+    if (stage === 'maximum') {
+      const fn = app.validarTitulo;
+      const ok = app.MAXIMO_CARACTERES === 30 && fn('a'.repeat(30)).valido === true &&
+        fn('a'.repeat(31)).valido === false && fn('a'.repeat(31)).erro.includes('30');
+      return { ok, detail: ok ? 'Bordas 30/31 caracteres verificadas.' : 'Altere MAXIMO_CARACTERES para 30 e preserve a regra superior em validarTitulo.' };
     }
     if (stage === 'button') {
-      const text = app.TEXTO_BOTAO?.trim();
-      const ok = typeof text === 'string' && text.length >= 8 && text !== 'Registrar memória' && getButtonText('web-root') === text && getButtonText('mobile-root') === text;
-      return { ok, detail: ok ? 'O texto editado chegou às duas interfaces.' : 'Altere TEXTO_BOTAO; confira se o novo texto aparece nas duas prévias.' };
+      const txt = app.TEXTO_BOTAO?.trim();
+      const ok = typeof txt === 'string' && txt.length >= 8 && txt !== 'Registrar memória' &&
+        getButtonText(web) === txt && getButtonText(mobile) === txt;
+      return { ok, detail: ok ? 'O botão foi renomeado em ambas as prévias.' : 'Altere TEXTO_BOTAO; confira as duas prévias.' };
     }
-    if (stage === 'behavior') {
+    if (stage === 'error') {
+      const txt = app.PREFIXO_ERRO?.trim();
+      const invalid = app.validarTitulo('abc');
+      const okPrefix = typeof txt === 'string' && txt.length >= 12 && txt !== 'Informe pelo menos' &&
+        invalid.valido === false && invalid.erro.startsWith(txt) && invalid.erro.includes(String(app.MINIMO_CARACTERES));
+      if (!okPrefix) return { ok: false, detail: 'Personalize PREFIXO_ERRO e mantenha o número mínimo na mensagem.' };
       try {
         await mount();
-        if (count('web-root') !== '0' || count('mobile-root') !== '0') return { ok: false, detail: 'Contadores iniciais devem ser zero.' };
-        await typeText('web-root', 'abc');
-        await press('web-root');
-        if (count('web-root') !== '0' || !testId('web-root', 'erro-titulo')) return { ok: false, detail: 'Entrada curta precisa ser rejeitada, com mensagem de erro.' };
-        await typeText('web-root', ' abcdefgh ');
-        await press('web-root');
-        if (count('web-root') !== '1' || count('mobile-root') !== '0') return { ok: false, detail: 'Verifique registro válido e estados independentes entre as prévias.' };
-        if (testId('web-root', 'ultima-memoria')?.textContent.trim() !== 'abcdefgh') return { ok: false, detail: 'A última memória precisa usar o título normalizado.' };
-        if (!testId('web-root', 'mensagem-sucesso')) return { ok: false, detail: 'O registro válido precisa apresentar confirmação.' };
-        return { ok: true, detail: 'Inválido bloqueado; válido registrado; Web e móvel mantêm estados independentes.' };
+        for (const root of [web, mobile]) {
+          await typeText(root, 'abc'); await press(root);
+          if (testId(root, 'erro-titulo')?.textContent.trim() !== invalid.erro) {
+            return { ok: false, detail: 'O erro da função deve aparecer em ambas as interfaces.' };
+          }
+        }
+        return { ok: true, detail: 'Mensagem nova ligada à validação real das duas telas.' };
       } finally { await mount(); }
     }
-    throw Error('Desafio desconhecido.');
+    if (stage === 'success') {
+      const message = app.MENSAGEM_SUCESSO?.trim();
+      if (typeof message !== 'string' || message.length < 12 || message === 'Memória registrada nesta sessão.')
+        return { ok: false, detail: 'Personalize MENSAGEM_SUCESSO mantendo uma confirmação clara.' };
+      try {
+        await mount();
+        for (const root of [web, mobile]) {
+          await typeText(root, 'Memória de teste'); await press(root);
+          if (testId(root, 'mensagem-sucesso')?.textContent.trim() !== message) {
+            return { ok: false, detail: 'O texto de sucesso precisa surgir nas duas interfaces após registro válido.' };
+          }
+        }
+        return { ok: true, detail: 'Feedback de sucesso atualizado e testado nas duas telas.' };
+      } finally { await mount(); }
+    }
+    if (stage === 'color') {
+      if (app.COR_BOTAO !== '#1f4f83') return { ok: false, detail: 'Experimente COR_BOTAO = "#1f4f83" (azul de contraste adequado).' };
+      const ok = [web, mobile].every(root => {
+        const element = testId(root, 'botao-registrar');
+        return element && /rgb\(31,\s*79,\s*131\)/.test(getComputedStyle(element).backgroundColor);
+      });
+      return { ok, detail: ok ? 'A cor nova chegou aos dois botões.' : 'Garanta que styles.botao usa backgroundColor: COR_BOTAO.' };
+    }
+    if (stage === 'trim') {
+      try {
+        await mount();
+        await typeText(web, '  Memória  coletiva  '); await press(web);
+        const ok = count(web) === '1' &&
+          testId(web, 'ultima-memoria')?.textContent.trim() === 'Memória  coletiva' &&
+          count(mobile) === '0';
+        return { ok, detail: ok ? 'Espaços externos removidos, internos preservados.' : 'Use resultado.texto ao registrar; mantenha os espaços entre palavras.' };
+      } finally { await mount(); }
+    }
+    if (stage === 'invalid') {
+      try {
+        await mount();
+        await typeText(web, '        '); await press(web);
+        const space = count(web) === '0' && !!testId(web, 'erro-titulo');
+        await typeText(web, 'abc'); await press(web);
+        const short = count(web) === '0' && !!testId(web, 'erro-titulo') && !testId(web, 'mensagem-sucesso');
+        await typeText(web, 'Memória válida');
+        const cleared = !testId(web, 'erro-titulo');
+        return { ok: !!(space && short && cleared), detail: space && short && cleared ?
+          'Espaços e título curto bloqueados; erro antigo apagado ao corrigir.' :
+          'Verifique bloqueio de entradas inválidas e remoção do erro ao digitar.' };
+      } finally { await mount(); }
+    }
+    if (stage === 'isolation') {
+      try {
+        await mount();
+        await typeText(web, 'Primeira memória'); await press(web);
+        if (count(web) !== '1' || count(mobile) !== '0')
+          return { ok: false, detail: 'Registrar na Web não deve incrementar o móvel.' };
+        await typeText(mobile, 'Segunda memória'); await press(mobile);
+        const ok = count(web) === '1' && count(mobile) === '1' &&
+          testId(web, 'ultima-memoria')?.textContent.trim() === 'Primeira memória' &&
+          testId(mobile, 'ultima-memoria')?.textContent.trim() === 'Segunda memória';
+        return { ok, detail: ok ? 'Mesmo código, duas instâncias independentes; nenhuma sincronização automática.' :
+          'Contadores e última memória devem permanecer distintos nas duas instâncias.' };
+      } finally { await mount(); }
+    }
+    throw Error('Exercício de código desconhecido.');
   }
   window.addEventListener('message', async (event) => {
     if (event.source !== sender) return;
