@@ -1,30 +1,48 @@
-# Aula 05 — Laboratório de transição Web ↔ Mobile
+# Aula 05 — Roteiro docente (laboratório comentado v2)
 
-## Decisão arquitetural (didática)
+## Finalidade
 
-O plano Web v2 previa, originalmente, composição e refatoração Vue com introdução ao Vue Router neste encontro. Esta aula de transição é um **replanejamento deliberado**: a versão Vue das aulas anteriores é preservada; o laboratório introduz React e um componente universal como ponte para a turma que já trabalha com Expo React Native. O ajuste deve ser registrado na documentação de ensino, conforme regras institucionais aplicáveis. A atividade é **formativa** e não substitui a nota E3-I1 da Aula 4.
+Esta aula substitui **somente o foco do encontro 5** por uma transição controlada Vue → React, articulada à disciplina Mobile React Native + Expo. O plano original Web v2 previa composição/refatoração Vue e introdução ao Vue Router: registre o replanejamento e reconcilie seus objetivos com os próximos encontros. Não altere retrospectivamente evidências/notas da Aula 4.
 
-## Objetivo observável
+## Correção pedagógica adotada
 
-Ao término, estudante identifica arquivo completo do componente; edita uma regra; executa novamente; observa mudanças simultâneas em prévia Web e prévia de largura móvel; explica a diferença entre React DOM, React Native Web e execução Expo nativa.
+A primeira edição tinha um arquivo TSX relativamente compacto, explicações em fragmentos e **apenas cinco missões**. A edição v2 implementa:
 
-## Cronograma sugerido (100 minutos)
-- 0–10 min: duas prévias e requisito único; teste manual de entradas vazias, curtas e válidas
-- 10–25 min: mapa de arquivos; equivalência Vue `ref/v-model` ↔ React `useState/onChangeText`
-- 25–45 min: leitura guiada do arquivo completo e busca do fluxo input → validação → estado → resultado
-- 45–75 min: três modificações sobre o MESMO arquivo; executar → observar → corrigir; XP formativa
-- 75–90 min: discussão de teste de borda, verificação de funcionamento e independência do estado
-- 90–100 min: exportar evidências parcial/total e registrar uma explicação individual
+1. **Um arquivo-fonte completo e comentado** (`ProjetoUniversal.tsx`) com sete blocos numerados e indicações cruzadas.
+2. **Guia de ação junto do editor** (Faça → Observe → Por quê?), botão para localizar código, pistas progressivas e botões para avançar/voltar.
+3. **Quatorze exercícios em três ciclos**, com oito tarefas nucleares e seis de extensão sem obrigatoriedade de terminar no encontro.
+4. **Oito pequenas alterações de código**, três experimentos de comportamento, uma exploração inicial e duas verificações conceituais.
+5. Testes automáticos do **comportamento executado** nas duas instâncias; estados independentes, não emuladores nativos.
 
-## Rubrica formativa (100 XP, não é nota)
-- 10 XP — compilar e executar nos dois painéis
-- 25 XP — alterar limite e comprovar casos 6/7 caracteres
-- 20 XP — alterar rótulo do botão com efeito nos dois painéis
-- 25 XP — comprovar bloqueio inválido, registro válido e estado independente
-- 20 XP — responder corretamente duas perguntas de arquitetura
+## Plano realista de 100 minutos
 
-A validação de código ocorre em **iframe sandbox isolado sem acesso à origem**. Não cole senhas, tokens ou código externo. O código é executado localmente no navegador e NÃO enviado ao professor. Exportar evidência é uma ação explícita do aluno. Impressão respeita XP parcial e não exige finalizar questões. O professor deve observar a explicação, independentemente dos testes automatizados.
+| Tempo | Condução | Critério observável |
+|---|---|---|
+| 0–10 min | Professor demonstra duas instâncias e pergunta por que contadores não sincronizam | Alunos sabem o resultado esperado, sem sintaxe nova |
+| 10–25 min | Alunos encontram os sete blocos, fazem exercícios 01–04 | Localizam useState, onChangeText, configurações e efeito imediato |
+| 25–65 min | Laboratório com pares de revisão; exercícios 05–08 | Editam limites, botão e erro; compilam e testam sem apagar o arquivo |
+| 65–85 min | Retomada guiada: entradas de borda, erro de compilação intencional e depuração | Explicam o return e a relação da regra com o JSX |
+| 85–100 min | Exportar evidências **parciais** e explicar individualmente uma mudança | Evidência reflete apenas verificações efetivamente realizadas |
 
-## Não ensinar neste encontro
+Os exercícios 09–14 são **extensão para ritmos diferentes** ou outra oportunidade. Não exigir 100 XP em 100 minutos. Se parte da turma não concluir o bloco essencial, retomar no encontro seguinte antes de introduzir rotas.
 
-Não exigir Vue Router, Expo Router, hooks avançados, servidor, banco, consumo de API, monorepo nem TypeScript avançado. O foco está no código completo e na transferência de conhecimento entre plataformas. Para Android/iOS real, consulte `docs/EXPO-REAL.md`.
+## Roteiro de intervenção ao vivo
+
+- **Demonstrar com um único erro:** modifique uma constante e mostre ambas as prévias. Evite digitar toda a solução.
+- **Perguntar antes de corrigir:** em qual arquivo e bloco está a alteração? O que deveria mudar nas duas telas?
+- **Voltar ao todo:** do `setTitulo` localizar sua declaração e o componente que o usa.
+- **Mostrar que código igual não significa estado sincronizado:** preencha os dois formulários com textos diferentes.
+- **Ajudar quem está com dificuldade:** resolver um exercício com o estudante, não todos; permitir sucesso parcial e novo teste.
+- **Estudantes avançados:** propor os desafios 09–14 e a execução nativa em Expo, com registro separado dos resultados.
+
+## Critérios e limites
+
+- 14 exercícios = 100 XP formativos; **não** converter XP automaticamente em nota institucional.
+- A avaliação E3-I1 da Aula 4 (2,5 pontos) é outra atividade.
+- O editor e as duas prévias executam TSX em React Native Web, localmente em iframe isolado. **Não** declará-las duas instalações diferentes.
+- Android/iOS nativo, acessibilidade assistiva completa, tráfego de rede do laboratório e integração ao projeto Expo do aluno requerem testes manuais reais.
+- A aula nunca grava em `src/` das Aulas 2–4 ou do projeto Mobile. A transição pedagógica não implica migração automática de Vue.
+
+## Material de preparação
+
+`README.md`, `docs/GUIA_ALUNO.md`, `docs/EXPO-REAL.md`, `docs/QA.md` e arquivo completo `shared/ProjetoUniversal.tsx`.
