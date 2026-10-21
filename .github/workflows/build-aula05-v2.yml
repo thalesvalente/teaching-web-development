@@ -1,0 +1,55 @@
+name: Montar e validar Aula 05 v2
+on:
+  push:
+    branches: [feat/aula05-lab-comentado-v2]
+    paths: ['tools/aula05-v2-transfer/part-08.txt']
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: build-aula05-v2
+  cancel-in-progress: false
+jobs:
+  build-and-verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feat/aula05-lab-comentado-v2
+          fetch-depth: 1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: SHA-256 e fontes v2
+        run: node tools/materializar-aula05-v2.mjs
+      - name: Dependências da Aula 05
+        working-directory: lessons/aula-05-laboratorio-web-mobile
+        run: npm ci --no-audit --no-fund
+      - name: Build local do React Native Web
+        working-directory: lessons/aula-05-laboratorio-web-mobile
+        run: npm run build
+      - name: Testes estruturais (14 exercícios)
+        working-directory: lessons/aula-05-laboratorio-web-mobile
+        run: npm run check:logic
+      - name: Preparar Chromium real
+        working-directory: lessons/aula-05-laboratorio-web-mobile
+        run: npx playwright install --with-deps chromium
+      - name: Testes interativos de navegador (Web + Mobile)
+        working-directory: lessons/aula-05-laboratorio-web-mobile
+        run: npm run test:e2e
+      - name: Garantir integridade das Aulas 1–4
+        run: |
+          git diff --exit-code -- lessons/Aula_03_Web_v4.html lessons/Aula_04_Web_v1.html lessons/aula-02-vite-vue-componentizacao
+      - name: Commitar somente as fontes da Aula 05
+        run: |
+          set -e
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -- lessons/aula-05-laboratorio-web-mobile/{README.md,index.html,lab.js,preview.html,preview.js,style.css,shared/ProjetoUniversal.tsx,docs/GUIA_ALUNO.md,docs/QA.md,docs/ROTEIRO-DOCENTE.md,tests/source.test.mjs,tests/lab.spec.mjs}
+          if git diff --cached --quiet; then
+            echo 'Nenhum arquivo modificado'
+          else
+            git commit -m 'feat(aula05): explica codigo completo e expande laboratorio para 14 exercicios'
+            git push origin HEAD:feat/aula05-lab-comentado-v2
+          fi
