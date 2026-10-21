@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Prévia isolada · Laboratório 05</title>
+<style>
+*{box-sizing:border-box}body{margin:0;color:#244234;background:#f1f5f1;font:15px/1.4 system-ui,Arial,sans-serif}
+.dual{display:grid;grid-template-columns:minmax(0,1fr) minmax(250px,.67fr);gap:12px;padding:12px;align-items:start}
+.display{min-width:0;border:1px solid #bdcfc2;border-radius:13px;background:white;overflow:hidden;box-shadow:0 8px 24px #1c503515}
+.top{display:flex;align-items:center;gap:8px;padding:10px 12px;background:#e4efe7;border-bottom:1px solid #cbdbcd;font-size:12px;font-weight:700}
+.dot{width:9px;height:9px;border-radius:50%;background:#bcd1c1}
+.viewport{background:#e8efe9;padding:12px;min-height:390px}
+#web-root,#mobile-root{width:100%}.phone{margin:0 auto;border:6px solid #283733;max-width:340px;border-radius:26px;padding:13px 8px 8px;background:#fff;min-height:510px}.notch{height:7px;width:78px;background:#364a3f;border-radius:20px;margin:0 auto 13px}
+.phone #mobile-root{max-width:100%}.mobile-wrapper{background:#e8efe9;min-height:530px;padding:10px 0 14px}
+small{display:block;padding:8px 12px;color:#53675b;background:white;font-size:11px}.state{margin:10px 12px;padding:9px;border-radius:7px;background:#ecf7ef;font-size:12px}
+@media(max-width:650px){.dual{grid-template-columns:1fr}.viewport{min-height:330px}.phone{max-width:350px}.mobile-wrapper{min-height:0}}
+</style>
+</head>
+<body>
+<div class="dual">
+  <section class="display" aria-label="Prévia Web executada no navegador">
+    <div class="top"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span>WEB · React Native Web</span></div>
+    <div class="viewport"><div id="web-root"></div></div>
+    <small>Renderização real no navegador com a mesma fonte TSX.</small>
+  </section>
+  <section class="display" aria-label="Prévia de largura móvel executada no navegador">
+    <div class="top"><span class="dot"></span><span>MOBILE · Prévia de largura móvel</span></div>
+    <div class="mobile-wrapper"><div class="phone"><div class="notch" aria-hidden="true"></div><div id="mobile-root"></div></div></div>
+    <small>Prévia via React Native Web. Não é emulador Android/iOS.</small>
+  </section>
+</div>
+<script src="./assets/vendor.js"></script>
+<script src="./preview.js"></script>
+</body>
+</html>

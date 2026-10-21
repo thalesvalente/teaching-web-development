@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="Aula 05: laboratório de código interativo e gamificado com a mesma fonte React Native nas prévias Web e móvel.">
+  <meta name="theme-color" content="#08653c">
+  <title>Aula 05 · Um código, duas telas | Desenvolvimento Web · IFMA</title>
+  <link rel="stylesheet" href="./style.css">
+  <script defer src="./lab.js"></script>
+</head>
+<body>
+  <a class="skip" href="#conteudo">Pular para o conteúdo</a>
+  <div class="brand-stripe" aria-hidden="true"></div>
+  <header class="topbar shell">
+    <a class="identity" href="../../index.html" aria-label="Voltar ao portal da disciplina">
+      <span class="brand-mark">IFMA</span><span>DESENVOLVIMENTO WEB <span class="subtle">/ 2026.2</span></span>
+    </a>
+    <nav class="toplinks" aria-label="Navegação do laboratório">
+      <a href="#ponte">Ponte Vue → React</a><a href="#laboratorio">Laboratório</a><a href="#desafios">Missões</a><a href="#evidencias">Evidências</a>
+    </nav>
+  </header>
+  <main id="conteudo">
+    <section class="hero shell" aria-labelledby="page-title">
+      <div class="hero-copy">
+        <p class="eyebrow">AULA 05 · TRANSIÇÃO GUIADA · 100 MINUTOS</p>
+        <h1 id="page-title">Um código.<br><span>Duas telas.</span><br>Uma ideia.</h1>
+        <p class="hero-lead">Saia dos trechos isolados. Leia um <strong>arquivo completo</strong>, edite uma regra de verdade e veja a mesma aplicação React funcionar em duas prévias simultâneas.</p>
+        <div class="hero-actions"><a class="action primary" href="#laboratorio">Abrir editor de código <span aria-hidden="true">↗</span></a><a class="action secondary" href="#ponte">Entender a ponte Vue → React</a></div>
+        <p class="compact-note"><strong>Transição, não substituição:</strong> seus trabalhos das Aulas 1–4 em Vue continuam válidos. Este laboratório não os altera.</p>
+      </div>
+      <div class="hero-display" aria-hidden="true">
+        <div class="showcase-window"><div class="showcase-top"><i></i><i></i><i></i> <span>PROJETO UNIVERSAL</span></div><div class="showcase-inner"><div class="tiny">MEMÓRIAS DO CAMPUS</div><div class="bar wide"></div><div class="bar"></div><div class="fake-input"></div><div class="fake-btn"></div><div class="fake-summary"></div></div></div>
+        <div class="showcase-phone"><div class="notch"></div><div class="tiny">MEMÓRIAS DO CAMPUS</div><div class="bar wide"></div><div class="fake-input"></div><div class="fake-btn"></div><div class="fake-summary"></div></div>
+        <span class="showcase-label">1 arquivo TSX <span aria-hidden="true">↗</span> 2 renderizações</span>
+      </div>
+    </section>
+    <div class="score-bar" aria-label="Progresso formativo">
+      <div class="shell score-inner">
+        <div class="score-label"><span class="score-flag">● LAB EM ANDAMENTO</span><strong><span id="xp-top">0</span> <span class="xp-unit">/ 100 XP</span></strong></div>
+        <div class="progress" role="progressbar" id="progress" aria-label="Pontos formativos concluídos" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div id="progress-fill"></div></div>
+        <span class="score-message" id="score-summary">0 de 5 missões concluídas · pontuação formativa, não nota oficial</span>
+      </div>
+    </div>
+    <section id="ponte" class="shell section-block" aria-labelledby="ponte-title">
+      <div class="section-heading"><span class="section-number">01 / COMPREENDER</span><h2 id="ponte-title">O que permanece. O que muda.</h2><p>Não vamos reaprender programação do zero. O raciocínio usado em Vue continua útil em React.</p></div>
+      <div class="bridge-grid">
+        <article class="bridge-card old"><div class="bridge-tag">VOCÊ JÁ VIU EM VUE</div><h3>Estado reativo</h3><pre><code>const titulo = ref('')
+
+&lt;input v-model="titulo" /&gt;</code></pre><p>O valor do campo acompanha o estado do componente.</p></article>
+        <div class="bridge-arrow" aria-hidden="true">⇄</div>
+        <article class="bridge-card new"><div class="bridge-tag">VOCÊ VAI USAR EM REACT</div><h3>Estado com hook</h3><pre><code>const [titulo, setTitulo] = useState('')
+
+&lt;TextInput value={titulo}
+  onChangeText={setTitulo} /&gt;</code></pre><p>A ideia é a mesma: entrada → estado → interface.</p></article>
+      </div>
+      <div class="architecture">
+        <div class="architecture-info"><span class="minor-title">MAPA DE ARQUIVOS · SEM MÁGICA</span><h3>Uma fonte, dois destinos</h3><p>O arquivo <code>shared/ProjetoUniversal.tsx</code> contém o componente completo. Tanto a rota Web quanto a rota Mobile podem importá-lo. Nesta aula, o navegador executa as duas renderizações via <strong>React Native Web</strong>.</p><p class="muted">Para testar em um Android/iPhone de verdade, execute o mesmo arquivo em um projeto Expo. A prévia móvel aqui <strong>não</strong> é um emulador nativo.</p></div>
+        <div class="tree" role="img" aria-label="Estrutura: shared ProjetoUniversal.tsx é importado por Expo Web e Expo Mobile"><div>📁 projeto-expo/</div><div class="tree-row">├── 📁 shared/</div><div class="tree-row tree-highlight">│　 └── ProjetoUniversal.tsx　← <strong>edite aqui</strong></div><div class="tree-row">└── 📁 app/</div><div class="tree-row">　　└── lab05.tsx　← importa componente</div><div class="tree-end">↙ WEB (React Native Web)　 ·　 ↘ MOBILE (Expo)</div></div>
+      </div>
+    </section>
+    <section id="laboratorio" class="workspace-section" aria-labelledby="lab-title">
+      <div class="shell"><div class="section-heading"><span class="section-number">02 / EXPERIMENTAR</span><h2 id="lab-title">Laboratório de código vivo</h2><p>Você edita <strong>um arquivo inteiro</strong>. Clique em <strong>Executar nas duas telas</strong>. Observe e interaja com a Web e a prévia móvel ao mesmo tempo.</p></div></div>
+      <div class="workspace shell-wide">
+        <div class="editor card-panel">
+          <div class="panel-heading"><span class="panel-name"><span class="indicator green"></span> EDITOR · FONTE REAL</span><span class="panel-meta">React Native · TSX</span></div>
+          <div class="file-tabs" role="tablist" aria-label="Arquivos do projeto">
+            <button type="button" role="tab" aria-selected="true" id="tab-shared" aria-controls="editor-source" data-file="shared">ProjetoUniversal.tsx <span class="edit-tag">EDITÁVEL</span></button>
+            <button type="button" role="tab" aria-selected="false" id="tab-route" aria-controls="editor-source" data-file="route">app/lab05.tsx</button>
+            <button type="button" role="tab" aria-selected="false" id="tab-vue" aria-controls="editor-source" data-file="vue">Ponte: Vue</button>
+          </div>
+          <div class="editor-notice" id="editor-context">Arquivo completo · altere uma constante, execute e compare as duas interfaces.</div>
+          <div class="source-container" id="editor-source" role="tabpanel" aria-labelledby="tab-shared">
+            <label for="code" class="sr-only">Código-fonte completo do componente universal</label>
+            <textarea id="code" spellcheck="false" autocomplete="off" autocapitalize="off" autocorrect="off" wrap="off" aria-describedby="code-help"></textarea>
+            <pre id="readonly-code" class="readonly-source" hidden tabindex="0"></pre>
+          </div>
+          <div class="editor-actions"><button type="button" class="action primary" id="run">▶ Executar nas duas telas</button><button type="button" class="action ghost" id="reset">Restaurar exemplo</button><button type="button" class="action ghost" id="download-code">Baixar .tsx</button></div>
+          <p class="editor-help" id="code-help">Use a tecla Tab para navegar; digite espaços para indentar. Alterações não executam sozinhas; clique em Executar. Código em sandbox isolado, sem envio ao servidor.</p>
+          <div class="compiler-status" id="compiler-status" role="status" aria-live="polite">Carregando arquivo inicial…</div>
+        </div>
+        <div class="preview-panel card-panel"><div class="panel-heading"><span class="panel-name"><span class="indicator blue"></span> SAÍDA · DUAS PRÉVIAS REAIS</span><span class="panel-meta">Mesmo TSX · estados separados</span></div>
+          <iframe id="preview" title="Web e prévia móvel: execução de React Native Web em sandbox isolado" sandbox="allow-scripts" referrerpolicy="no-referrer" src="./preview.html"></iframe>
+          <div class="preview-caption"><span><span class="indicator green"></span> Web: navegador</span><span><span class="indicator blue"></span> Móvel: largura simulada no navegador</span></div>
+        </div>
+      </div>
+    </section>
+    <section id="desafios" class="shell section-block" aria-labelledby="challenges-title">
+      <div class="section-heading"><span class="section-number">03 / CONSTRUIR</span><h2 id="challenges-title">Cinco missões. Seu ritmo.</h2><p>Faça na ordem sugerida, mas você pode deixar questões sem responder. Os pontos aparecem somente quando o teste correspondente passa.</p></div>
+      <div class="challenge-grid">
+        <article class="challenge-card" data-mission="run"><div class="challenge-header"><span class="mission-number">01</span><span class="reward">+10 XP</span></div><h3>Executar e observar</h3><p>Use o editor para executar o componente. Confirme que ele aparece nas duas prévias.</p><button type="button" class="action challenge-action" data-check="run">Conferir execução</button><p class="challenge-feedback" data-feedback="run" role="status" aria-live="polite">Pendente</p></article>
+        <article class="challenge-card" data-mission="limit"><div class="challenge-header"><span class="mission-number">02</span><span class="reward">+25 XP</span></div><h3>Mudar uma regra</h3><p>Localize <code>MINIMO_CARACTERES</code>, troque <strong>5 por 7</strong> e execute. Com 6 caracteres deve falhar; com 7 deve passar.</p><button type="button" class="action challenge-action" data-check="limit">Testar limites 6/7</button><p class="challenge-feedback" data-feedback="limit" role="status" aria-live="polite">Pendente</p></article>
+        <article class="challenge-card" data-mission="button"><div class="challenge-header"><span class="mission-number">03</span><span class="reward">+20 XP</span></div><h3>Um texto, duas telas</h3><p>Altere <code>TEXTO_BOTAO</code> para outra expressão clara. Execute e confirme o mesmo rótulo nas duas interfaces.</p><button type="button" class="action challenge-action" data-check="button">Comparar as prévias</button><p class="challenge-feedback" data-feedback="button" role="status" aria-live="polite">Pendente</p></article>
+        <article class="challenge-card" data-mission="behavior"><div class="challenge-header"><span class="mission-number">04</span><span class="reward">+25 XP</span></div><h3>Teste como desenvolvedor</h3><p>Com código executado, verifique: título curto não registra; válido incrementa só o painel Web; o estado do celular continua independente.</p><button type="button" class="action challenge-action" data-check="behavior">Rodar teste de comportamento</button><p class="challenge-feedback" data-feedback="behavior" role="status" aria-live="polite">Pendente</p></article>
+        <article class="challenge-card quiz-card" data-mission="quiz"><div class="challenge-header"><span class="mission-number">05</span><span class="reward">+20 XP</span></div><h3>Explique o que aconteceu</h3><fieldset><legend>Por que o mesmo TSX aparece nos dois painéis?</legend><label><input type="radio" name="q1" value="a"> Porque React Native Web renderiza componentes compatíveis no navegador.</label><label><input type="radio" name="q1" value="b"> Porque o navegador virou um Android real.</label><label><input type="radio" name="q1" value="c"> Porque Vue converte automaticamente para React.</label></fieldset>
+          <fieldset><legend>Se eu quiser rodar este arquivo no celular de verdade, preciso de quê?</legend><label><input type="radio" name="q2" value="a"> Apenas alterar a largura do navegador.</label><label><input type="radio" name="q2" value="b"> Executá-lo em um projeto React Native/Expo compatível.</label><label><input type="radio" name="q2" value="c"> Substituir todos os arquivos das aulas anteriores.</label></fieldset>
+          <button type="button" class="action challenge-action" id="check-quiz">Conferir respostas</button><p class="challenge-feedback" data-feedback="quiz" role="status" aria-live="polite">Pendente · pode ficar em branco</p></article>
+      </div>
+      <div class="activity-reminder"><strong>Não se preocupe em decorar sintaxe.</strong> Explore o arquivo inteiro, descubra onde o estado muda, execute, observe e explique. Esta aula é de consolidação e transição, sem exigir Vue Router ou Expo Router.</div>
+    </section>
+    <section id="evidencias" class="shell section-block evidence-section" aria-labelledby="evidencias-title">
+      <div class="section-heading"><span class="section-number">04 / REGISTRAR</span><h2 id="evidencias-title">Seu relatório de laboratório</h2><p>Exportação disponível a qualquer momento, inclusive com missões pendentes. A pontuação é <strong>formativa</strong>, não substitui a avaliação E3-I1.</p></div>
+      <div class="evidence-grid"><div class="evidence-form card-panel"><label for="observacao">O que você alterou? Como percebeu o efeito na Web e na prévia móvel?</label><textarea id="observacao" rows="5" placeholder="Ex.: mudei o limite para 7. As duas telas passaram a rejeitar 6 caracteres, mas os contadores continuaram independentes."></textarea><label for="limite-real">O que ainda precisa ser testado em um celular real?</label><textarea id="limite-real" rows="3" placeholder="Ex.: abrir a rota no Expo Go e conferir entrada, teclado e acessibilidade."></textarea><p class="privacy">O laboratório salva rascunho de código, respostas e XP <strong>apenas neste navegador</strong>, quando armazenamento local está disponível. Não solicita nome, turma, senha nem envia evidências automaticamente.</p></div>
+      <div class="evidence-summary card-panel"><div class="result-kicker">RESULTADO ATUAL</div><strong class="big-score"><span id="xp-evidence">0</span><small>/100 XP</small></strong><p id="evidence-count">0 missões concluídas · 5 pendentes</p><ul class="evidence-list" id="evidence-list"><li>Aguardando primeiras verificações.</li></ul><div class="evidence-actions"><button type="button" class="action primary" id="export-json">Exportar evidência JSON</button><button type="button" class="action secondary" id="export-md">Exportar Markdown</button><button type="button" class="action ghost" id="print">Imprimir / salvar PDF</button></div><div class="evidence-status" id="evidence-status" role="status" aria-live="polite"></div></div></div>
+      <div class="print-only" id="print-report" aria-hidden="true"></div>
+    </section>
+  </main>
+  <footer><div class="shell footer-grid"><span><strong>IFMA · Desenvolvimento de Sistemas Web</strong> · Aula 05 de transição · 2026.2</span><span>Prof. Dr. Thales Levi Azevedo Valente · <a href="../../index.html">Voltar ao portal Web</a> · <a href="https://thalesvalente.github.io/teaching-mobile/">Portal Mobile</a></span></div></footer>
+</body>
+</html>

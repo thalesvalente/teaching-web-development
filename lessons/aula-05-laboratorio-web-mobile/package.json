@@ -1,0 +1,24 @@
+{
+  "name": "ifma-aula05-lab-universal",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Laboratório gamificado Web + prévia Mobile com React Native Web",
+  "scripts": {
+    "build": "node scripts-build.mjs",
+    "check:logic": "node --test tests/*.test.mjs",
+    "test:e2e": "playwright test",
+    "test": "npm run check:logic && npm run test:e2e"
+  },
+  "dependencies": {
+    "@babel/standalone": "7.29.10",
+    "react": "19.2.3",
+    "react-dom": "19.2.3",
+    "react-native-web": "0.21.2"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.63.0",
+    "esbuild": "0.28.2",
+    "typescript": "6.0.3"
+  },
+  "engines": { "node": ">=22.13.0" }
+}
