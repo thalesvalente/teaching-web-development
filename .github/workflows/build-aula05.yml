@@ -1,0 +1,56 @@
+name: Aula 05 | Laboratorio Web Mobile
+on:
+  push:
+    branches: [feat/aula05-laboratorio-web-mobile]
+    paths:
+      - 'tools/aula05-source.part-05'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: build-aula05
+  cancel-in-progress: false
+jobs:
+  assemble-and-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feat/aula05-laboratorio-web-mobile
+          fetch-depth: 1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Conferir integridade e materializar fontes
+        run: node tools/materializar-aula05.mjs
+      - name: Fixar dependencias e instalar
+        working-directory: lessons/aula-05-laboratorio-web-mobile
+        run: |
+          npm install --package-lock-only --ignore-scripts --no-audit --no-fund
+          npm ci --no-audit --no-fund
+      - name: Compilar fornecedor local para uso offline
+        working-directory: lessons/aula-05-laboratorio-web-mobile
+        run: npm run build
+      - name: Testes unitarios de sintaxe, estrutura e integridade
+        working-directory: lessons/aula-05-laboratorio-web-mobile
+        run: npm run check:logic
+      - name: Preparar navegador Chromium real
+        working-directory: lessons/aula-05-laboratorio-web-mobile
+        run: npx playwright install --with-deps chromium
+      - name: Testes e2e das duas previas, formulario, XP e responsividade
+        working-directory: lessons/aula-05-laboratorio-web-mobile
+        run: npm run test:e2e
+      - name: Garantir preservacao dos trabalhos anteriores
+        run: |
+          git diff --exit-code -- lessons/aula-02-vite-vue-componentizacao lessons/Aula_03_Web_v4.html lessons/Aula_04_Web_v1.html
+      - name: Registrar fontes testadas e build reproduzivel na branch
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -- lessons/aula-05-laboratorio-web-mobile
+          if git diff --cached --quiet; then echo 'Nenhuma mudanca'; else
+            git commit -m 'feat(aula05): laboratorio React universal com previas verificadas'
+            git push origin HEAD:feat/aula05-laboratorio-web-mobile
+          fi
+          echo '## Aula 05: fonte TSX unica, React Native Web duplicado e QA real aprovado' >> "$GITHUB_STEP_SUMMARY"
