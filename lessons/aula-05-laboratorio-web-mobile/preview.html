@@ -3,31 +3,37 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Prévia isolada · Laboratório 05</title>
+<title>Resultado do mesmo componente em duas larguras</title>
 <style>
-*{box-sizing:border-box}body{margin:0;color:#244234;background:#f1f5f1;font:15px/1.4 system-ui,Arial,sans-serif}
-.dual{display:grid;grid-template-columns:minmax(0,1fr) minmax(250px,.67fr);gap:12px;padding:12px;align-items:start}
-.display{min-width:0;border:1px solid #bdcfc2;border-radius:13px;background:white;overflow:hidden;box-shadow:0 8px 24px #1c503515}
-.top{display:flex;align-items:center;gap:8px;padding:10px 12px;background:#e4efe7;border-bottom:1px solid #cbdbcd;font-size:12px;font-weight:700}
-.dot{width:9px;height:9px;border-radius:50%;background:#bcd1c1}
-.viewport{background:#e8efe9;padding:12px;min-height:390px}
-#web-root,#mobile-root{width:100%}.phone{margin:0 auto;border:6px solid #283733;max-width:340px;border-radius:26px;padding:13px 8px 8px;background:#fff;min-height:510px}.notch{height:7px;width:78px;background:#364a3f;border-radius:20px;margin:0 auto 13px}
-.phone #mobile-root{max-width:100%}.mobile-wrapper{background:#e8efe9;min-height:530px;padding:10px 0 14px}
-small{display:block;padding:8px 12px;color:#53675b;background:white;font-size:11px}.state{margin:10px 12px;padding:9px;border-radius:7px;background:#ecf7ef;font-size:12px}
-@media(max-width:650px){.dual{grid-template-columns:1fr}.viewport{min-height:330px}.phone{max-width:350px}.mobile-wrapper{min-height:0}}
+*{box-sizing:border-box}html{height:100%}body{margin:0;color:#244234;background:#edf4ee;font:13px/1.4 system-ui,Arial,sans-serif}
+/* A versão anterior empilhava as prévias quando o iframe tinha menos de 650px,
+   escondendo o resultado móvel. Agora as duas ficam VISÍVEIS simultaneamente
+   sempre que couberem com pelo menos 210px cada. */
+.dual{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px;padding:8px;align-items:start;min-width:0}
+.display{min-width:0;border:1px solid #bdd2c3;border-radius:10px;background:white;overflow:hidden;box-shadow:0 6px 18px #1c503510}
+.top{display:flex;gap:5px;align-items:center;padding:8px 7px;background:#dcece2;border-bottom:1px solid #cbdbcd;font-size:10px;line-height:1.2;font-weight:850;min-height:31px}
+.dot{width:7px;height:7px;border-radius:50%;background:#8dbda2;flex:0 0 7px}
+.viewport{background:#f1f7f2;padding:6px;min-height:390px}
+#web-root,#mobile-root{width:100%;min-width:0}
+.phone{margin:0 auto;border:4px solid #293932;max-width:330px;border-radius:17px;padding:6px 4px 5px;background:#fff;min-height:470px;min-width:0}
+.notch{height:5px;width:55px;background:#364a3f;border-radius:20px;margin:0 auto 8px}
+.mobile-wrapper{background:#f1f7f2;min-height:390px;padding:5px 3px 10px}
+small{display:block;padding:7px 8px;color:#53675b;background:white;font-size:10px;line-height:1.4}
+@media(max-width:445px){.dual{grid-template-columns:1fr}.viewport{min-height:310px}.phone{max-width:350px;min-height:0}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important}}
 </style>
 </head>
 <body>
 <div class="dual">
-  <section class="display" aria-label="Prévia Web executada no navegador">
-    <div class="top"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span>WEB · React Native Web</span></div>
+  <section class="display" aria-label="Interface Web executada no navegador">
+    <div class="top"><span class="dot"></span><strong>WEB</strong> · navegador</div>
     <div class="viewport"><div id="web-root"></div></div>
-    <small>Renderização real no navegador com a mesma fonte TSX.</small>
+    <small>React Native Web: execução da mesma fonte.</small>
   </section>
   <section class="display" aria-label="Prévia de largura móvel executada no navegador">
-    <div class="top"><span class="dot"></span><span>MOBILE · Prévia de largura móvel</span></div>
+    <div class="top"><span class="dot"></span><strong>MOBILE</strong> · largura estreita</div>
     <div class="mobile-wrapper"><div class="phone"><div class="notch" aria-hidden="true"></div><div id="mobile-root"></div></div></div>
-    <small>Prévia via React Native Web. Não é emulador Android/iOS.</small>
+    <small>Prévia no navegador. Não é Android/iOS nativo.</small>
   </section>
 </div>
 <script src="./assets/vendor.js"></script>

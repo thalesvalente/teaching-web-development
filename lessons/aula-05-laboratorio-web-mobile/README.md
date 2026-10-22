@@ -1,52 +1,38 @@
-# Aula 05 — Laboratório comentado: um código, duas telas
+# Aula 05 — Bancada de código Web ↔ Mobile · versão 3.0.0
 
-**IFMA Campus Itapecuru-Mirim · Desenvolvimento de Sistemas Web · 2026.2 · versão 2.0.0**
+**IFMA Campus Itapecuru-Mirim · Desenvolvimento de Sistemas Web · 2026.2**
 
-Aula prática de **transição Vue → React/React Native**, seguindo uma única aplicação completa, sem descartar as atividades anteriores. O estudante modifica `shared/ProjetoUniversal.tsx` e observa **duas instâncias reais de React Native Web no navegador**: uma em largura Web, outra em largura de celular. **A segunda não é emulador Android/iOS**; o roteiro de execução nativa está em `docs/EXPO-REAL.md`.
+A Aula 05 agora opera como uma **bancada única**, e não uma página de cartões e seções distantes. O aluno encontra a missão atual, o código completo comentado, o botão Executar, o botão Conferir missão e os resultados no mesmo contexto visual. Desktop mostra editor e as duas prévias lado a lado; telas estreitas têm alternador Código/Resultado e preservam as instruções da missão. **O documento não exige rolagem vertical para sair do enunciado e chegar à interação.**
 
-## Como abrir
+## Entrar
 
-- Portal GitHub Pages: https://thalesvalente.github.io/teaching-web-development/lessons/aula-05-laboratorio-web-mobile/
-- Visualização local: executar `python3 -m http.server 8000` nesta pasta e abrir `http://127.0.0.1:8000/`. Não funciona abrindo `index.html` diretamente como `file://`.
-- Reproduzir o bundle local de dependências (Node/npm preparados): `npm ci` e `npm run build`. A versão publicada já contém o bundle, sem CDN.
+- GitHub Pages: https://thalesvalente.github.io/teaching-web-development/lessons/aula-05-laboratorio-web-mobile/
+- Em servidor local: `python3 -m http.server 8000`, na pasta da aula; abra `http://127.0.0.1:8000/`. `file://` não é suportado porque o TSX é carregado via `fetch()`.
+- Reproduzir dependências: `npm ci`, depois `npm run build`. O Pages contém `assets/vendor.js` e não precisa de CDN.
 
-## Aprendizagem guiada
+## Usar a bancada (sem subir e descer na página)
 
-**14 exercícios em 3 ciclos (até 100 XP formativos):**
+1. **Escolha** o exercício no seletor da missão. Você verá um enunciado por vez.
+2. Leia **Faça → Observe → Entenda** no painel à esquerda. Nas missões teóricas, **as perguntas aparecem dentro do próprio painel**, e não em outra parte da página.
+3. Clique em **Localizar linha**: o arquivo integral abre no trecho correspondente, com seleção visível, sem deslocar a página.
+4. Edite o código e clique em **Executar** no mesmo painel; observe a Web e a prévia móvel. Em telas estreitas, a aba **Resultado** é ativada após compilação bem-sucedida.
+5. Clique em **Conferir missão**; o feedback fica imediatamente abaixo do enunciado. Use **Anterior**, **Próxima** ou o seletor para trocar de desafio.
+6. **Evidências** abre uma janela que preserva o ponto de trabalho, permite registrar observações e baixar JSON/Markdown/PDF mesmo com pendências.
 
-| Ciclo | Exercícios | Foco | Tempo de referência |
-|---|---|---|---|
-| 1 — Encontre o todo | 01–04 | Executar, identificar o fluxo do estado, trocar título e dica | 21 min |
-| 2 — Mude e compare | 05–10 | Limites, botão, erro, sucesso e cor | 44 min |
-| 3 — Teste e explique | 11–14 | `trim`, dados inválidos, instâncias independentes e reflexão | 35 min |
+## Currículo, ritmo e pontuação
 
-**Em sala, priorize exercícios 01–08.** Exercícios 09–14 são aprofundamento e podem ser concluídos depois. Os 100 minutos representam o tempo estimado para o roteiro todo, e **não uma exigência de 100 XP em 100 minutos**. O roteiro docente distribui o encontro com tempo para orientação e fechamento.
+14 exercícios em três ciclos: 01–04 conhecer a aplicação; 05–10 modificar e comparar; 11–14 testar, explicar e aprofundar. Total de **100 XP formativos**, sem equivalência com nota institucional. No encontro de **100 minutos, priorize 01–08**; os demais são de extensão, não devem pressionar o ritmo.
 
-Cada missão tem **Faça → Observe → Por quê? → Localizar no código → Testar → Avançar**, mais uma pista opcional. Os botões não entregam a solução: a pontuação depende de resultado executado no código ou de respostas conceituais verificadas. O progresso parcial pode ser exportado como JSON ou Markdown, e impresso em PDF; questões pendentes permanecem pendentes. XP **não é a nota oficial** da disciplina e não altera a avaliação E3-I1 da Aula 04.
+## Código completo
 
-## Código e arquivos
+`shared/ProjetoUniversal.tsx` tem sete blocos comentados: [01] importações, [02] configurações, [03] validação, [04] estado, [05] ação, [06] JSX/interface, [07] estilos. As abas **Rota Expo** e **Comparar Vue** oferecem arquivos completos para consulta, sem substituir o código da turma.
 
-```
-index.html                      Guia, 14 desafios e exportação de evidências
-lab.js / style.css              Navegação do laboratório e feedback de cada missão
-shared/ProjetoUniversal.tsx     Única fonte React Native TSX completa, comentada e editável
-preview.html / preview.js       Duas instâncias React Native Web em iframe sandbox
-assets/vendor.js                Runtime compilado e versionado (sem dependência de CDN)
-docs/GUIA_ALUNO.md              Como navegar, localizar trechos e depurar
-docs/ROTEIRO-DOCENTE.md          Sequência realista para 100 min e limites
-/docs/EXPO-REAL.md              Como executar o TSX em um app Expo de verdade
-docs/QA.md                     Gates e evidências previstas
-```
+O arquivo React Native é realmente executado **duas vezes via React Native Web**, em estados independentes. A visualização móvel estreita **não é emulador Android/iOS**; consulte `docs/EXPO-REAL.md` para integração real com Expo. Compartilhar componente não sincroniza dados automaticamente.
 
-O arquivo TSX é comentado em **sete blocos numerados**: importações; configurações; regra de negócio; estado; ação; interface; estilos. O guia seleciona o trecho real dentro do código completo. A aba `Ponte: Vue` mostra um exemplo completo e independente, **não** uma migração automática de `.vue` para `.tsx`.
+## Integridade e qualidade
 
-## QA e segurança
+`npm run check:logic` valida estrutura e 14 missões. `npm run test:e2e` executa browser real com Playwright e verifica ausência de rolagem do documento, ações próximas à missão, quizzes contextualizados, renderização, XP, exportações, responsividade e links lógicos. Nenhum dado vai automaticamente ao professor; o TSX roda em `iframe sandbox="allow-scripts"`, de origem opaca, sem `allow-same-origin`. Não coloque senhas ou dados pessoais no editor.
 
-- Verificação estrutural: `npm run check:logic`.
-- Verificação de interface real com Chromium/Playwright: `npm run test:e2e`. Ambiente com Chromium preparado é obrigatório; a CI instala o navegador.
-- Fonte editada executa em `iframe sandbox="allow-scripts"`, **sem** `allow-same-origin`. Importações didáticas permitidas: `react`, `react-native`.
-- O laboratório **não** modifica `src/`, os trabalhos Vue anteriores nem o repositório de Mobile; tampouco envia código/evidências ao professor. Não cole dados pessoais nem segredos.
-- Rascunhos v2 usam chave própria no armazenamento local. Caso exista código da v1, há botão para exportá-lo, sem sobrescrever automaticamente o editor v2.
-- Leitura responsiva e verificações automatizadas **não equivalem à conformidade WCAG 2.2 AA integral**, que requer revisão assistiva manual.
+A versão 3 **reaproveita a chave de rascunho v2**, preservando alterações já feitas, e permite exportar o antigo rascunho v1 quando existir. Testes automatizados não substituem auditoria WCAG 2.2 AA com tecnologias assistivas.
 
-Referências técnicas: [Expo — Web](https://docs.expo.dev/workflow/web/) e [React Native Web](https://necolas.github.io/react-native-web/docs/installation/).
+Referências: [Expo — Web](https://docs.expo.dev/workflow/web/) e [React Native Web](https://necolas.github.io/react-native-web/docs/installation/).

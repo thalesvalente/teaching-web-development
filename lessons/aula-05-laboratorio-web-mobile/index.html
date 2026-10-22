@@ -3,131 +3,130 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="description" content="Aula 05 v2: laboratório de 14 exercícios com React Native Web, código TSX completo comentado e prévias Web/móvel interativas.">
-  <meta name="theme-color" content="#08653c">
-  <title>Aula 05 v2 · Laboratório de código Web e Mobile | IFMA</title>
+  <meta name="description" content="Aula 05: bancada de programação guiada. Uma missão por vez, código React Native comentado e duas prévias em tempo de execução.">
+  <meta name="theme-color" content="#10472e">
+  <title>Aula 05 · Bancada Web ↔ Mobile | IFMA</title>
   <link rel="stylesheet" href="./style.css">
   <script defer src="./lab.js"></script>
 </head>
 <body>
-  <a class="skip" href="#conteudo">Pular para o conteúdo</a>
-  <div class="brand-stripe" aria-hidden="true"></div>
-  <header class="topbar shell">
-    <a class="identity" href="../../index.html" aria-label="Voltar ao portal da disciplina">
-      <span class="brand-mark">IFMA</span><span>DESENVOLVIMENTO WEB <span class="subtle">/ 2026.2</span></span>
-    </a>
-    <nav class="toplinks" aria-label="Navegação do laboratório">
-      <a href="#ponte">Ponte Vue → React</a><a href="#laboratorio">Laboratório</a><a href="#desafios">Missões</a><a href="#evidencias">Evidências</a>
-    </nav>
-  </header>
-  <main id="conteudo">
-    <section class="hero shell" aria-labelledby="page-title">
-      <div class="hero-copy">
-        <p class="eyebrow">AULA 05 · TRANSIÇÃO GUIADA · 100 MINUTOS</p>
-        <h1 id="page-title">Um código.<br><span>Duas telas.</span><br>Catorze desafios.</h1>
-        <p class="hero-lead">Agora o código está <strong>comentado do início ao fim</strong>. Percorra um <strong>roteiro passo a passo</strong>, altere o mesmo arquivo TSX e veja o resultado nas prévias Web e de largura móvel.</p>
-        <div class="hero-actions"><a class="action primary" href="#laboratorio">Abrir editor de código <span aria-hidden="true">↗</span></a><a class="action secondary" href="#ponte">Entender a ponte Vue → React</a></div>
-        <p class="compact-note"><strong>Transição, não substituição:</strong> seus trabalhos das Aulas 1–4 em Vue continuam válidos. Este laboratório não os altera.</p>
+  <a class="skip" href="#missao-atual">Pular para a missão atual</a>
+  <div class="app-shell">
+    <header class="app-header">
+      <a href="../../index.html" class="brand" aria-label="Voltar ao portal Web do IFMA"><strong>IFMA</strong><span>Aula 05 <span class="brand-separator">/</span> Laboratório Web ↔ Mobile</span></a>
+      <div class="overall" aria-label="Progresso formativo">
+        <div class="overall-caption"><span id="score-summary">0 de 14 exercícios concluídos</span><strong><span id="xp-top">0</span> / 100 XP</strong></div>
+        <div class="progress" id="progress" role="progressbar" aria-label="XP formativos" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div id="progress-fill"></div></div>
       </div>
-      <div class="hero-display" aria-hidden="true">
-        <div class="showcase-window"><div class="showcase-top"><i></i><i></i><i></i> <span>PROJETO UNIVERSAL</span></div><div class="showcase-inner"><div class="tiny">MEMÓRIAS DO CAMPUS</div><div class="bar wide"></div><div class="bar"></div><div class="fake-input"></div><div class="fake-btn"></div><div class="fake-summary"></div></div></div>
-        <div class="showcase-phone"><div class="notch"></div><div class="tiny">MEMÓRIAS DO CAMPUS</div><div class="bar wide"></div><div class="fake-input"></div><div class="fake-btn"></div><div class="fake-summary"></div></div>
-        <span class="showcase-label">1 arquivo TSX <span aria-hidden="true">↗</span> 2 renderizações</span>
-      </div>
-    </section>
-    <div class="score-bar" aria-label="Progresso formativo">
-      <div class="shell score-inner">
-        <div class="score-label"><span class="score-flag">● LAB EM ANDAMENTO</span><strong><span id="xp-top">0</span> <span class="xp-unit">/ 100 XP</span></strong></div>
-        <div class="progress" role="progressbar" id="progress" aria-label="Pontos formativos concluídos" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div id="progress-fill"></div></div>
-        <span class="score-message" id="score-summary">0 de 14 exercícios concluídos · pontuação formativa, não nota oficial</span>
-      </div>
-    </div>
-    <section id="ponte" class="shell section-block" aria-labelledby="ponte-title">
-      <div class="section-heading"><span class="section-number">01 / COMPREENDER</span><h2 id="ponte-title">O que permanece. O que muda.</h2><p>Não vamos reaprender programação do zero. O raciocínio usado em Vue continua útil em React.</p></div>
-      <div class="bridge-grid">
-        <article class="bridge-card old">
-          <div class="bridge-tag">RELEMBRE A AULA 04</div>
-          <h3>Vue: estado + entrada</h3>
-          <p>O <code>ref()</code> guarda o valor; o <code>v-model</code> acompanha a digitação. Veja o arquivo Vue <strong>completo</strong> na aba “Ponte: Vue”.</p>
-        </article>
-        <div class="bridge-arrow" aria-hidden="true">⇄</div>
-        <article class="bridge-card new">
-          <div class="bridge-tag">AULA 05: MESMA IDEIA</div>
-          <h3>React: estado + callback</h3>
-          <p>O <code>useState()</code> devolve valor e atualizador; o <code>onChangeText</code> chama esse atualizador. Encontre as seções [04] e [06] do TSX completo.</p>
-        </article>
-      </div>
-      <div class="learning-flow" aria-label="Caminho de um texto digitado até o resultado">
-        <span>Digitação no TextInput</span><b aria-hidden="true">→</b>
-        <span>onChangeText / setTitulo</span><b aria-hidden="true">→</b>
-        <span>Estado useState</span><b aria-hidden="true">→</b>
-        <span>validarTitulo</span><b aria-hidden="true">→</b>
-        <span>Mensagem ou contador</span>
-      </div>
-      <p class="flow-caption">Mapa de execução: clique em <strong>Localizar no código</strong> a cada exercício para encontrar a função correspondente no arquivo inteiro.</p>
-      <div class="architecture">
-        <div class="architecture-info"><span class="minor-title">MAPA DE ARQUIVOS · SEM MÁGICA</span><h3>Uma fonte, dois destinos</h3><p>O arquivo <code>shared/ProjetoUniversal.tsx</code> contém o componente completo. Tanto a rota Web quanto a rota Mobile podem importá-lo. Nesta aula, o navegador executa as duas renderizações via <strong>React Native Web</strong>.</p><p class="muted">Para testar em um Android/iPhone de verdade, execute o mesmo arquivo em um projeto Expo. A prévia móvel aqui <strong>não</strong> é um emulador nativo.</p></div>
-        <div class="tree" role="img" aria-label="Estrutura: shared ProjetoUniversal.tsx é importado por Expo Web e Expo Mobile"><div>📁 projeto-expo/</div><div class="tree-row">├── 📁 shared/</div><div class="tree-row tree-highlight">│　 └── ProjetoUniversal.tsx　← <strong>edite aqui</strong></div><div class="tree-row">└── 📁 app/</div><div class="tree-row">　　└── lab05.tsx　← importa componente</div><div class="tree-end">↙ WEB (React Native Web)　 ·　 ↘ MOBILE (Expo)</div></div>
-      </div>
-    </section>
-    <section id="laboratorio" class="workspace-section" aria-labelledby="lab-title">
-      <div class="shell"><div class="section-heading"><span class="section-number">02 / EXPERIMENTAR</span><h2 id="lab-title">Seu posto de trabalho</h2><p>Acompanhe a missão selecionada <strong>junto do editor</strong>. Localize a linha comentada, faça uma alteração pequena, execute, compare as duas telas e teste antes de avançar.</p></div></div>
-      <div class="workspace shell-wide">
-        <div class="editor card-panel">
-          <div class="panel-heading"><span class="panel-name"><span class="indicator green"></span> EDITOR · FONTE REAL</span><span class="panel-meta">React Native · TSX</span></div>
-          <section class="lab-guide" aria-labelledby="guide-title" aria-label="Roteiro guiado do laboratório">
-            <div class="guide-brow"><span id="guide-number">MISSÃO 01 / 14 · CICLO 1</span><span id="guide-time">4 min · 5 XP</span></div>
-            <h3 id="guide-title">Primeiro contato: execute o projeto</h3>
-            <div class="guide-lineup">
-              <p><strong>1. Faça:</strong> <span id="guide-do">Execute o código completo nas duas prévias.</span></p>
-              <p><strong>2. Observe:</strong> <span id="guide-observe">Mesmo código, duas instâncias.</span></p>
-              <p class="guide-why"><strong>Por quê?</strong> <span id="guide-why">Contextualize cada mudança no arquivo.</span></p>
+      <nav class="header-tools" aria-label="Recursos do laboratório">
+        <button type="button" id="help-open" class="header-action"><span aria-hidden="true">?</span> Como funciona</button>
+        <button type="button" id="evidence-open" class="header-action emphasis">Evidências <span aria-hidden="true">↗</span></button>
+      </nav>
+    </header>
+
+    <main class="lab-grid" id="conteudo">
+      <aside class="mission-panel" id="missao-atual" aria-labelledby="guide-title" tabindex="-1">
+        <div class="mission-copy" id="mission-copy">
+          <div class="mission-overline"><span id="guide-number">MISSÃO 01 / 14 · CICLO 1</span><span class="xp-pill" id="guide-time">4 min · 5 XP</span></div>
+          <h1 id="guide-title">Primeiro contato: execute o projeto</h1>
+          <p class="mission-intro">Tudo acontece nesta bancada. Não é necessário procurar o editor ou os testes em outra parte da página.</p>
+          <div class="mission-directions">
+            <section class="direction do" aria-labelledby="label-do"><h2 id="label-do"><span>1</span> Faça</h2><p id="guide-do">Execute nas duas telas.</p></section>
+            <section class="direction see" aria-labelledby="label-observe"><h2 id="label-observe"><span>2</span> Observe</h2><p id="guide-observe">As duas renderizações usam um arquivo.</p></section>
+            <section class="direction why" aria-labelledby="label-why"><h2 id="label-why"><span>3</span> Entenda</h2><p id="guide-why">Relacione mudança e resultado.</p></section>
+          </div>
+          <p class="code-location" id="guide-line">shared/ProjetoUniversal.tsx · seção [06]</p>
+          <div id="quiz-bank" class="inline-quiz" aria-label="Perguntas desta missão" hidden></div>
+          <details id="guide-hint-box" class="hint"><summary>Preciso de uma pista</summary><p id="guide-hint">Encontre o comentário [06] no código.</p></details>
+        </div>
+
+        <div class="mission-footer">
+          <p class="mission-feedback" id="guide-feedback" role="status" aria-live="polite">Pendente · execute e confira nesta bancada</p>
+          <div class="mission-actions">
+            <button type="button" id="guide-locate" class="btn secondary"><span aria-hidden="true">⌕</span> Localizar linha</button>
+            <button type="button" id="run" class="btn run"><span aria-hidden="true">▶</span> Executar</button>
+            <button type="button" id="guide-check" class="btn check">Conferir missão</button>
+          </div>
+          <div class="mission-nav">
+            <label for="mission-select">Escolha um exercício</label>
+            <select id="mission-select" aria-label="Escolha um dos 14 exercícios"></select>
+            <div class="mission-next"><button type="button" id="guide-prev">← Anterior</button><span id="mission-counter">01 / 14</span><button type="button" id="guide-next">Próxima →</button></div>
+          </div>
+        </div>
+      </aside>
+
+      <section class="workspace" id="laboratorio" aria-label="Código editável e resultados lado a lado">
+        <div class="workspace-toolbar">
+          <div class="workspace-identity"><strong>ProjetoUniversal.tsx</strong><span>Uma fonte real · duas instâncias</span></div>
+          <div class="pane-switch" role="tablist" aria-label="Alternar entre edição e resultado em telas estreitas">
+            <button type="button" role="tab" data-pane="code" aria-selected="true" aria-controls="code-panel" id="view-code">Código</button>
+            <button type="button" role="tab" data-pane="preview" aria-selected="false" aria-controls="result-panel" id="view-preview">Resultado</button>
+          </div>
+          <div class="toolbar-buttons"><button type="button" class="text-button" id="reset">Restaurar código</button><button type="button" class="text-button" id="download-code">Baixar .tsx</button><button type="button" class="text-button legacy" id="legacy-export" hidden>Backup v1</button></div>
+        </div>
+        <div class="workspace-panes">
+          <section class="code-panel" id="code-panel" role="tabpanel" aria-labelledby="view-code">
+            <div class="panel-caption"><span class="status-dot green" aria-hidden="true"></span><strong>Código completo e comentado</strong><span class="editable-chip">EDITÁVEL</span></div>
+            <div class="file-tabs" role="tablist" aria-label="Arquivos completos do projeto">
+              <button type="button" role="tab" aria-selected="true" aria-controls="editor-source" id="tab-shared" data-file="shared">ProjetoUniversal.tsx</button>
+              <button type="button" role="tab" aria-selected="false" aria-controls="editor-source" id="tab-route" data-file="route">Rota Expo</button>
+              <button type="button" role="tab" aria-selected="false" aria-controls="editor-source" id="tab-vue" data-file="vue">Comparar Vue</button>
             </div>
-            <p class="guide-location" id="guide-line">Arquivo: shared/ProjetoUniversal.tsx · seções [01] a [07]</p>
-            <div class="guide-tools">
-              <button class="action guide-locate" type="button" id="guide-locate">↳ Localizar no código</button>
-              <button class="action guide-test" type="button" id="guide-check">Testar esta missão</button>
+            <p id="editor-context" class="editor-context">Arquivo inteiro, comentado de [01] importações até [07] estilos.</p>
+            <div class="source-container" id="editor-source" role="tabpanel" aria-labelledby="tab-shared">
+              <label for="code" class="sr-only">Edite o código completo do componente React Native</label>
+              <textarea id="code" spellcheck="false" autocomplete="off" autocapitalize="off" autocorrect="off" wrap="off" aria-describedby="code-help"></textarea>
+              <pre id="readonly-code" hidden class="readonly-source" tabindex="0"></pre>
             </div>
-            <details class="guide-tip" id="guide-hint-box"><summary>Mostrar pista opcional</summary><p id="guide-hint">Encontre os comentários dentro do arquivo.</p></details>
-            <p class="guide-feedback" id="guide-feedback" role="status" aria-live="polite">Pendente · você pode continuar sem concluir</p>
-            <div class="guide-navigation"><button type="button" id="guide-prev">← Anterior</button><button type="button" id="guide-next">Próxima →</button></div>
+            <p id="code-help" class="sr-only">Use o botão Localizar linha, edite e clique Executar na missão à esquerda. Este é o arquivo completo.</p>
           </section>
-          <div class="file-tabs" role="tablist" aria-label="Arquivos do projeto">
-            <button type="button" role="tab" aria-selected="true" id="tab-shared" aria-controls="editor-source" data-file="shared">ProjetoUniversal.tsx <span class="edit-tag">EDITÁVEL</span></button>
-            <button type="button" role="tab" aria-selected="false" id="tab-route" aria-controls="editor-source" data-file="route">app/lab05.tsx</button>
-            <button type="button" role="tab" aria-selected="false" id="tab-vue" aria-controls="editor-source" data-file="vue">Ponte: Vue</button>
-          </div>
-          <div class="editor-notice" id="editor-context">Arquivo completo, comentado em sete blocos [01] a [07]. Use Localizar no código para ir ao ponto certo.</div>
-          <div class="source-container" id="editor-source" role="tabpanel" aria-labelledby="tab-shared">
-            <label for="code" class="sr-only">Código-fonte completo do componente universal</label>
-            <textarea id="code" spellcheck="false" autocomplete="off" autocapitalize="off" autocorrect="off" wrap="off" aria-describedby="code-help"></textarea>
-            <pre id="readonly-code" class="readonly-source" hidden tabindex="0"></pre>
-          </div>
-          <div class="editor-actions"><button type="button" class="action primary" id="run">▶ Executar nas duas telas</button><button type="button" class="action ghost" id="reset">Restaurar exemplo</button><button type="button" class="action ghost" id="download-code">Baixar .tsx</button><button type="button" class="action ghost" id="legacy-export" hidden>Backup do rascunho da versão 1</button></div>
-          <p class="editor-help" id="code-help">O código abaixo é o arquivo TSX inteiro, não um fragmento. Para começar, use “Localizar no código” no guia acima. Tab move o foco; use espaços para indentar. Execute após cada alteração. Código avaliado dentro de iframe isolado, sem envio ao professor.</p>
-          <div class="compiler-status" id="compiler-status" role="status" aria-live="polite">Carregando arquivo inicial…</div>
+          <section class="result-panel" id="result-panel" role="tabpanel" aria-labelledby="view-preview">
+            <div class="panel-caption"><span class="status-dot blue" aria-hidden="true"></span><strong>Resultado executável</strong><span class="preview-kind">Web + largura móvel</span><button type="button" id="expand-preview" class="expand-preview" aria-pressed="false">Ampliar prévias</button></div>
+            <iframe id="preview" title="Duas prévias reais do mesmo componente usando React Native Web" src="./preview.html" referrerpolicy="no-referrer" sandbox="allow-scripts"></iframe>
+            <p class="preview-caveat">As duas telas executam <strong>React Native Web</strong>. A tela estreita <strong>não</strong> é Android/iOS nativo.</p>
+          </section>
         </div>
-        <div class="preview-panel card-panel"><div class="panel-heading"><span class="panel-name"><span class="indicator blue"></span> SAÍDA · DUAS PRÉVIAS REAIS</span><span class="panel-meta">Mesmo TSX · estados separados</span></div>
-          <iframe id="preview" title="Web e prévia móvel: execução de React Native Web em sandbox isolado" sandbox="allow-scripts" referrerpolicy="no-referrer" src="./preview.html"></iframe>
-          <div class="preview-caption"><span><span class="indicator green"></span> Web: navegador</span><span><span class="indicator blue"></span> Móvel: largura simulada no navegador</span></div>
-        </div>
-      </div>
-    </section>
-    <section id="desafios" class="shell section-block" aria-labelledby="challenges-title">
-      <div class="section-heading"><span class="section-number">03 / PRATICAR</span>
-        <h2 id="challenges-title">14 exercícios, um só projeto</h2>
-        <p>Os exercícios estão organizados por ciclo: <strong>entender o todo → modificar → testar e explicar</strong>. Selecione “Abrir no editor” para levar a tarefa ao guia do laboratório. Você pode deixar desafios incompletos e registrar a pontuação atual.</p>
-      </div>
-      <div class="chapter-list" id="chapter-list"><noscript>Ative JavaScript para carregar os desafios e prévias interativas.</noscript></div>
-      <div class="activity-reminder"><strong>Aprender não é correr até os 100 XP.</strong> Cada tarefa mostra onde alterar, o que observar e por que aquilo funciona. Os exercícios finais também podem ser retomados após a aula. A aprovação exige teste real da implementação, não clicar em uma resposta pronta.</div>
-    </section>
-    <section id="evidencias" class="shell section-block evidence-section" aria-labelledby="evidencias-title">
-      <div class="section-heading"><span class="section-number">04 / REGISTRAR</span><h2 id="evidencias-title">Seu relatório de laboratório</h2><p>Exportação disponível a qualquer momento, inclusive com missões pendentes. As <strong>14 verificações</strong> somam 100 XP formativos, e o relatório registra pendências. Não substitui a avaliação E3-I1 nem exige terminar todas as tarefas.</p></div>
-      <div class="evidence-grid"><div class="evidence-form card-panel"><label for="observacao">O que você alterou? Como percebeu o efeito na Web e na prévia móvel?</label><textarea id="observacao" rows="5" placeholder="Ex.: mudei o limite para 7. As duas telas passaram a rejeitar 6 caracteres, mas os contadores continuaram independentes."></textarea><label for="limite-real">O que ainda precisa ser testado em um celular real?</label><textarea id="limite-real" rows="3" placeholder="Ex.: abrir a rota no Expo Go e conferir entrada, teclado e acessibilidade."></textarea><p class="privacy">O laboratório salva o rascunho de código, as respostas e as observações <strong>apenas neste navegador</strong>, quando o armazenamento está disponível. Os XP técnicos devem ser <strong>revalidados após recarregar</strong>, pois o código precisa ser executado novamente. Não solicita nome, turma, senha nem envia evidências automaticamente.</p></div>
-      <div class="evidence-summary card-panel"><div class="result-kicker">RESULTADO ATUAL</div><strong class="big-score"><span id="xp-evidence">0</span><small>/100 XP</small></strong><p id="evidence-count">0 exercícios concluídos · 14 pendentes</p><ul class="evidence-list" id="evidence-list"><li>Aguardando primeiras verificações.</li></ul><div class="evidence-actions"><button type="button" class="action primary" id="export-json">Exportar evidência JSON</button><button type="button" class="action secondary" id="export-md">Exportar Markdown</button><button type="button" class="action ghost" id="print">Imprimir / salvar PDF</button></div><div class="evidence-status" id="evidence-status" role="status" aria-live="polite"></div></div></div>
-      <div class="print-only" id="print-report" aria-hidden="true"></div>
-    </section>
-  </main>
-  <footer><div class="shell footer-grid"><span><strong>IFMA · Desenvolvimento de Sistemas Web</strong> · Aula 05 · laboratório comentado v2 · 2026.2</span><span>Prof. Dr. Thales Levi Azevedo Valente · <a href="../../index.html">Voltar ao portal Web</a> · <a href="https://thalesvalente.github.io/teaching-mobile/">Portal Mobile</a></span></div></footer>
+        <p id="compiler-status" class="compiler-status" role="status" aria-live="polite">Preparando código e duas prévias…</p>
+      </section>
+    </main>
+  </div>
+
+  <dialog class="resource-dialog" id="help-dialog" aria-labelledby="help-title">
+    <div class="dialog-header"><h2 id="help-title">Como funciona a bancada</h2><button type="button" class="close-dialog" data-close-dialog="help-dialog" aria-label="Fechar ajuda">×</button></div>
+    <div class="dialog-body">
+      <p><strong>Sem caça ao editor:</strong> escolha o exercício à esquerda; leia Faça → Observe → Entenda; use Localizar linha, Executar e Conferir missão sem sair desta bancada. O feedback aparece imediatamente sob o enunciado.</p>
+      <h3>O caminho da informação</h3>
+      <div class="concept-flow"><span>TextInput</span><b>→</b><span>onChangeText</span><b>→</b><span>useState</span><b>→</b><span>validarTitulo</span><b>→</b><span>Mensagem</span></div>
+      <h3>Ponte com a Aula 4</h3>
+      <div class="compare-table"><p><strong>Vue</strong><br><code>ref()</code> guarda o valor; <code>v-model</code> acompanha a digitação.</p><p><strong>React Native</strong><br><code>useState()</code> guarda o valor; <code>onChangeText</code> chama o atualizador.</p></div>
+      <p>Para ver os <strong>arquivos inteiros</strong>, use as abas <em>Comparar Vue</em>, <em>Rota Expo</em> e <em>ProjetoUniversal.tsx</em> dentro da bancada.</p>
+      <h3>Mesmo código, plataformas diferentes</h3>
+      <pre class="tree"><code>shared/ProjetoUniversal.tsx  ← fonte única
+app/lab05.tsx               ← importa o componente
+       ↙ Web (React Native Web)
+       ↘ Mobile (Expo em dispositivo real)</code></pre>
+      <p>A prévia móvel da bancada é uma renderização estreita no navegador, não um teste nativo. Também não há sincronização entre os contadores: as duas instâncias têm estado próprio.</p>
+      <p><strong>Ritmo sugerido:</strong> exercícios 01–08 durante os 100 minutos; 09–14 como aprofundamento, sem obrigação de 100 XP na mesma aula.</p>
+      <p><a href="./docs/GUIA_ALUNO.md" target="_blank" rel="noopener">Guia de consulta</a> · <a href="https://thalesvalente.github.io/teaching-mobile/" target="_blank" rel="noopener">Portal Mobile</a></p>
+    </div>
+  </dialog>
+
+  <dialog class="resource-dialog evidence-dialog" id="evidence-dialog" aria-labelledby="evidence-title">
+    <div class="dialog-header"><h2 id="evidence-title">Evidências do laboratório</h2><button type="button" class="close-dialog" data-close-dialog="evidence-dialog" aria-label="Fechar evidências">×</button></div>
+    <div class="dialog-body">
+      <p>Pode exportar <strong>agora</strong>, mesmo com exercícios pendentes. XP são formativos, não nota oficial.</p>
+      <div class="evidence-score"><strong><span id="xp-evidence">0</span>/100 XP</strong><span id="evidence-count">0 concluídos · 14 pendentes</span></div>
+      <label for="observacao">O que mudou no código e o que aconteceu nas duas prévias?</label>
+      <textarea id="observacao" rows="4" placeholder="Descreva a linha alterada e o comportamento que você observou."></textarea>
+      <label for="limite-real">O que ainda deve ser testado em um celular real?</label>
+      <textarea id="limite-real" rows="3" placeholder="Ex.: teclado e acessibilidade no Expo Go."></textarea>
+      <details><summary>Ver situação de cada exercício</summary><ul id="evidence-list" class="evidence-list"></ul></details>
+      <div class="evidence-actions"><button type="button" id="export-json" class="btn run">Exportar JSON</button><button type="button" id="export-md" class="btn secondary">Exportar Markdown</button><button type="button" id="print" class="btn secondary">Imprimir / PDF</button></div>
+      <p class="privacy">Rascunho salvo somente neste navegador, se o armazenamento estiver disponível. Código e evidências não são enviados automaticamente. Os XP técnicos são revalidados após cada edição ou recarga.</p>
+      <p id="evidence-status" role="status" aria-live="polite"></p>
+    </div>
+  </dialog>
+  <div class="print-only" id="print-report" aria-hidden="true"></div>
+  <noscript>Este laboratório exige JavaScript para editar, executar código e verificar exercícios.</noscript>
 </body>
 </html>

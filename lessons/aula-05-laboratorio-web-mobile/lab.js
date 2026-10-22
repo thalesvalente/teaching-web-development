@@ -156,9 +156,83 @@ function registrar() {
   let activeFile = 'shared';
   let activeIndex = 0;
   let ready = false, sourceLoaded = false, lastCompiled = false, pending = null;
+  let revealPreviewAfterExplicitRun = false;
   const nonce = 'aula05-' + String(Date.now()) + '-' + Math.random().toString(36).slice(2);
   const passed = Object.fromEntries(tasks.map(task => [task.id, false]));
   const completedDetail = {};
+
+  // Em vez de quatorze cartões em outra seção, há UMA missão ativa.
+  // O aluno sempre lê a instrução, edita e testa na mesma bancada.
+  const feedbackState = Object.fromEntries(tasks.map(t => [t.id, { kind: 'pending', text: 'Pendente · execute e confira nesta bancada.' }]));
+  const select = byId('mission-select');
+  const quizBank = byId('quiz-bank');
+
+  function buildMissionIndex() {
+    phases.forEach((phase, phaseIndex) => {
+      const group = document.createElement('optgroup');
+      group.label = phase.name;
+      tasks.forEach((task, index) => {
+        if (task.phase !== phaseIndex + 1) return;
+        const option = document.createElement('option');
+        option.value = task.id;
+        option.textContent = `${String(index + 1).padStart(2, '0')} · ${task.name}`;
+        group.appendChild(option);
+      });
+      select.appendChild(group);
+    });
+  }
+  buildMissionIndex();
+
+  // Os quizzes fazem parte do próprio enunciado; NÃO é preciso procurá-los embaixo.
+  const quizData = {
+    map: [
+      ['Qual recurso React guarda o texto durante a digitação?', [
+        ['a', 'useState e seu par [valor, setValor]'],
+        ['b', 'StyleSheet.create'],
+        ['c', 'Uma variável global fora do componente'],
+      ]],
+      ['Qual propriedade chama setTitulo quando o usuário digita?', [
+        ['a', 'backgroundColor'], ['b', 'onChangeText'], ['c', 'accessibilityLabel'],
+      ]],
+    ],
+    quiz: [
+      ['Por que um único TSX aparece nas duas prévias?', [
+        ['a', 'React Native Web renderiza componentes compatíveis no navegador.'],
+        ['b', 'O navegador se torna um Android real.'],
+        ['c', 'Vue converte automaticamente para React.'],
+      ]],
+      ['Como executar o mesmo componente em um celular de verdade?', [
+        ['a', 'Somente estreitando a janela do navegador.'],
+        ['b', 'Integrando o arquivo a um projeto React Native/Expo compatível.'],
+        ['c', 'Apagando todas as aulas anteriores.'],
+      ]],
+    ],
+  };
+  function buildQuizBank() {
+    for (const [id, questions] of Object.entries(quizData)) {
+      const group = document.createElement('div');
+      group.dataset.quiz = id;
+      group.hidden = true;
+      questions.forEach(([question, options], i) => {
+        const field = document.createElement('fieldset');
+        const legend = document.createElement('legend');
+        legend.textContent = question;
+        field.append(legend);
+        for (const [value, label] of options) {
+          const choice = document.createElement('label');
+          const input = document.createElement('input');
+          input.type = 'radio';
+          input.name = `${id}-q${i + 1}`;
+          input.value = value;
+          choice.append(input, document.createTextNode(label));
+          field.append(choice);
+        }
+        group.append(field);
+      });
+      quizBank.append(group);
+    }
+  }
+  buildQuizBank();
 
   function setStatus(message, error = false) {
     compilerStatus.textContent = message;
@@ -166,158 +240,59 @@ function registrar() {
   }
   function getScore() { return tasks.reduce((sum, t) => sum + (passed[t.id] ? t.xp : 0), 0); }
 
-  // Monta 14 cartões agrupados por roteiro (sem duplicar texto entre UI e lógica).
-  function makeQuiz(id) {
-    const sets = {
-      map: [
-        ['Qual recurso React guarda o texto durante a digitação?', [
-          ['a', 'useState e seu par [valor, setValor]'],
-          ['b', 'StyleSheet.create'],
-          ['c', 'Uma variável global fora do componente'],
-        ]],
-        ['Qual propriedade chama setTitulo quando o usuário digita?', [
-          ['a', 'backgroundColor'], ['b', 'onChangeText'], ['c', 'accessibilityLabel'],
-        ]],
-      ],
-      quiz: [
-        ['Por que um único TSX aparece nas duas prévias?', [
-          ['a', 'React Native Web renderiza componentes compatíveis no navegador.'],
-          ['b', 'O navegador se torna um Android real.'],
-          ['c', 'Vue converte automaticamente para React.'],
-        ]],
-        ['Como executar o mesmo componente em um celular de verdade?', [
-          ['a', 'Somente estreitando a janela do navegador.'],
-          ['b', 'Integrando o arquivo a um projeto React Native/Expo compatível.'],
-          ['c', 'Apagando todas as aulas anteriores.'],
-        ]],
-      ],
-    };
-    const fragment = document.createDocumentFragment();
-    for (const [i, [question, options]] of sets[id].entries()) {
-      const field = document.createElement('fieldset');
-      const legend = document.createElement('legend');
-      legend.textContent = question;
-      field.appendChild(legend);
-      const name = id + '-q' + (i + 1);
-      for (const [value, label] of options) {
-        const choice = document.createElement('label');
-        const radio = document.createElement('input');
-        radio.type = 'radio'; radio.name = name; radio.value = value;
-        choice.append(radio, document.createTextNode(' ' + label));
-        field.appendChild(choice);
-      }
-      fragment.appendChild(field);
-    }
-    return fragment;
-  }
-  function makeCard(task, index) {
-    const card = document.createElement('article');
-    card.className = 'challenge-card'; card.dataset.mission = task.id;
-    card.innerHTML = `<div class="challenge-header"><span class="mission-number">${String(index + 1).padStart(2, '0')}</span><span class="reward">+${task.xp} XP</span></div>`;
-    const title = document.createElement('h4'); title.textContent = task.name;
-    const action = document.createElement('p'); action.className = 'task-description'; action.textContent = task.do;
-    const observe = document.createElement('p'); observe.className = 'task-observe';
-    const strong = document.createElement('strong'); strong.textContent = 'Observe: ';
-    observe.append(strong, document.createTextNode(task.observe));
-    const tags = document.createElement('p'); tags.className = 'task-meta';
-    tags.textContent = `${index >= 8 ? 'APROFUNDAMENTO OPCIONAL · ' : 'ROTEIRO ESSENCIAL · '}${task.minutes} min · ${task.type === 'quiz' ? 'reflexão' : 'execução'}`;
-    const details = document.createElement('details'); details.className = 'task-hint';
-    const summary = document.createElement('summary'); summary.textContent = 'Preciso de uma pista';
-    const hint = document.createElement('p'); hint.textContent = task.hint;
-    details.append(summary, hint);
-    const actions = document.createElement('div'); actions.className = 'task-actions';
-    const open = document.createElement('button'); open.type = 'button';
-    open.className = 'action secondary task-open'; open.dataset.open = task.id;
-    open.textContent = 'Abrir no editor';
-    const check = document.createElement('button'); check.type = 'button';
-    check.className = 'action challenge-action'; check.dataset.check = task.id;
-    check.textContent = task.type === 'quiz' ? 'Conferir respostas' : 'Executar teste';
-    actions.append(open, check);
-    if (task.type === 'quiz') card.classList.add('quiz-card');
-    card.append(title, tags, action, observe);
-    if (task.type === 'quiz') card.appendChild(makeQuiz(task.id));
-    card.append(details, actions);
-    const feedback = document.createElement('p');
-    feedback.className = 'challenge-feedback'; feedback.dataset.feedback = task.id;
-    feedback.setAttribute('role', 'status'); feedback.setAttribute('aria-live', 'polite');
-    feedback.textContent = 'Pendente · 0 XP';
-    card.appendChild(feedback);
-    return card;
-  }
-  function createCards() {
-    phases.forEach((phase, i) => {
-      const section = document.createElement('section');
-      section.className = 'chapter'; section.dataset.chapter = String(i + 1);
-      const title = document.createElement('h3'); title.textContent = phase.name;
-      const description = document.createElement('p'); description.className = 'chapter-description';
-      description.textContent = `${phase.objective} · ${phase.time} · até ${phase.xp} XP`;
-      const grid = document.createElement('div'); grid.className = 'challenge-grid';
-      tasks.forEach((task, index) => { if (task.phase === i + 1) grid.appendChild(makeCard(task, index)); });
-      section.append(title, description, grid);
-      byId('chapter-list').appendChild(section);
-    });
-  }
-  createCards();
-
-  // O guia permanece junto do editor: um único local para LER, EDITAR e TESTAR.
+  function activeTask() { return tasks[activeIndex]; }
   function updateGuide() {
-    const task = tasks[activeIndex];
-    byId('guide-number').textContent = `EXERCÍCIO ${String(activeIndex + 1).padStart(2, '0')} / ${tasks.length} · CICLO ${task.phase} · ${activeIndex < 8 ? 'ESSENCIAL' : 'OPCIONAL'}`;
+    const task = activeTask();
+    byId('guide-number').textContent = `MISSÃO ${String(activeIndex + 1).padStart(2, '0')} / 14 · CICLO ${task.phase} · ${activeIndex < 8 ? 'ESSENCIAL' : 'APROFUNDAMENTO'}`;
+    byId('guide-time').textContent = `${task.minutes} min · +${task.xp} XP`;
     byId('guide-title').textContent = task.name;
     byId('guide-do').textContent = task.do;
     byId('guide-observe').textContent = task.observe;
     byId('guide-why').textContent = task.why;
+    byId('guide-line').textContent = `Localizar em ProjetoUniversal.tsx: ${task.focus}`;
     byId('guide-hint').textContent = task.hint;
     byId('guide-hint-box').open = false;
-    byId('guide-time').textContent = `${task.minutes} min · ${task.xp} XP`;
     byId('guide-prev').disabled = activeIndex === 0;
     byId('guide-next').disabled = activeIndex === tasks.length - 1;
-    byId('guide-check').textContent = task.type === 'quiz' ? 'Ir às perguntas da missão' : 'Testar esta missão';
-    byId('guide-feedback').textContent = passed[task.id] ? `✓ Concluída · +${task.xp} XP` : 'Pendente · você pode continuar sem concluir';
-    byId('guide-feedback').className = 'guide-feedback' + (passed[task.id] ? ' success' : '');
-    document.querySelectorAll('.challenge-card').forEach(card => {
-      card.classList.toggle('current', card.dataset.mission === task.id);
-    });
+    byId('mission-counter').textContent = `${String(activeIndex + 1).padStart(2, '0')} / 14`;
+    select.value = task.id;
+    const needsQuiz = task.type === 'quiz';
+    quizBank.hidden = !needsQuiz;
+    // Questões no topo do enunciado: no celular aparecem antes dos detalhes,
+    // enquanto o botão de conferir permanece sempre fixo no rodapé da missão.
+    if (needsQuiz) byId('guide-title').after(quizBank);
+    else byId('guide-line').after(quizBank);
+    quizBank.querySelectorAll('[data-quiz]').forEach(group => { group.hidden = group.dataset.quiz !== task.id; });
+    byId('guide-check').textContent = needsQuiz ? 'Conferir respostas' : 'Conferir missão';
+    const feedback = feedbackState[task.id];
+    const guideFeedback = byId('guide-feedback');
+    guideFeedback.className = 'mission-feedback ' + (passed[task.id] ? 'success' : feedback.kind);
+    guideFeedback.textContent = passed[task.id]
+      ? `✓ Aprovado · +${task.xp} XP · ${completedDetail[task.id] || 'verificação concluída'}`
+      : feedback.text;
   }
-  function setActive(target, scroll = false) {
-    const n = typeof target === 'number' ? target : tasks.findIndex(task => task.id === target);
-    if (n < 0 || n >= tasks.length) return;
-    activeIndex = n; updateGuide();
-    if (scroll) byId('laboratorio').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  function setActive(target) {
+    const index = typeof target === 'number' ? target : tasks.findIndex(t => t.id === target);
+    if (index < 0 || index >= tasks.length) return;
+    activeIndex = index;
+    updateGuide();
+    // Só reinicia o scroll do ENUNCIADO, não desloca toda a página.
+    byId('mission-copy').scrollTop = 0;
+    save();
   }
-  function locate() {
-    const task = tasks[activeIndex];
-    showFile('shared');
-    const pos = panels.shared.indexOf(task.focus);
-    if (pos < 0) { byId('guide-feedback').textContent = 'Trecho não encontrado. Verifique se a declaração original foi renomeada.'; return; }
-    const linesBefore = panels.shared.slice(0, pos).split('\n').length;
-    const height = Number.parseFloat(getComputedStyle(codeEditor).lineHeight) || 21;
-    codeEditor.focus({ preventScroll: true });
-    codeEditor.setSelectionRange(pos, pos + task.focus.length);
-    codeEditor.scrollTop = Math.max(0, (linesBefore - 6) * height);
-    byId('editor-source').scrollIntoView({ behavior: 'smooth', block: 'center' });
-    byId('guide-line').textContent = `Arquivo shared/ProjetoUniversal.tsx · aproximadamente linha ${linesBefore} (posição atual)`;
-  }
-
   function render() {
     const score = getScore();
     byId('xp-top').textContent = String(score);
     byId('xp-evidence').textContent = String(score);
     byId('progress-fill').style.width = score + '%';
     byId('progress').setAttribute('aria-valuenow', String(score));
-    const done = tasks.filter(t => passed[t.id]).length;
-    byId('score-summary').textContent = `${done} de ${tasks.length} exercícios concluídos · XP formativos, não nota oficial`;
-    byId('evidence-count').textContent = `${done} exercícios concluídos · ${tasks.length - done} pendentes`;
-    tasks.forEach(task => {
-      const card = document.querySelector(`[data-mission="${task.id}"]`);
-      const feedback = document.querySelector(`[data-feedback="${task.id}"]`);
-      card.classList.toggle('passed', passed[task.id]);
-      if (passed[task.id]) {
-        feedback.className = 'challenge-feedback success';
-        feedback.textContent = `✓ Concluído · +${task.xp} XP · ${completedDetail[task.id] || 'Verificação aprovada.'}`;
-      } else if (!feedback.classList.contains('failed')) {
-        feedback.className = 'challenge-feedback'; feedback.textContent = 'Pendente · 0 XP';
-      }
+    const completed = tasks.filter(t => passed[t.id]).length;
+    byId('score-summary').textContent = `${completed} de ${tasks.length} exercícios concluídos`;
+    byId('evidence-count').textContent = `${completed} concluídos · ${tasks.length - completed} pendentes`;
+    select.querySelectorAll('option').forEach((option, index) => {
+      const task = tasks.find(t => t.id === option.value);
+      const number = tasks.indexOf(task) + 1;
+      option.textContent = `${passed[task.id] ? '✓ ' : ''}${String(number).padStart(2, '0')} · ${task.name}`;
     });
     const list = byId('evidence-list'); list.replaceChildren();
     tasks.forEach(task => {
@@ -329,34 +304,34 @@ function registrar() {
   }
   function readAnswers() {
     const values = {};
-    document.querySelectorAll('input[type="radio"]').forEach(input => {
-      if (input.checked) values[input.name] = input.value;
-    });
+    quizBank.querySelectorAll('input[type="radio"]:checked').forEach(input => { values[input.name] = input.value; });
     return values;
   }
   function save() {
     try {
-      localStorage.setItem(key, JSON.stringify({ code: panels.shared, answers: readAnswers(),
-        note: byId('observacao').value, nativeNote: byId('limite-real').value }));
-    } catch { /* disponibilidade de armazenamento é opcional */ }
+      localStorage.setItem(key, JSON.stringify({
+        code: panels.shared, answers: readAnswers(), activeTask: activeTask().id,
+        note: byId('observacao').value, nativeNote: byId('limite-real').value,
+      }));
+    } catch { /* armazenamento opcional; a bancada funciona sem ele */ }
   }
   let saved = null;
-  try { saved = JSON.parse(localStorage.getItem(key) || 'null'); } catch { /* rascunho inválido */ }
+  try { saved = JSON.parse(localStorage.getItem(key) || 'null'); } catch { /* dado antigo inválido */ }
   if (saved && typeof saved === 'object') {
     if (typeof saved.note === 'string') byId('observacao').value = saved.note;
     if (typeof saved.nativeNote === 'string') byId('limite-real').value = saved.nativeNote;
     if (saved.answers && typeof saved.answers === 'object') {
-      document.querySelectorAll('input[type="radio"]').forEach(input => {
-        input.checked = saved.answers[input.name] === input.value;
-      });
+      quizBank.querySelectorAll('input[type="radio"]').forEach(input => { input.checked = saved.answers[input.name] === input.value; });
+    }
+    if (typeof saved.activeTask === 'string') {
+      const index = tasks.findIndex(t => t.id === saved.activeTask);
+      if (index >= 0) activeIndex = index;
     }
   }
-  // A versão anterior continua intacta no navegador. Exportação opcional.
+  // O rascunho v1 permanece exportável; o v2 continua na mesma chave de armazenamento.
   let legacy = null;
-  try { legacy = JSON.parse(localStorage.getItem('ifma-web-aula05-lab-v1') || 'null'); } catch { /* sem dados */ }
-  if (typeof legacy?.code === 'string' && legacy.code.length < 30000) {
-    byId('legacy-export').hidden = false;
-  }
+  try { legacy = JSON.parse(localStorage.getItem('ifma-web-aula05-lab-v1') || 'null'); } catch { /* não encontrado */ }
+  if (typeof legacy?.code === 'string' && legacy.code.length < 30000) byId('legacy-export').hidden = false;
   render();
 
   async function loadSource() {
@@ -364,98 +339,137 @@ function registrar() {
       const response = await fetch('./shared/ProjetoUniversal.tsx', { cache: 'no-store' });
       if (!response.ok) throw Error(`HTTP ${response.status}`);
       const initial = await response.text();
-      panels.shared = (typeof saved?.code === 'string' && saved.code.length < 30000) ? saved.code : initial;
+      panels.shared = typeof saved?.code === 'string' && saved.code.length < 30000 ? saved.code : initial;
       window.__IFMA_LAB_INITIAL__ = initial;
       codeEditor.value = panels.shared;
       sourceLoaded = true;
-      setStatus('Arquivo inteiro carregado. Preparando Web e prévia móvel…');
-      if (ready) run();
-    } catch (error) { setStatus(`Falha ao carregar o arquivo: ${error.message}. Abra via HTTP/HTTPS, não file://.`, true); }
+      setStatus('Arquivo completo carregado. Preparando execução nas duas telas…');
+      if (ready) run({ initial: true });
+    } catch (error) { setStatus(`Não foi possível carregar o arquivo: ${error.message}. Use HTTP/HTTPS, não file://.`, true); }
   }
   function send(type, fields = {}) {
     if (!ready || !sourceLoaded || !frame.contentWindow) { setStatus('Código ou prévia indisponível.', true); return false; }
     frame.contentWindow.postMessage({ from: 'ifma-aula05-host', type, token: nonce, ...fields }, '*');
     return true;
   }
-  function enableChecks() { document.querySelectorAll('[data-check]').forEach(button => button.disabled = false); }
+  function setPane(which) {
+    const pane = which === 'preview' ? 'preview' : 'code';
+    byId('conteudo').dataset.pane = pane;
+    document.querySelectorAll('[data-pane]').forEach(button => {
+      const chosen = button.dataset.pane === pane;
+      button.setAttribute('aria-selected', String(chosen));
+      button.tabIndex = chosen ? 0 : -1;
+    });
+  }
+  setPane('code');
+  const expandButton = byId('expand-preview');
+  expandButton.addEventListener('click', () => {
+    const workspace = byId('laboratorio');
+    const expanded = workspace.dataset.expandedPreview !== 'true';
+    workspace.dataset.expandedPreview = String(expanded);
+    expandButton.setAttribute('aria-pressed', String(expanded));
+    expandButton.textContent = expanded ? 'Voltar à divisão' : 'Ampliar prévias';
+  });
+  document.querySelectorAll('[data-pane]').forEach(button => button.addEventListener('click', () => setPane(button.dataset.pane)));
+  function locate() {
+    const task = activeTask();
+    showFile('shared');
+    if (!panels.shared) return;
+    const pos = panels.shared.indexOf(task.focus);
+    if (pos < 0) {
+      feedbackState[task.id] = { kind: 'failed', text: 'Trecho não encontrado: reveja o nome da declaração no arquivo completo.' };
+      updateGuide(); return;
+    }
+    const linesBefore = panels.shared.slice(0, pos).split('\n').length;
+    const lineHeight = Number.parseFloat(getComputedStyle(codeEditor).lineHeight) || 21;
+    setPane('code');
+    byId('laboratorio').dataset.expandedPreview = 'false';
+    expandButton.setAttribute('aria-pressed', 'false');
+    expandButton.textContent = 'Ampliar prévias';
+    codeEditor.focus({ preventScroll: true });
+    codeEditor.setSelectionRange(pos, pos + task.focus.length);
+    codeEditor.scrollTop = Math.max(0, (linesBefore - 6) * lineHeight);
+    byId('guide-line').textContent = `↳ ProjetoUniversal.tsx · linha ${linesBefore} destacada no editor ao lado`;
+  }
   function invalidateCodeTasks() {
     for (const task of tasks) {
-      // Entendimento conceitual não expira por editar uma variável; testes reais, sim.
+      // Respostas teóricas não dependem de um build anterior.
       if (task.type === 'quiz') continue;
       passed[task.id] = false;
       delete completedDetail[task.id];
-      document.querySelector(`[data-feedback="${task.id}"]`).className = 'challenge-feedback';
+      feedbackState[task.id] = { kind: 'pending', text: 'Código alterado. Execute novamente antes de conferir.' };
     }
     lastCompiled = false;
     render();
   }
-  function run() {
+  function enableChecks() { byId('guide-check').disabled = false; }
+  function run({ initial = false } = {}) {
     if (!sourceLoaded) return;
     if (activeFile !== 'shared') showFile('shared');
     panels.shared = codeEditor.value;
-    // Evita atribuir XP de uma verificação anterior a uma compilação nova.
     pending = null; enableChecks();
+    revealPreviewAfterExplicitRun = !initial;
     invalidateCodeTasks();
-    if (send('RUN', { source: panels.shared })) setStatus('Compilando o arquivo TSX inteiro…');
-    save();
+    if (send('RUN', { source: panels.shared })) setStatus('Compilando TSX completo para as duas prévias…');
+    if (!initial) save();
   }
   function showFile(which) {
     activeFile = which;
-    document.querySelectorAll('[data-file]').forEach(button => button.setAttribute('aria-selected', String(button.dataset.file === which)));
+    document.querySelectorAll('[data-file]').forEach(button => {
+      const chosen = button.dataset.file === which;
+      button.setAttribute('aria-selected', String(chosen));
+      button.tabIndex = chosen ? 0 : -1;
+    });
     byId('editor-source').setAttribute('aria-labelledby', 'tab-' + which);
     codeEditor.hidden = which !== 'shared';
     readOnly.hidden = which === 'shared';
     if (which !== 'shared') readOnly.textContent = panels[which];
-    fileContext.textContent = which === 'shared' ? 'Arquivo completo e editável · [01] importações até [07] estilos.' :
-      which === 'route' ? 'Rota Expo Router completa; demonstra onde o componente é importado.' :
-      'Exemplo Vue completo e independente para comparar o mesmo raciocínio.';
+    fileContext.textContent = which === 'shared' ? 'Arquivo inteiro: [01] importações → [07] estilos.' :
+      which === 'route' ? 'Rota completa Expo Router · importa o componente, não substitui as outras telas.' :
+      'Exemplo Vue completo · compare ref/v-model com useState/onChangeText.';
+    setPane('code');
   }
-
   function checkQuiz(id) {
-    const wanted = id === 'map' ? ['a', 'b'] : ['a', 'b'];
     const names = [id + '-q1', id + '-q2'];
-    const selected = names.map(name => document.querySelector(`input[name="${name}"]:checked`)?.value || '');
-    const feedback = document.querySelector(`[data-feedback="${id}"]`);
-    if (selected.some(value => !value)) {
-      feedback.className = 'challenge-feedback';
-      feedback.textContent = 'Você pode deixar em branco. Para ganhar XP, responda às duas perguntas.';
-      return;
+    const answers = names.map(name => quizBank.querySelector(`input[name="${name}"]:checked`)?.value || '');
+    if (answers.some(value => !value)) {
+      feedbackState[id] = { kind: 'pending', text: 'Responda às duas perguntas aqui mesmo para conferir. Pode deixá-las pendentes.' };
+      updateGuide();return;
     }
-    const ok = selected.every((value, i) => value === wanted[i]);
+    const ok = answers[0] === 'a' && answers[1] === 'b';
     passed[id] = ok;
-    if (ok) completedDetail[id] = id === 'map' ? 'useState armazena; onChangeText atualiza.' :
-      'RNWeb renderiza na Web; Expo permite execução nativa.';
+    if (ok) completedDetail[id] = id === 'map' ? 'useState guarda; onChangeText atualiza.' :
+      'React Native Web renderiza no navegador; Expo permite execução em dispositivo real.';
     else delete completedDetail[id];
-    feedback.className = 'challenge-feedback' + (ok ? ' success' : ' failed');
-    feedback.textContent = ok ? '✓ Correto: você identificou a relação entre código e resultado.' :
-      id === 'map' ? 'Procure a seção [04] e a propriedade onChangeText na seção [06].' :
-        'Uma prévia de largura móvel não é execução Android/iOS. Consulte o mapa de arquivos.';
+    feedbackState[id] = ok
+      ? { kind: 'success', text: '✓ Você identificou a relação entre código e resultado.' }
+      : { kind: 'failed', text: id === 'map' ? 'Revise [04] e onChangeText no bloco [06].' : 'Prévia móvel não é execução Android/iOS; consulte Como funciona.' };
     render(); save();
   }
   function checkTask(id) {
-    const task = tasks.find(x => x.id === id);
+    const task = tasks.find(t => t.id === id);
     if (!task) return;
     if (task.type === 'quiz') { checkQuiz(id); return; }
-    const feedback = document.querySelector(`[data-feedback="${id}"]`);
     if (!ready || !lastCompiled) {
-      feedback.className = 'challenge-feedback failed';
-      feedback.textContent = 'Execute o arquivo atualizado antes de testar esta missão.';
-      if (tasks[activeIndex].id === id) byId('guide-feedback').textContent = feedback.textContent;
-      return;
+      feedbackState[id] = { kind: 'failed', text: 'Primeiro clique Executar. Depois confira esta missão aqui.' };
+      updateGuide(); return;
     }
     if (pending !== null) return;
     pending = id;
-    document.querySelectorAll('[data-check]').forEach(button => button.disabled = true);
-    feedback.className = 'challenge-feedback';
-    feedback.textContent = 'Testando a aplicação executada nas duas prévias…';
-    byId('guide-feedback').textContent = feedback.textContent;
+    byId('guide-check').disabled = true;
+    feedbackState[id] = { kind: 'pending', text: 'Testando o código executado nas duas prévias…' };
+    updateGuide();
     if (!send('CHECK', { stage: id })) { pending = null; enableChecks(); }
   }
-
-  byId('run').addEventListener('click', run);
+  select.addEventListener('change', () => setActive(select.value));
+  byId('guide-prev').addEventListener('click', () => setActive(activeIndex - 1));
+  byId('guide-next').addEventListener('click', () => setActive(activeIndex + 1));
+  byId('guide-locate').addEventListener('click', locate);
+  byId('guide-check').addEventListener('click', () => checkTask(activeTask().id));
+  byId('run').addEventListener('click', () => run());
   byId('reset').addEventListener('click', () => {
     if (!window.__IFMA_LAB_INITIAL__) return;
-    if (!confirm('Restaurar o exemplo completo? As alterações locais do editor serão substituídas.')) return;
+    if (!confirm('Restaurar o arquivo original? O código que você editou será substituído, mas as observações continuam.')) return;
     panels.shared = window.__IFMA_LAB_INITIAL__;
     codeEditor.value = panels.shared;
     run();
@@ -463,70 +477,70 @@ function registrar() {
   codeEditor.addEventListener('input', () => {
     panels.shared = codeEditor.value;
     invalidateCodeTasks(); save();
-    setStatus('Código alterado. Clique em Executar nas duas telas para conferir.');
+    setStatus('Código modificado. Clique Executar ao lado da missão para ver o resultado.');
+  });
+  codeEditor.addEventListener('keydown', event => {
+    if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
+      event.preventDefault();run();
+    }
   });
   document.querySelectorAll('[data-file]').forEach(button => button.addEventListener('click', () => showFile(button.dataset.file)));
-  byId('guide-prev').addEventListener('click', () => setActive(activeIndex - 1));
-  byId('guide-next').addEventListener('click', () => setActive(activeIndex + 1));
-  byId('guide-locate').addEventListener('click', locate);
-  byId('guide-check').addEventListener('click', () => {
-    const t = tasks[activeIndex];
-    if (t.type === 'quiz') {
-      document.querySelector(`[data-mission="${t.id}"]`).scrollIntoView({ behavior: 'smooth', block: 'center' });
-    } else checkTask(t.id);
-  });
-  document.querySelectorAll('[data-open]').forEach(button => button.addEventListener('click', () => {
-    setActive(button.dataset.open, true);
-  }));
-  document.querySelectorAll('[data-check]').forEach(button => button.addEventListener('click', () => checkTask(button.dataset.check)));
-  document.querySelectorAll('input[type="radio"]').forEach(input => input.addEventListener('change', () => {
+  quizBank.querySelectorAll('input[type="radio"]').forEach(input => input.addEventListener('change', () => {
     const id = input.name.startsWith('map-') ? 'map' : 'quiz';
     passed[id] = false;
     delete completedDetail[id];
-    document.querySelector(`[data-feedback="${id}"]`).className = 'challenge-feedback';
-    render(); save();
+    feedbackState[id] = { kind: 'pending', text: 'Resposta alterada. Clique Conferir respostas quando desejar.' };
+    render();save();
   }));
   byId('observacao').addEventListener('input', save);
   byId('limite-real').addEventListener('input', save);
 
-  // Protocolo de comunicação: validar origem da janela e nonce da execução.
+  // O mesmo iframe permanece isolado; a bancada apenas consome resultados verificados.
   window.addEventListener('message', event => {
     if (event.source !== frame.contentWindow) return;
     const data = event.data;
     if (!data || data.from !== 'ifma-aula05') return;
-    if (data.type === 'READY') { ready = true; if (sourceLoaded) run(); return; }
+    if (data.type === 'READY') { ready = true; if (sourceLoaded) run({ initial: true }); return; }
     if (data.token !== nonce) return;
     if (data.type === 'COMPILED') {
       lastCompiled = !!data.ok;
-      setStatus(data.ok ? '✓ Executado nas duas prévias com React Native Web. Estados independentes.' :
-        `Erro de compilação/execução: ${data.detail || 'revise o arquivo completo.'}`, !data.ok);
+      setStatus(data.ok ? '✓ Executado nas duas prévias React Native Web. Estados independentes.' :
+        `Erro no código: ${data.detail || 'revise o arquivo completo.'}`, !data.ok);
+      if (data.ok && revealPreviewAfterExplicitRun && window.matchMedia('(max-width: 1040px)').matches) setPane('preview');
+      revealPreviewAfterExplicitRun = false;
     } else if (data.type === 'CHECKED' && data.stage === pending) {
-      const id = pending; pending = null; enableChecks();
+      const id = pending; pending = null;enableChecks();
       passed[id] = !!data.ok;
       if (data.ok) completedDetail[id] = data.detail;
       else delete completedDetail[id];
-      const feedback = document.querySelector(`[data-feedback="${id}"]`);
-      feedback.className = 'challenge-feedback' + (data.ok ? ' success' : ' failed');
-      feedback.textContent = data.ok ? `✓ Aprovado · ${data.detail}` : `Revisar · ${data.detail}`;
-      render(); save();
-      if (!data.ok && tasks[activeIndex].id === id) {
-        byId('guide-feedback').textContent = feedback.textContent;
-        byId('guide-feedback').className = 'guide-feedback failed';
-      }
+      feedbackState[id] = data.ok
+        ? { kind: 'success', text: `✓ Aprovado · ${data.detail}` }
+        : { kind: 'failed', text: `Revisar · ${data.detail}` };
+      render();save();
     }
   });
 
+  // Ajuda e evidências são janelas auxiliares; a bancada jamais perde seu lugar.
+  for (const [buttonId, dialogId] of [['help-open','help-dialog'],['evidence-open','evidence-dialog']]) {
+    byId(buttonId).addEventListener('click', () => byId(dialogId).showModal());
+  }
+  document.querySelectorAll('[data-close-dialog]').forEach(button => button.addEventListener('click', () => byId(button.dataset.closeDialog).close()));
+  document.querySelectorAll('dialog.resource-dialog').forEach(dialog => {
+    dialog.addEventListener('click', event => { if (event.target === dialog) dialog.close(); });
+  });
+
   function evidence() {
-    return { schema: 'ifma-web-aula05-lab-v2', geradoEm: new Date().toISOString(),
-      atividade: 'Aula 05 — Um código, duas telas · versão comentada',
+    return { schema: 'ifma-web-aula05-lab-v3', geradoEm: new Date().toISOString(),
+      atividade: 'Aula 05 — Bancada Web ↔ Mobile · interface sem navegação longa',
       tipo: 'formativo-nao-e-nota', xp: getScore(), maximoXp: TOTAL_XP,
-      exercicios: tasks.map(t => ({ id: t.id, ciclo: t.phase, titulo: t.name, xp: passed[t.id] ? t.xp : 0,
-        maximoXp: t.xp, estado: passed[t.id] ? 'APROVADO' : 'PENDENTE', comentario: completedDetail[t.id] || null })),
+      exercicios: tasks.map(task => ({ id: task.id, ciclo: task.phase, titulo: task.name,
+        xp: passed[task.id] ? task.xp : 0, maximoXp: task.xp,
+        estado: passed[task.id] ? 'APROVADO' : 'PENDENTE', comentario: completedDetail[task.id] || null })),
       observacao: byId('observacao').value, testeNativoPendente: byId('limite-real').value,
       codigoFonteCompleto: panels.shared,
-      ressalvas: ['Prévia de largura móvel = React Native Web no navegador, NÃO Android/iOS real.',
-        'O mesmo código não sincroniza estados ou dados entre dispositivos.',
-        'Nenhum envio automático e nenhuma nota oficial.', 'Testes automáticos não substituem análise humana.'] };
+      ressalvas: ['Prévia móvel = React Native Web estreito, NÃO dispositivo Android/iOS.',
+        'Compartilhar componente não sincroniza dados.',
+        'Os XP não constituem nota oficial.', 'Não existe envio automático ao professor.'] };
   }
   function download(name, content, type) {
     const url = URL.createObjectURL(new Blob([content], { type }));
@@ -536,10 +550,10 @@ function registrar() {
     byId('evidence-status').textContent = `Arquivo ${name} preparado para salvar.`;
   }
   byId('download-code').addEventListener('click', () => download('ProjetoUniversal.tsx', panels.shared, 'text/plain;charset=utf-8'));
-  byId('export-json').addEventListener('click', () => download('Aula05_Laboratorio_Evidencia_v2.json', JSON.stringify(evidence(), null, 2), 'application/json;charset=utf-8'));
   byId('legacy-export').addEventListener('click', () => {
     if (typeof legacy?.code === 'string') download('Aula05_Rascunho_v1_Backup.tsx', legacy.code, 'text/plain;charset=utf-8');
   });
+  byId('export-json').addEventListener('click', () => download('Aula05_Laboratorio_Evidencia_v3.json', JSON.stringify(evidence(), null, 2), 'application/json;charset=utf-8'));
   function reportText() {
     const data = evidence();
     const lines = ['# Aula 05 — Laboratório Web ↔ Mobile', '', `Gerado em: ${data.geradoEm}`,
@@ -551,11 +565,10 @@ function registrar() {
       '', '## Arquivo completo entregue', '```tsx', data.codigoFonteCompleto, '```', '');
     return lines.join('\n');
   }
-  byId('export-md').addEventListener('click', () => download('Aula05_Laboratorio_Evidencia_v2.md', reportText(), 'text/markdown;charset=utf-8'));
+  byId('export-md').addEventListener('click', () => download('Aula05_Laboratorio_Evidencia_v3.md', reportText(), 'text/markdown;charset=utf-8'));
   byId('print').addEventListener('click', () => {
     byId('print-report').textContent = reportText().split('## Arquivo completo entregue')[0];
     window.print();
   });
-
   loadSource();
 })();
