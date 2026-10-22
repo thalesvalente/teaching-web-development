@@ -16,3 +16,35 @@
 .expand-preview{margin-left:auto;border:1px solid #b4d3bf;background:#fff;border-radius:5px;color:#154f31;min-height:26px;padding:3px 7px;font-size:10px;font-weight:750}
 @media(min-width:1041px){.workspace[data-expanded-preview="true"] .code-panel{display:none}.workspace[data-expanded-preview="true"] .workspace-panes{display:flex}.workspace[data-expanded-preview="true"] .result-panel{flex:1}}
 @media(max-width:1040px){.expand-preview,.preview-kind{display:none}}
+
+
+/* Laboratório Vivo v4: definição, ação e prova pertencem à missão atual. */
+.key-concept{background:#e9f4ed;border:1px solid #b9d9c2;border-radius:7px;padding:9px 10px;margin:0 0 9px}
+.key-concept strong{display:block;font-size:11px;font-weight:900;color:#115036;margin-bottom:3px}
+.key-concept p{font-size:12px;line-height:1.38;color:#214c34;overflow-wrap:anywhere}
+.mission-test{margin-top:9px;border:1px solid #d1e0ed;border-left:4px solid #2a6d93;background:#f2f7fc;border-radius:7px;padding:8px 10px;font-size:12px;line-height:1.42;color:#214a60;overflow-wrap:anywhere}
+.mission-test strong{color:#164d6c}
+.migration-note{flex:0 0 auto;font-size:11px;line-height:1.35;padding:7px 11px;background:#fff2d6;color:#67470f;border-bottom:1px solid #e0c99a;overflow-wrap:anywhere}
+.migration-note[hidden]{display:none!important}
+.glossary{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:0 0 16px}
+.glossary>div{border:1px solid #cadccb;border-radius:7px;padding:10px;background:#f8fbf8}
+.glossary dt{font-size:13px;font-weight:850;color:#115337;margin-bottom:3px}
+.glossary dd{font-size:12px;line-height:1.5;margin:0;color:#2c4937}
+.glossary code{font-size:11px;overflow-wrap:anywhere}
+@media(min-width:711px){
+  .mission-copy{padding:14px 15px 7px}
+  .mission-intro{margin-bottom:9px}
+  .mission-panel h1{margin:7px 0}
+  .mission-directions{gap:6px}
+  .direction{padding:7px 9px}
+  .direction h2{margin-bottom:2px}
+  .direction p{line-height:1.35}
+}
+@media(max-width:710px){
+  .key-concept{padding:5px 8px;margin-bottom:5px}
+  .key-concept strong{font-size:10px;margin-bottom:1px}
+  .key-concept p{font-size:11px;line-height:1.25}
+  .mission-test{padding:5px 8px;margin-top:5px;font-size:11px;line-height:1.3}
+  .glossary{grid-template-columns:1fr}
+  .migration-note{font-size:10px;padding:5px 8px}
+}
