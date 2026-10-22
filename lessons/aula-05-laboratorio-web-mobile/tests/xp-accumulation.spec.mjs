@@ -134,7 +134,7 @@ test('mudar respostas depois de obter XP conceituais não subtrai pontuação',a
   await page.locator('#quiz-bank input[name="map-q1"][value="c"]').check();
   await waitXp(page,5);
   await page.locator('#guide-check').click();
-  await expect(page.locator('#guide-feedback')).toContainText('Revisar código atual');
+  await expect(page.locator('#guide-feedback')).toContainText('Revisar resposta atual');
   await waitXp(page,5);
 });
 
