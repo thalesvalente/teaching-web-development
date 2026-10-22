@@ -219,7 +219,14 @@ function registrar() {
   let ready = false, sourceLoaded = false, lastCompiled = false, pending = null;
   let revealPreviewAfterExplicitRun = false;
   const nonce = 'aula05-' + String(Date.now()) + '-' + Math.random().toString(36).slice(2);
+  // XP são conquistas históricas e cumulativas, não a nota de uma fotografia
+  // instantânea do código. A validação atual é indicada no feedback separado.
   const passed = Object.fromEntries(tasks.map(task => [task.id, false]));
+  const codeTaskIds = tasks.filter(task => task.type === 'code').map(task => task.id);
+  let sourceRevision = 0;    // Muda apenas quando o TSX é editado/restaurado.
+  let runSequence = 0;       // Evita aceitar respostas de compilações antigas.
+  let reviewPending = false; // Conferência coletiva em curso.
+  let reviewAfterCompile = false;
   const completedDetail = {};
 
   // Em vez de quatorze cartões em outra seção, há UMA missão ativa.
@@ -332,10 +339,21 @@ function registrar() {
     byId('guide-check').textContent = needsQuiz ? 'Conferir respostas' : 'Conferir missão';
     const feedback = feedbackState[task.id];
     const guideFeedback = byId('guide-feedback');
-    guideFeedback.className = 'mission-feedback ' + (passed[task.id] ? 'success' : feedback.kind);
-    guideFeedback.textContent = passed[task.id]
-      ? `✓ Aprovado · +${task.xp} XP · ${completedDetail[task.id] || 'verificação concluída'}`
-      : feedback.text;
+    // O XP já ganho não some quando o aluno segue editando. Mas uma falha
+    // na versão atual é mostrada claramente, sem falsa aprovação técnica.
+    if (passed[task.id] && feedback.kind === 'failed') {
+      guideFeedback.className = 'mission-feedback failed';
+      guideFeedback.textContent = `Revisar código atual · +${task.xp} XP conquistados preservados. ${feedback.text}`;
+    } else if (passed[task.id] && feedback.kind === 'pending' &&
+               feedback.text !== 'Pendente · execute e confira nesta bancada.') {
+      guideFeedback.className = 'mission-feedback pending';
+      guideFeedback.textContent = `✓ +${task.xp} XP já conquistados · ${feedback.text}`;
+    } else {
+      guideFeedback.className = 'mission-feedback ' + (passed[task.id] ? 'success' : feedback.kind);
+      guideFeedback.textContent = passed[task.id]
+        ? `✓ Aprovado · +${task.xp} XP · ${completedDetail[task.id] || 'verificação concluída'}`
+        : feedback.text;
+    }
   }
   function setActive(target) {
     const index = typeof target === 'number' ? target : tasks.findIndex(t => t.id === target);
