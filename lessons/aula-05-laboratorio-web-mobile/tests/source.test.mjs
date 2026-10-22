@@ -85,3 +85,26 @@ test('documentação conserva orientações Expo nativo, extensão e 100 minutos
   assert.match(read('docs/ROTEIRO-DOCENTE.md'),/100 minutos/);
   assert.match(read('README.md'),/14|quatorze/);
 });
+
+
+test('regra visual e accessibilityHint reutilizam literalmente a mesma orientação dinâmica', () => {
+  assert.match(source, /const orientacao = `Digite de \$\{MINIMO_CARACTERES\} a \$\{MAXIMO_CARACTERES\} caracteres/);
+  assert.match(source, /accessibilityHint=\{orientacao\}/);
+  assert.match(source, /testID="ajuda-titulo"[\s\S]*?\{orientacao\}/);
+  assert.match(source, /testID="contador-caracteres"[\s\S]*?titulo\.trim\(\)\.length/);
+  assert.match(source, /placeholder=\{DICA_CAMPO\}/);
+  assert.match(source, /ajudaCampo: \{/);
+});
+
+test('Laboratório Vivo contextualiza conceitos, ações e testes sem descartar rascunhos', () => {
+  assert.match(html, /Laboratório Vivo/);
+  for (const id of ['guide-concept', 'guide-test', 'migration-note']) assert.ok(html.includes('id="' + id + '"'));
+  assert.match(ui, /const tutorial = \{/);
+  assert.match(ui, /ifma-web-aula05-lab-v4/);
+  assert.match(ui, /ifma-web-aula05-lab-v2/);
+  assert.match(ui, /Baixar meu código anterior/);
+  assert.match(html, /accessibilityHint/);
+  assert.match(css, /\.key-concept\{/);
+  assert.match(css, /\.mission-test\{/);
+  assert.match(css, /\.glossary\{/);
+});
