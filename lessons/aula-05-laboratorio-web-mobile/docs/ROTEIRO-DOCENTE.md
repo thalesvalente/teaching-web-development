@@ -1,8 +1,8 @@
-# Aula 05 — Roteiro docente: bancada Web ↔ Mobile v3
+# Aula 05 — Roteiro docente: Laboratório Vivo Web ↔ Mobile v4
 
 ## Mudança de metodologia
 
-A página anterior dividia aprendizagem em três grandes seções: contextualização, editor, cartões com exercícios. A ação indicada em um cartão ficava em outra posição da página, forçando a turma a subir e descer para testar. **Na v3, a missão, suas ações, o código e a prévia compõem um único posto de trabalho**, com uma missão ativa de cada vez. Testes e quizzes são resolvidos no painel da própria tarefa.
+A página anterior dividia aprendizagem em três grandes seções: contextualização, editor, cartões com exercícios. A ação indicada em um cartão ficava em outra posição da página, forçando a turma a subir e descer para testar. **No Laboratório Vivo v4, a missão, conceito-chave, teste concreto, código e prévia compõem um único posto de trabalho**, com uma missão ativa de cada vez. Testes e quizzes são resolvidos no painel da própria tarefa.
 
 Preservamos as **14 missões e 100 XP formativos**, o código React Native TSX comentado e a execução Web/visualização estreita. Não mudamos o contrato de avaliação E3-I1 da Aula 4 e não substituímos o repositório Mobile nem o Vue anterior.
 
@@ -35,3 +35,16 @@ Os exercícios 09–14 são extensão para outro momento. Não transformar pontu
 - Prévia móvel estreita não equivale a React Native em Android/iOS real; validar com Expo em aparelho quando disponível.
 - Revisão automatizada Chromium/Node não certifica WCAG 2.2 AA; revisar zoom, navegação assistiva e foco.
 - Alteração da stack/scope curricular da Aula 5 exige registro de replanejamento conforme regras do curso, sem desconsiderar a trajetória Vue já feita.
+
+## Microintervenção sobre `TextInput`, dica e acessibilidade (5–8 minutos)
+
+Abra a missão 04. Peça que um estudante identifique primeiro o **rótulo** (“Título da memória”), depois o **exemplo** (placeholder). Pergunte: “Onde a regra de 5 a 60 aparece quando o aluno já está digitando?” Agora há um `Text` **sempre visível** abaixo do campo. Explique que `accessibilityHint` oferece orientação à tecnologia assistiva, mas não substitui a instrução para quem lê a tela.
+
+Em seguida, no bloco [02], modifique `MINIMO_CARACTERES` para 7 e execute. Aponte a mesma variável `orientacao` no `accessibilityHint` e no `Text` visual. Solicite um caso de seis caracteres (rejeitado) e outro de sete (aceito). Finalmente, mostre que cada instância Web e prévia móvel mantém estado próprio.
+
+Esta microintervenção não cria uma prova extra: é diagnóstico formativo e observação do modelo mental. Preserve o ritmo original da aula e não exija 100 XP num único encontro.
+
+## Atualização sem perda de trabalhos
+
+O laboratório v4 inicia com um exemplo corrigido; não substitui automaticamente um TSX salvo no navegador na versão anterior. Havendo código anterior, aparece a opção de **baixar backup**. Oriente que o estudante compare e reaplique apenas suas próprias alterações, sem fazer sobrescrita automática.
+
