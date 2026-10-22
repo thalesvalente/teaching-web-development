@@ -72,7 +72,9 @@ test('rascunho preservado e evidências parciais acessíveis por janela local', 
   assert.match(ui,/ifma-web-aula05-lab-v2/);
   assert.match(ui,/ifma-web-aula05-lab-v1/);
   assert.match(ui,/ifma-web-aula05-lab-v4/);
-  assert.match(ui,/delete completedDetail\[task\.id\]/);
+  assert.match(ui,/function markCodeForReview/);
+  assert.doesNotMatch(ui,/passed\[task\.id\]\s*=\s*false/);
+  assert.match(ui,/function startReview/);
   assert.match(ui,/if \(task\.type === 'quiz'\) continue/);
   assert.match(ui,/exercicios: tasks\.map/);
   assert.match(ui,/PENDENTE/);
@@ -107,4 +109,19 @@ test('Laboratório Vivo contextualiza conceitos, ações e testes sem descartar 
   assert.match(css, /\.key-concept\{/);
   assert.match(css, /\.mission-test\{/);
   assert.match(css, /\.glossary\{/);
+});
+
+test('XP acumulativos sobrevivem à edição, ao rerun e à reprovação posterior', () => {
+  const preview = read('preview.js');
+  for (const token of ['reviewPending','sourceRevision','runSequence','CHECKED_ALL']) {
+    assert.ok(ui.includes(token), 'Mecanismo de progresso ausente: ' + token);
+  }
+  assert.match(ui, /if \(data\.ok === true\) \{\s*passed\[id\] = true/);
+  assert.doesNotMatch(ui, /passed\[id\]\s*=\s*!!data\.ok/);
+  assert.match(ui, /XP conquistados não desaparecem/);
+  assert.match(preview, /const codeStages = Object\.freeze/);
+  assert.match(preview, /msg\.type === 'CHECK_ALL'/);
+  for(const id of ['review-xp','review-xp-dialog','review-status']) {
+    assert.ok(html.includes('id="' + id + '"'), 'Controle de progresso ausente: ' + id);
+  }
 });
