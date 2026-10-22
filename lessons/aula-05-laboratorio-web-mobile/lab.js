@@ -378,12 +378,23 @@ function registrar() {
       localStorage.setItem(key, JSON.stringify({
         code: panels.shared, answers: readAnswers(), activeTask: activeTask().id,
         note: byId('observacao').value, nativeNote: byId('limite-real').value,
+        completed: tasks.filter(t => passed[t.id]).map(t => t.id),
+        details: Object.fromEntries(tasks.filter(t => passed[t.id]).map(t => [t.id, completedDetail[t.id] || 'Concluído em sessão anterior'])),
       }));
     } catch { /* armazenamento opcional; a bancada funciona sem ele */ }
   }
   let saved = null;
   try { saved = JSON.parse(localStorage.getItem(key) || 'null'); } catch { /* dado antigo inválido */ }
   if (saved && typeof saved === 'object') {
+    // Retomar pontuação formativa previamente conferida; não equivale a nota.
+    if (Array.isArray(saved.completed) && saved.completed.length <= tasks.length) {
+      for (const id of saved.completed) {
+        if (typeof id !== 'string' || !Object.hasOwn(passed, id)) continue;
+        passed[id] = true;
+        completedDetail[id] = typeof saved.details?.[id] === 'string'
+          ? saved.details[id].slice(0, 250) : 'Concluído em sessão anterior';
+      }
+    }
     if (typeof saved.note === 'string') byId('observacao').value = saved.note;
     if (typeof saved.nativeNote === 'string') byId('limite-real').value = saved.nativeNote;
     if (saved.answers && typeof saved.answers === 'object') {
@@ -487,7 +498,7 @@ function registrar() {
     panels.shared = codeEditor.value;
     pending = null; enableChecks();
     revealPreviewAfterExplicitRun = !initial;
-    invalidateCodeTasks();
+    if (!initial) invalidateCodeTasks();
     if (send('RUN', { source: panels.shared })) setStatus('Compilando TSX completo para as duas prévias…');
     if (!initial) save();
   }
@@ -584,6 +595,10 @@ function registrar() {
       lastCompiled = !!data.ok;
       setStatus(data.ok ? '✓ Executado nas duas prévias React Native Web. Estados independentes.' :
         `Erro no código: ${data.detail || 'revise o arquivo completo.'}`, !data.ok);
+      if (!data.ok) {
+        // Compilação inválida não pode manter XP técnicos previamente restaurados.
+        invalidateCodeTasks(); save();
+      }
       if (data.ok && revealPreviewAfterExplicitRun && window.matchMedia('(max-width: 1040px)').matches) setPane('preview');
       revealPreviewAfterExplicitRun = false;
     } else if (data.type === 'CHECKED' && data.stage === pending) {
@@ -631,6 +646,93 @@ function registrar() {
   byId('legacy-export').addEventListener('click', () => {
     if (typeof legacy?.code === 'string') download('Aula05_Rascunho_' + legacyTag + '_Backup.tsx', legacy.code, 'text/plain;charset=utf-8');
   });
+  // Arquivo de continuidade é distinto da evidência enviada ao professor:
+  // contém código, missão atual, respostas e checkpoints formativos.
+  function checkpoint() {
+    return {
+      schema: 'ifma-web-aula05-checkpoint-v1',
+      savedAt: new Date().toISOString(),
+      code: panels.shared,
+      activeTask: activeTask().id,
+      answers: readAnswers(),
+      completed: tasks.filter(t => passed[t.id]).map(t => t.id),
+      details: Object.fromEntries(tasks.filter(t => passed[t.id]).map(t => [t.id, completedDetail[t.id] || 'Concluído'])),
+      note: byId('observacao').value,
+      nativeNote: byId('limite-real').value,
+      xp: getScore(),
+      warning: 'XP formativos, não nota oficial. Revalidar tarefas se modificar o código.'
+    };
+  }
+  function progressMessage(message, error = false) {
+    const target = byId('progress-status');
+    target.textContent = message;
+    target.dataset.kind = error ? 'error' : 'success';
+  }
+  function exportCheckpoint() {
+    save();
+    download('Aula05_Continuar_Depois.json', JSON.stringify(checkpoint(), null, 2), 'application/json;charset=utf-8');
+    progressMessage('Progresso exportado. Guarde o JSON para retomar neste ou em outro dispositivo.');
+  }
+  function restoreCheckpoint(data) {
+    if (!data || typeof data !== 'object' || Array.isArray(data)) throw Error('JSON inválido.');
+    const isCheckpoint = data.schema === 'ifma-web-aula05-checkpoint-v1';
+    const isEvidence = data.schema === 'ifma-web-aula05-lab-v4';
+    if (!isCheckpoint && !isEvidence) throw Error('Este arquivo não é um progresso da Aula 05.');
+    const source = isCheckpoint ? data.code : data.codigoFonteCompleto;
+    if (typeof source !== 'string' || !source.trim() || source.length > 30000)
+      throw Error('O arquivo não contém código TSX válido.');
+    const ids = isCheckpoint ? data.completed : Array.isArray(data.exercicios)
+      ? data.exercicios.filter(ex => ex && ex.estado === 'APROVADO').map(ex => ex.id) : [];
+    if (!Array.isArray(ids) || ids.length > tasks.length || new Set(ids).size !== ids.length ||
+        ids.some(id => !Object.hasOwn(passed, id))) throw Error('Lista de exercícios inválida.');
+    const answerMap = isCheckpoint ? data.answers : data.progressoTutorial?.answers;
+    if (answerMap != null && (typeof answerMap !== 'object' || Array.isArray(answerMap)))
+      throw Error('Respostas inválidas.');
+    const answers = answerMap || {};
+    // Não reconhecer XP de quiz sem suas respostas; o estudante pode refazê-lo.
+    const quizValid = id => (id === 'map' || id === 'quiz') &&
+      answers[id + '-q1'] === 'a' && answers[id + '-q2'] === 'b';
+    const restored = ids.filter(id => !['map','quiz'].includes(id) || quizValid(id));
+    const computed = restored.reduce((n,id)=>n+tasks.find(t=>t.id===id).xp,0);
+    if (isCheckpoint && (!Number.isSafeInteger(data.xp) ||
+        data.xp !== ids.reduce((n,id)=>n+tasks.find(t=>t.id===id).xp,0)))
+      throw Error('Pontuação inconsistente no arquivo.');
+    if (!confirm('Retomar o arquivo selecionado? O código e o progresso desta sessão serão substituídos.')) return;
+    panels.shared = source;
+    codeEditor.value = source;
+    for (const task of tasks) {
+      passed[task.id] = restored.includes(task.id);
+      delete completedDetail[task.id];
+      if (passed[task.id]) completedDetail[task.id] = 'Restaurado do JSON · XP formativo';
+      feedbackState[task.id] = {kind:'pending',text:'Progresso restaurado. Execute e confira novamente se editar.'};
+    }
+    quizBank.querySelectorAll('input[type="radio"]').forEach(input => {
+      input.checked = answers[input.name] === input.value;
+    });
+    byId('observacao').value = String((isCheckpoint ? data.note : data.observacao) || '').slice(0,2000);
+    byId('limite-real').value = String((isCheckpoint ? data.nativeNote : data.testeNativoPendente) || '').slice(0,1000);
+    const selected = isCheckpoint ? data.activeTask : data.progressoTutorial?.activeTask;
+    activeIndex = Math.max(0, tasks.findIndex(t=>t.id===selected));
+    showFile('shared');
+    render();save();
+    run({initial:true});
+    progressMessage('Progresso retomado: '+computed+'/100 XP formativos. Código e respostas restaurados; quizzes sem respostas verificáveis ficam pendentes.');
+  }
+  const fileInput = byId('progress-file');
+  fileInput.addEventListener('change', async () => {
+    const file = fileInput.files?.[0];
+    if (!file) return;
+    try {
+      if (file.size > 100000) throw Error('Arquivo excede 100 KB.');
+      const raw = await file.text();
+      restoreCheckpoint(JSON.parse(raw));
+    } catch (error) {
+      progressMessage('Não foi possível retomar: '+String(error.message || error), true);
+    } finally { fileInput.value = ''; }
+  });
+  for (const id of ['save-progress','dialog-save-progress']) byId(id).addEventListener('click', exportCheckpoint);
+  for (const id of ['load-progress','dialog-load-progress']) byId(id).addEventListener('click', () => fileInput.click());
+
   byId('export-json').addEventListener('click', () => download('Aula05_Laboratorio_Evidencia_v4.json', JSON.stringify(evidence(), null, 2), 'application/json;charset=utf-8'));
   function reportText() {
     const data = evidence();
@@ -644,10 +746,14 @@ function registrar() {
     return lines.join('\n');
   }
   byId('export-md').addEventListener('click', () => download('Aula05_Laboratorio_Evidencia_v4.md', reportText(), 'text/markdown;charset=utf-8'));
-  byId('print').addEventListener('click', () => {
-    byId('print-report').textContent = reportText().split('## Arquivo completo entregue')[0];
+  function printPartial() {
+    const current = evidence();
+    byId('print-report').textContent = reportText().split('## Arquivo completo entregue')[0] +
+      '\n\nRelatório parcial: ' + current.exercicios.filter(ex => ex.estado === 'APROVADO').length +
+      ' de 14 missões concluídas; ' + (14 - current.exercicios.filter(ex => ex.estado === 'APROVADO').length) + ' de 14 pendentes.\\n';
     window.print();
-  });
+  }
+  for (const id of ['print','quick-pdf','dialog-pdf']) byId(id).addEventListener('click', printPartial);
   // Integração externa só pode obter o mesmo snapshot usado nos exports.
   // O Apps Script recebe evidência relatada, não um certificado de nota.
   window.WebLabEvidence = Object.freeze({ snapshot: evidence });
