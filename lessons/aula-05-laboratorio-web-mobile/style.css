@@ -80,3 +80,16 @@
 .app-header{min-height:62px}
 @media(max-width:1040px){.app-header{flex-wrap:wrap;gap:6px;padding:5px 12px}.overall{flex:1 1 220px;max-width:none}.header-tools{flex:1 1 100%}}
 @media(max-width:710px){.app-header{gap:4px}.brand{font-size:11px}.overall{flex:1 1 155px}.header-tools{justify-content:flex-start}}
+
+
+/* Guia didático de componentes nativos: compacto, legível e sem nova navegação. */
+.component-choices{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:14px 0}
+.component-choices button{min-height:46px;padding:9px 10px;border:1px solid #93b6a0;border-radius:7px;background:#f2f8f4;color:#114b31;font-weight:750;text-align:left}
+.component-choices button[aria-pressed="true"]{background:#18593a;color:#fff}
+.component-choices button:focus-visible{outline:3px solid #e8b34e;outline-offset:2px}
+.component-description{background:#f7faf8;border:1px solid #cbddcf;padding:13px;border-radius:8px;margin-bottom:13px}
+.component-description h3{font-size:17px;margin:0 0 8px}
+.component-description p{margin:7px 0;font-size:13px;line-height:1.5}
+.component-description code{overflow-wrap:anywhere}
+#component-locate{width:100%;min-height:44px}
+@media(max-width:490px){.component-choices{grid-template-columns:1fr}}

@@ -21,6 +21,7 @@
         <div class="progress" id="progress" role="progressbar" aria-label="XP formativos" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div id="progress-fill"></div></div>
       </div>
       <nav class="header-tools" aria-label="Recursos do laboratório">
+        <button type="button" id="component-open" class="header-action">Componentes básicos</button>
         <button type="button" id="help-open" class="header-action"><span aria-hidden="true">?</span> Como funciona</button>
         <button type="button" id="save-progress" class="header-action emphasis">Salvar progresso</button>
         <button type="button" id="load-progress" class="header-action">Retomar arquivo</button>
@@ -102,6 +103,27 @@
       </section>
     </main>
   </div>
+
+  <dialog class="resource-dialog component-dialog" id="component-dialog" aria-labelledby="component-title">
+    <div class="dialog-header"><h2 id="component-title">Componentes básicos — veja no código e nas duas telas</h2><button type="button" class="close-dialog" data-close-dialog="component-dialog" aria-label="Fechar componentes">×</button></div>
+    <div class="dialog-body">
+      <p>Um <strong>componente</strong> é um bloco de interface. Nesta aula, <code>ProjetoUniversal()</code> reúne os elementos sem exigir criar arquivos novos. Os componentes de <code>react-native</code> abaixo aparecem no <strong>mesmo TSX</strong> que roda nas duas prévias.</p>
+      <div class="component-choices" role="group" aria-label="Escolher um componente para localizar">
+        <button type="button" data-component="View">View · grupo</button>
+        <button type="button" data-component="Text">Text · texto</button>
+        <button type="button" data-component="TextInput">TextInput · entrada</button>
+        <button type="button" data-component="Pressable">Pressable · botão</button>
+      </div>
+      <section class="component-description" aria-live="polite" aria-atomic="true">
+        <h3 id="component-name">View · agrupa elementos</h3>
+        <p id="component-explanation">Organiza conteúdo como uma seção. Em Web, pense em uma região como div; em React Native usamos View.</p>
+        <p><strong>No código completo:</strong> <code id="component-fragment">&lt;View style={styles.pagina}&gt;</code></p>
+        <p id="component-observe">Observe o grupo que contém título, formulário e resumo nas duas telas.</p>
+      </section>
+      <button type="button" id="component-locate" class="btn run">Localizar este componente no código completo</button>
+      <p class="privacy">Use o botão para destacar onde o componente é usado; depois clique Executar e observe o resultado. São os mesmos exercícios existentes: nenhum exercício ou XP foi acrescentado.</p>
+    </div>
+  </dialog>
 
   <dialog class="resource-dialog" id="help-dialog" aria-labelledby="help-title">
     <div class="dialog-header"><h2 id="help-title">Como funciona a bancada</h2><button type="button" class="close-dialog" data-close-dialog="help-dialog" aria-label="Fechar ajuda">×</button></div>
