@@ -278,3 +278,61 @@ test('ambas as prévias ficam lado a lado no iframe do desktop, não uma escondi
   await expect(page.locator('#code-panel')).toBeVisible();
   await expect(page.locator('#guide-title')).toContainText('limite máximo');
 });
+
+
+test('Laboratório Vivo: placeholder é exemplo, regra é visível e contador usa trim()',async({page})=>{
+  const frame=await open(page);
+  await expect(page).toHaveTitle(/Laboratório Vivo/);
+  await mission(page,'placeholder');
+  await expect(page.locator('#guide-concept')).toContainText('accessibilityHint');
+  await expect(page.locator('#guide-test')).toContainText('5–60');
+  const web=frame.locator('#web-root');
+  const mobile=frame.locator('#mobile-root');
+  for(const view of [web,mobile]){
+    await expect(view.locator('[data-testid="campo-titulo"]')).toHaveAttribute('placeholder','Ex.: Feira de ciências');
+    await expect(view.locator('[data-testid="ajuda-titulo"]')).toHaveText('Digite de 5 a 60 caracteres. Espaços nas extremidades não contam.');
+    await expect(view.locator('[data-testid="contador-caracteres"]')).toContainText('0');
+  }
+  const input=web.locator('[data-testid="campo-titulo"]');
+  await input.fill('  1  ');
+  await expect(web.locator('[data-testid="contador-caracteres"]')).toContainText('1');
+  await expect(web.locator('[data-testid="ajuda-titulo"]')).toBeVisible();
+  await web.locator('[data-testid="botao-registrar"]').click();
+  await expect(web.locator('[data-testid="erro-titulo"]')).toHaveText('Informe pelo menos 5 caracteres.');
+  await expect(web.locator('[data-testid="ajuda-titulo"]')).toContainText('5 a 60');
+  await input.fill('  Memória escolar  ');
+  await expect(web.locator('[data-testid="erro-titulo"]')).toHaveCount(0);
+  await expect(web.locator('[data-testid="contador-caracteres"]')).toContainText('15');
+});
+
+test('alterar minimo e maximo atualiza simultaneamente regra visível nas duas prévias',async({page})=>{
+  const frame=await open(page);
+  const original=await page.locator('#code').inputValue();
+  const next=original.replace('MINIMO_CARACTERES = 5','MINIMO_CARACTERES = 7').replace('MAXIMO_CARACTERES = 60','MAXIMO_CARACTERES = 30');
+  await runSource(page,next);
+  for(const selector of ['#web-root','#mobile-root']){
+    const root=frame.locator(selector);
+    await expect(root.locator('[data-testid="ajuda-titulo"]')).toContainText('7 a 30');
+    await root.locator('[data-testid="campo-titulo"]').fill('123456');
+    await root.locator('[data-testid="botao-registrar"]').click();
+    await expect(root.locator('[data-testid="erro-titulo"]')).toContainText('7 caracteres');
+  }
+  await mission(page,'limit');
+  await expect(page.locator('#guide-concept')).toContainText('orientação visível');
+  await expect(page.locator('#guide-test')).toContainText('7–60');
+});
+
+test('novo tutorial preserva e permite exportar rascunho v3 sem substituí-lo automaticamente',async({page})=>{
+  const prior="// trabalho do estudante v3\nexport const MINIMO_CARACTERES = 9;";
+  await page.addInitScript(text=>{
+    localStorage.setItem('ifma-web-aula05-lab-v2', JSON.stringify({code:text}));
+  },prior);
+  await open(page);
+  await expect(page.locator('#migration-note')).toBeVisible();
+  const editor=await page.locator('#code').inputValue();
+  expect(editor).toContain('testID="ajuda-titulo"');
+  expect(editor).not.toContain('MINIMO_CARACTERES = 9');
+  const [download]=await Promise.all([page.waitForEvent('download'),page.locator('#legacy-export').click()]);
+  expect(download.suggestedFilename()).toBe('Aula05_Rascunho_v3_Backup.tsx');
+  expect(await readFile(await download.path(),'utf8')).toBe(prior);
+});
