@@ -336,3 +336,61 @@ test('novo tutorial preserva e permite exportar rascunho v3 sem substituí-lo au
   expect(download.suggestedFilename()).toBe('Aula05_Rascunho_v3_Backup.tsx');
   expect(await readFile(await download.path(),'utf8')).toBe(prior);
 });
+
+
+test('atalhos de PDF e salvar/retomar aparecem no cabeçalho e no diálogo',async({page})=>{
+  await open(page);
+  for(const id of ['save-progress','load-progress','quick-pdf']) await expect(page.locator('#'+id)).toBeVisible();
+  await page.locator('#evidence-open').click();
+  for(const id of ['dialog-save-progress','dialog-load-progress','dialog-pdf']) await expect(page.locator('#'+id)).toBeVisible();
+  await expect(page.locator('#evidence-dialog')).toContainText('mesmo com exercícios pendentes');
+});
+test('recarregar mantém código, missão, quiz e XP formativos da sessão',async({page})=>{
+  await open(page);
+  await checkCode(page,'run');
+  await answer(page,'map');
+  const code=await page.locator('#code').inputValue();
+  await mission(page,'limit');
+  await expect(page.locator('#xp-top')).toHaveText('10');
+  await page.reload();
+  await expect(page.locator('#compiler-status')).toContainText('Executado',{timeout:30000});
+  await expect(page.locator('#xp-top')).toHaveText('10');
+  await expect(page.locator('#mission-select')).toHaveValue('limit');
+  await expect(page.locator('#code')).toHaveValue(code);
+  await mission(page,'map');
+  await expect(page.locator('#quiz-bank input[name="map-q1"][value="a"]')).toBeChecked();
+});
+test('JSON de continuidade parcial pode ser carregado em outra sessão sem concluir missões pendentes',async({page})=>{
+  await open(page);
+  await checkCode(page,'run');
+  await answer(page,'map');
+  await mission(page,'limit');
+  const source=await page.locator('#code').inputValue();
+  const [download]=await Promise.all([page.waitForEvent('download'),page.locator('#save-progress').click()]);
+  expect(download.suggestedFilename()).toBe('Aula05_Continuar_Depois.json');
+  const raw=await readFile(await download.path(),'utf8');
+  const saved=JSON.parse(raw);
+  expect(saved.schema).toBe('ifma-web-aula05-checkpoint-v1');
+  expect(saved.xp).toBe(10);
+  expect(saved.completed).toEqual(['run','map']);
+  await page.evaluate(()=>localStorage.clear());
+  await page.reload();
+  await expect(page.locator('#xp-top')).toHaveText('0');
+  page.once('dialog',dialog=>dialog.accept());
+  await page.locator('#progress-file').setInputFiles({name:'retomar.json',mimeType:'application/json',buffer:Buffer.from(raw)});
+  await expect(page.locator('#progress-status')).toContainText('Progresso retomado');
+  await expect(page.locator('#xp-top')).toHaveText('10');
+  await expect(page.locator('#code')).toHaveValue(source);
+  await expect(page.locator('#mission-select')).toHaveValue('limit');
+  await expect(page.locator('#evidence-count')).toContainText('12 pendentes');
+});
+test('PDF parcial usa pontuação corrente e preserva perguntas não respondidas',async({page})=>{
+  await page.addInitScript(()=>{window.print=()=>{window.__printed= document.getElementById('print-report').textContent;}});
+  await open(page);
+  await checkCode(page,'run');
+  await page.locator('#quick-pdf').click();
+  const report=await page.evaluate(()=>window.__printed);
+  expect(report).toContain('5/100');
+  expect(report).toContain('13 de 14');
+  expect(report).toContain('PENDENTE');
+});
