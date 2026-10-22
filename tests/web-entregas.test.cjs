@@ -133,7 +133,9 @@ function harness(){
   return {ctx:context,evt,evidence,tabs,properties,writes:()=>writes,locks:()=>locks};
 }
 function extract(html){
-  const hit=html.match(/top\.postMessage\((\{.*\}),"https:\/\/thalesvalente\.github\.io"\)/);
+  const body=typeof html==='string'?html:html?.html;
+  assert.equal(typeof body,'string','HtmlService deve retornar HTML legível no mock');
+  const hit=body.match(/top\.postMessage\((\{.*\}),"https:\/\/thalesvalente\.github\.io"\)/);
   assert.ok(hit,'Resposta deve usar top.postMessage');
   return JSON.parse(hit[1]);
 }
