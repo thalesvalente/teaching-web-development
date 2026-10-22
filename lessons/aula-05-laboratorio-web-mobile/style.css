@@ -63,3 +63,13 @@
 #web-delivery-status[data-kind="success"]{background:#e4f5e9;color:#145337}
 #web-delivery-status[data-kind="error"]{background:#fff0eb;color:#9b2c25}
 @media(max-width:710px){.web-submission-fields{padding:10px;margin:12px 0}.web-submission-fields input{font-size:16px}}
+
+
+/* Acesso direto às funções de continuidade, inclusive em telas estreitas. */
+.header-tools{display:flex;flex-wrap:wrap;align-items:center;justify-content:flex-end;gap:6px;min-width:0}
+.header-tools .header-action{min-height:40px;white-space:nowrap}
+.priority-actions{border:1px solid #b6d6bd;background:#eef7f0;border-radius:8px;padding:10px;position:sticky;top:0;z-index:2}
+.progress-status{background:#eef5ed;border-radius:7px;padding:9px;margin:9px 0;font-size:12px;line-height:1.45}
+.progress-status[data-kind="error"]{background:#fff0e8;color:#a12420}
+@media(max-width:1040px){.header-tools{flex:1 1 100%;justify-content:center}.header-tools .header-action{font-size:12px;padding:7px 9px}}
+@media(max-width:710px){.header-tools{flex-wrap:nowrap;overflow-x:auto;justify-content:flex-start;scrollbar-width:thin;max-width:100%;padding:2px 0}.header-tools .header-action{flex:0 0 auto;min-height:44px}.priority-actions{position:static}.priority-actions .btn{flex:1 1 140px}}
