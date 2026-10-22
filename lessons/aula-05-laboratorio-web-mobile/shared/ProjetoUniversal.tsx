@@ -1,5 +1,5 @@
 /**
- * AULA 05 — LABORATÓRIO WEB ↔ MOBILE | IFMA
+ * AULA 05 — LABORATÓRIO VIVO · TUTORIAL WEB ↔ MOBILE | IFMA
  * ------------------------------------------------------------
  * ESTE É O ARQUIVO COMPLETO QUE VOCÊ EDITA.
  * Em vez de copiar fragmentos de slides, siga as sete etapas
@@ -64,6 +64,13 @@ export default function ProjetoUniversal() {
   const [erro, setErro] = useState('');
   const [sucesso, setSucesso] = useState('');
 
+  // ORIENTAÇÃO COMPREENSÍVEL PARA TODOS:
+  // placeholder={DICA_CAMPO} mostra um EXEMPLO apenas com o campo vazio.
+  // accessibilityHint={orientacao} informa a regra à tecnologia assistiva,
+  // mas não desenha um texto na tela. Por isso, exibimos a MESMA regra em
+  // um <Text> visível. Mudar MINIMO/MAXIMO no bloco [02] atualiza ambos.
+  const orientacao = `Digite de ${MINIMO_CARACTERES} a ${MAXIMO_CARACTERES} caracteres. Espaços nas extremidades não contam.`;
+
   // [05] AÇÃO DO USUÁRIO — Pressable chama registrar() com onPress.
   // 1. Lê o estado; 2. valida; 3. se inválido, PARA com return.
   // 4. Se válido, atualiza contador, última memória e feedback.
@@ -93,10 +100,11 @@ export default function ProjetoUniversal() {
       </Text>
 
       <Text style={styles.rotulo}>Título da memória</Text>
+      {/* Rótulo visível ≠ placeholder ≠ accessibilityHint: cada um tem uma função. */}
       <TextInput
         testID="campo-titulo"
         accessibilityLabel="Título da memória"
-        accessibilityHint={`Digite de ${MINIMO_CARACTERES} a ${MAXIMO_CARACTERES} caracteres`}
+        accessibilityHint={orientacao}
         value={titulo} // O campo mostra exatamente o valor do estado React.
         onChangeText={(valor) => {
           setTitulo(valor);  // Atualiza o estado a cada digitação.
@@ -106,6 +114,15 @@ export default function ProjetoUniversal() {
         placeholder={DICA_CAMPO}
         style={styles.entrada}
       />
+      {/* Regra sempre visível e idêntica ao accessibilityHint.
+          Diferentemente do placeholder, ela permanece após digitar. */}
+      <Text testID="ajuda-titulo" style={styles.ajudaCampo}>
+        {orientacao}
+      </Text>
+      {/* Este contador usa o mesmo trim() da regra de validação [03]. */}
+      <Text testID="contador-caracteres" style={styles.contadorCampo}>
+        Caracteres considerados: {titulo.trim().length}
+      </Text>
       {erro ? (
         <Text testID="erro-titulo" accessibilityRole="alert" style={styles.erro}>
           {erro}
@@ -151,7 +168,9 @@ const styles = StyleSheet.create({
   intro: { color: '#485b51', fontSize: 14, lineHeight: 21, marginTop: 6, marginBottom: 20 },
   rotulo: { color: '#243c2e', fontWeight: '700', fontSize: 14, marginBottom: 7 },
   entrada: { borderColor: '#718c79', borderWidth: 1.5, borderRadius: 9, padding: 12, minHeight: 48, fontSize: 16, color: '#142e1c' },
-  erro: { color: '#a12824', fontSize: 14, marginTop: 9 },
+  ajudaCampo: { color: '#3b5c4b', fontSize: 12, lineHeight: 18, marginTop: 7 },
+  contadorCampo: { color: '#155b3d', fontWeight: '700', fontSize: 12, marginTop: 4 },
+  erro: { color: '#a12824', fontSize: 14, marginTop: 8 },
   botao: { backgroundColor: COR_BOTAO, borderRadius: 10, minHeight: 48, padding: 12, marginTop: 15, justifyContent: 'center', alignItems: 'center' },
   textoBotao: { color: '#ffffff', fontWeight: '800', fontSize: 15 },
   sucesso: { color: '#145635', fontSize: 14, fontWeight: '700', marginTop: 12 },
