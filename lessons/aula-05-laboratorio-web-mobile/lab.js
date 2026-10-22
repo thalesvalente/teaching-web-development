@@ -343,7 +343,7 @@ function registrar() {
     // na versão atual é mostrada claramente, sem falsa aprovação técnica.
     if (passed[task.id] && feedback.kind === 'failed') {
       guideFeedback.className = 'mission-feedback failed';
-      guideFeedback.textContent = `Revisar código atual · +${task.xp} XP conquistados preservados. ${feedback.text}`;
+      guideFeedback.textContent = `${task.type === 'quiz' ? 'Revisar resposta atual' : 'Revisar código atual'} · +${task.xp} XP conquistados preservados. ${feedback.text}`;
     } else if (passed[task.id] && feedback.kind === 'pending' &&
                feedback.text !== 'Pendente · execute e confira nesta bancada.') {
       guideFeedback.className = 'mission-feedback pending';
@@ -527,6 +527,7 @@ function registrar() {
     revealPreviewAfterExplicitRun = !initial;
     lastCompiled = false;
     const thisRun = ++runSequence;
+    if (reviewAfterCompile) setReviewBusy(true);
     if (send('RUN', { source: panels.shared, revision: sourceRevision, runId: thisRun }))
       setStatus('Compilando TSX completo para as duas prévias…');
     if (!initial) save();
@@ -675,6 +676,7 @@ function registrar() {
         markCodeForReview('O código atual não compilou. Corrija-o antes de novas conferências; XP conquistados não desaparecem.');
         if (reviewAfterCompile) {
           reviewAfterCompile = false;
+          setReviewBusy(false);
           setReviewStatus('Não foi possível conferir: o código atual não compilou. Seus XP estão preservados.', 'failed');
         }
         save();
