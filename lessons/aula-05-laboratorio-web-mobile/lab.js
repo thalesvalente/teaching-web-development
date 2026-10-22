@@ -219,7 +219,14 @@ function registrar() {
   let ready = false, sourceLoaded = false, lastCompiled = false, pending = null;
   let revealPreviewAfterExplicitRun = false;
   const nonce = 'aula05-' + String(Date.now()) + '-' + Math.random().toString(36).slice(2);
+  // XP são conquistas históricas e cumulativas, não a nota de uma fotografia
+  // instantânea do código. A validação atual é indicada no feedback separado.
   const passed = Object.fromEntries(tasks.map(task => [task.id, false]));
+  const codeTaskIds = tasks.filter(task => task.type === 'code').map(task => task.id);
+  let sourceRevision = 0;    // Muda apenas quando o TSX é editado/restaurado.
+  let runSequence = 0;       // Evita aceitar respostas de compilações antigas.
+  let reviewPending = false; // Conferência coletiva em curso.
+  let reviewAfterCompile = false;
   const completedDetail = {};
 
   // Em vez de quatorze cartões em outra seção, há UMA missão ativa.
@@ -332,10 +339,21 @@ function registrar() {
     byId('guide-check').textContent = needsQuiz ? 'Conferir respostas' : 'Conferir missão';
     const feedback = feedbackState[task.id];
     const guideFeedback = byId('guide-feedback');
-    guideFeedback.className = 'mission-feedback ' + (passed[task.id] ? 'success' : feedback.kind);
-    guideFeedback.textContent = passed[task.id]
-      ? `✓ Aprovado · +${task.xp} XP · ${completedDetail[task.id] || 'verificação concluída'}`
-      : feedback.text;
+    // O XP já ganho não some quando o aluno segue editando. Mas uma falha
+    // na versão atual é mostrada claramente, sem falsa aprovação técnica.
+    if (passed[task.id] && feedback.kind === 'failed') {
+      guideFeedback.className = 'mission-feedback failed';
+      guideFeedback.textContent = `${task.type === 'quiz' ? 'Revisar resposta atual' : 'Revisar código atual'} · +${task.xp} XP conquistados preservados. ${feedback.text}`;
+    } else if (passed[task.id] && feedback.kind === 'pending' &&
+               feedback.text !== 'Pendente · execute e confira nesta bancada.') {
+      guideFeedback.className = 'mission-feedback pending';
+      guideFeedback.textContent = `✓ +${task.xp} XP já conquistados · ${feedback.text}`;
+    } else {
+      guideFeedback.className = 'mission-feedback ' + (passed[task.id] ? 'success' : feedback.kind);
+      guideFeedback.textContent = passed[task.id]
+        ? `✓ Aprovado · +${task.xp} XP · ${completedDetail[task.id] || 'verificação concluída'}`
+        : feedback.text;
+    }
   }
   function setActive(target) {
     const index = typeof target === 'number' ? target : tasks.findIndex(t => t.id === target);
@@ -480,26 +498,38 @@ function registrar() {
     codeEditor.scrollTop = Math.max(0, (linesBefore - 6) * lineHeight);
     byId('guide-line').textContent = `↳ ProjetoUniversal.tsx · linha ${linesBefore} destacada no editor ao lado`;
   }
-  function invalidateCodeTasks() {
+  // Ao editar, a compilação antiga deixa de ser a versão atual,
+  // porém as missões JÁ APROVADAS continuam creditadas.
+  function markCodeForReview(message) {
     for (const task of tasks) {
-      // Respostas teóricas não dependem de um build anterior.
       if (task.type === 'quiz') continue;
-      passed[task.id] = false;
-      delete completedDetail[task.id];
-      feedbackState[task.id] = { kind: 'pending', text: 'Código alterado. Execute novamente antes de conferir.' };
+      feedbackState[task.id] = { kind: 'pending', text: message ||
+        'Código atualizado. Execute e confira novamente se desejar; XP conquistados continuam no histórico.' };
     }
     lastCompiled = false;
     render();
   }
   function enableChecks() { byId('guide-check').disabled = false; }
+  function setReviewBusy(busy) {
+    for (const id of ['review-xp', 'review-xp-dialog']) byId(id).disabled = busy;
+  }
+  function stopPendingChecks() {
+    pending = null;
+    reviewPending = false;
+    enableChecks();
+    setReviewBusy(false);
+  }
   function run({ initial = false } = {}) {
     if (!sourceLoaded) return;
     if (activeFile !== 'shared') showFile('shared');
     panels.shared = codeEditor.value;
-    pending = null; enableChecks();
+    stopPendingChecks();
     revealPreviewAfterExplicitRun = !initial;
-    if (!initial) invalidateCodeTasks();
-    if (send('RUN', { source: panels.shared })) setStatus('Compilando TSX completo para as duas prévias…');
+    lastCompiled = false;
+    const thisRun = ++runSequence;
+    if (reviewAfterCompile) setReviewBusy(true);
+    if (send('RUN', { source: panels.shared, revision: sourceRevision, runId: thisRun }))
+      setStatus('Compilando TSX completo para as duas prévias…');
     if (!initial) save();
   }
   function showFile(which) {
@@ -526,10 +556,11 @@ function registrar() {
       updateGuide();return;
     }
     const ok = answers[0] === 'a' && answers[1] === 'b';
-    passed[id] = ok;
-    if (ok) completedDetail[id] = id === 'map' ? 'useState guarda; onChangeText atualiza.' :
-      'React Native Web renderiza no navegador; Expo permite execução em dispositivo real.';
-    else delete completedDetail[id];
+    if (ok) {
+      passed[id] = true; // XP ganho é acumulativo: conferir depois não o remove.
+      completedDetail[id] = id === 'map' ? 'useState guarda; onChangeText atualiza.' :
+        'React Native Web renderiza no navegador; Expo permite execução em dispositivo real.';
+    }
     feedbackState[id] = ok
       ? { kind: 'success', text: '✓ Você identificou a relação entre código e resultado.' }
       : { kind: 'failed', text: id === 'map' ? 'Revise [04] e onChangeText no bloco [06].' : 'Prévia móvel não é execução Android/iOS; consulte Como funciona.' };
@@ -543,13 +574,50 @@ function registrar() {
       feedbackState[id] = { kind: 'failed', text: 'Primeiro clique Executar. Depois confira esta missão aqui.' };
       updateGuide(); return;
     }
-    if (pending !== null) return;
+    if (pending !== null || reviewPending) return;
     pending = id;
     byId('guide-check').disabled = true;
     feedbackState[id] = { kind: 'pending', text: 'Testando o código executado nas duas prévias…' };
     updateGuide();
-    if (!send('CHECK', { stage: id })) { pending = null; enableChecks(); }
+    if (!send('CHECK', { stage: id, revision: sourceRevision, runId: runSequence })) {
+      pending = null; enableChecks();
+    }
   }
+  // Conferência única das doze missões técnicas. Útil para recuperar XP
+  // que foram zerados pelo bug anterior, quando o código final ainda atende
+  // aos critérios. Somente resultados PASS ganham XP, sem tirar os anteriores.
+  function setReviewStatus(message, kind = '') {
+    const node = byId('review-status');
+    node.textContent = message;
+    node.dataset.kind = kind;
+  }
+  function startReview() {
+    if (reviewPending || pending !== null || !lastCompiled) return;
+    reviewPending = true;
+    setReviewBusy(true);
+    byId('guide-check').disabled = true;
+    setReviewStatus('Conferindo as 12 missões técnicas no código executado. Os XP já conquistados estão protegidos.');
+    if (!send('CHECK_ALL', { stages: codeTaskIds, revision: sourceRevision, runId: runSequence })) {
+      stopPendingChecks();
+      setReviewStatus('Não foi possível iniciar a conferência. Seus XP foram preservados.', 'failed');
+    }
+  }
+  function reviewProgress() {
+    if (reviewPending || pending !== null) return;
+    if (!ready || !sourceLoaded) {
+      setReviewStatus('Aguarde o carregamento do laboratório para conferir.', 'failed');
+      return;
+    }
+    if (!lastCompiled) {
+      reviewAfterCompile = true;
+      setReviewStatus('Executando o TSX atual antes de conferir as missões. Os XP anteriores permanecem.');
+      run({ initial: true }); // Não troca de aba nem altera os pontos.
+      return;
+    }
+    startReview();
+  }
+  for (const id of ['review-xp','review-xp-dialog'])
+    byId(id).addEventListener('click', reviewProgress);
   select.addEventListener('change', () => setActive(select.value));
   byId('guide-prev').addEventListener('click', () => setActive(activeIndex - 1));
   byId('guide-next').addEventListener('click', () => setActive(activeIndex + 1));
@@ -561,12 +629,18 @@ function registrar() {
     if (!confirm('Restaurar o arquivo original? O código que você editou será substituído, mas as observações continuam.')) return;
     panels.shared = window.__IFMA_LAB_INITIAL__;
     codeEditor.value = panels.shared;
+    sourceRevision++;
+    markCodeForReview('Código original restaurado. XP anteriores preservados como histórico de aprendizagem.');
     run();
   });
   codeEditor.addEventListener('input', () => {
     panels.shared = codeEditor.value;
-    invalidateCodeTasks(); save();
-    setStatus('Código modificado. Clique Executar ao lado da missão para ver o resultado.');
+    sourceRevision++;
+    stopPendingChecks();
+    reviewAfterCompile = false;
+    markCodeForReview('Arquivo editado. Execute para conferir a nova versão; XP acumulados não diminuem.');
+    save();
+    setStatus('Código modificado. Seus XP foram preservados. Clique Executar para testar o novo arquivo.');
   });
   codeEditor.addEventListener('keydown', event => {
     if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
@@ -576,9 +650,9 @@ function registrar() {
   document.querySelectorAll('[data-file]').forEach(button => button.addEventListener('click', () => showFile(button.dataset.file)));
   quizBank.querySelectorAll('input[type="radio"]').forEach(input => input.addEventListener('change', () => {
     const id = input.name.startsWith('map-') ? 'map' : 'quiz';
-    passed[id] = false;
-    delete completedDetail[id];
-    feedbackState[id] = { kind: 'pending', text: 'Resposta alterada. Clique Conferir respostas quando desejar.' };
+    // Alterar a resposta NÃO retira os XP conquistados em conferência anterior.
+    // O estado atual fica pendente até uma nova conferência conceitual.
+    feedbackState[id] = { kind: 'pending', text: 'Resposta alterada. Confira a resposta atual; XP já conquistados permanecem.' };
     render();save();
   }));
   byId('observacao').addEventListener('input', save);
@@ -591,25 +665,71 @@ function registrar() {
     if (!data || data.from !== 'ifma-aula05') return;
     if (data.type === 'READY') { ready = true; if (sourceLoaded) run({ initial: true }); return; }
     if (data.token !== nonce) return;
+    // A resposta assíncrona deve vir da VERSÃO compilada que continua aberta.
+    // Editar/reexecutar durante uma conferência descarta resultados antigos.
+    if (data.runId !== runSequence || data.revision !== sourceRevision) return;
     if (data.type === 'COMPILED') {
-      lastCompiled = !!data.ok;
-      setStatus(data.ok ? '✓ Executado nas duas prévias React Native Web. Estados independentes.' :
-        `Erro no código: ${data.detail || 'revise o arquivo completo.'}`, !data.ok);
-      if (!data.ok) {
-        // Compilação inválida não pode manter XP técnicos previamente restaurados.
-        invalidateCodeTasks(); save();
+      lastCompiled = data.ok === true;
+      setStatus(lastCompiled ? '✓ Executado nas duas prévias React Native Web. Estados independentes.' :
+        `Erro no código: ${data.detail || 'revise o arquivo completo.'} · XP anteriores preservados.`, !lastCompiled);
+      if (!lastCompiled) {
+        markCodeForReview('O código atual não compilou. Corrija-o antes de novas conferências; XP conquistados não desaparecem.');
+        if (reviewAfterCompile) {
+          reviewAfterCompile = false;
+          setReviewBusy(false);
+          setReviewStatus('Não foi possível conferir: o código atual não compilou. Seus XP estão preservados.', 'failed');
+        }
+        save();
       }
-      if (data.ok && revealPreviewAfterExplicitRun && window.matchMedia('(max-width: 1040px)').matches) setPane('preview');
+      if (lastCompiled && reviewAfterCompile) {
+        reviewAfterCompile = false;
+        startReview();
+      }
+      if (lastCompiled && revealPreviewAfterExplicitRun && window.matchMedia('(max-width: 1040px)').matches) setPane('preview');
       revealPreviewAfterExplicitRun = false;
     } else if (data.type === 'CHECKED' && data.stage === pending) {
-      const id = pending; pending = null;enableChecks();
-      passed[id] = !!data.ok;
-      if (data.ok) completedDetail[id] = data.detail;
-      else delete completedDetail[id];
-      feedbackState[id] = data.ok
+      const id = pending;
+      stopPendingChecks();
+      if (data.ok === true) {
+        passed[id] = true;
+        completedDetail[id] = String(data.detail || 'Critério aprovado.').slice(0, 250);
+      }
+      // Falha na versão atual não anula o XP acumulado por aprovação anterior.
+      feedbackState[id] = data.ok === true
         ? { kind: 'success', text: `✓ Aprovado · ${data.detail}` }
-        : { kind: 'failed', text: `Revisar · ${data.detail}` };
+        : { kind: 'failed', text: `A conferência atual falhou: ${data.detail || 'revise o código.'}` };
       render();save();
+    } else if (data.type === 'CHECKED_ALL' && reviewPending) {
+      stopPendingChecks();
+      const results = data.results;
+      if (!Array.isArray(results) || results.length !== codeTaskIds.length ||
+          new Set(results.map(item => item?.stage)).size !== codeTaskIds.length ||
+          results.some(item => !item || !codeTaskIds.includes(item.stage) || typeof item.ok !== 'boolean')) {
+        setReviewStatus('Não foi possível validar a conferência coletiva. Os XP já conquistados permanecem.', 'failed');
+        return;
+      }
+      const scoreBefore = getScore();
+      let approvedNow = 0, notApprovedNow = 0, newlyApproved = 0;
+      for (const item of results) {
+        const id = item.stage;
+        const current = item.ok === true;
+        if (current) {
+          approvedNow++;
+          if (!passed[id]) newlyApproved++;
+          passed[id] = true;
+          completedDetail[id] = String(item.detail || 'Critério conferido.').slice(0, 250);
+          feedbackState[id] = { kind: 'success', text: '✓ Conferência coletiva: ' + (item.detail || 'aprovado.') };
+        } else {
+          notApprovedNow++;
+          feedbackState[id] = { kind: 'failed',
+            text: 'A versão atual não passou: ' + String(item.detail || 'revise o critério.').slice(0, 250) };
+        }
+      }
+      render();save();
+      const gained = getScore() - scoreBefore;
+      const message = `Conferência concluída: ${approvedNow}/${codeTaskIds.length} missões técnicas aprovadas no código atual; ${newlyApproved} novas conquistas (+${gained} XP). Total acumulado: ${getScore()}/100 XP. ${notApprovedNow} não passaram na versão atual. Nenhuma conquista anterior foi apagada.`;
+      setReviewStatus(message, 'success');
+      setStatus('✓ '+message);
     }
   });
 
@@ -726,7 +846,7 @@ function registrar() {
       note: byId('observacao').value,
       nativeNote: byId('limite-real').value,
       xp: getScore(),
-      warning: 'XP formativos, não nota oficial. Revalidar tarefas se modificar o código.'
+      warning: 'XP acumulativos e formativos, não nota oficial. Alterar código não apaga conquistas; Conferir progresso testa a versão atual.'
     };
   }
   function progressMessage(message, error = false) {

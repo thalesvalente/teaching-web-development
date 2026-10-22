@@ -191,25 +191,56 @@
     }
     throw Error('Exercício de código desconhecido.');
   }
+  // Mesmos 12 testes comportamentais usados por "Conferir missão".
+  // CHECK_ALL apenas os executa em sequência: NÃO concede XP por si só;
+  // a página principal só credita cada sucesso efetivamente confirmado.
+  const codeStages = Object.freeze([
+    'run','title','placeholder','limit','maximum','button',
+    'error','success','color','trim','invalid','isolation'
+  ]);
   window.addEventListener('message', async (event) => {
     if (event.source !== sender) return;
     const msg = event.data;
-    if (!msg || msg.from !== 'ifma-aula05-host' || typeof msg.token !== 'string' || msg.token.length > 100) return;
+    if (!msg || msg.from !== 'ifma-aula05-host' || typeof msg.token !== 'string' || msg.token.length > 100 ||
+        !Number.isSafeInteger(msg.revision) || msg.revision < 0 ||
+        !Number.isSafeInteger(msg.runId) || msg.runId < 1) return;
     token = msg.token;
     const id = ++generation;
+    const version = { revision: msg.revision, runId: msg.runId };
     try {
       if (msg.type === 'RUN') {
         app = null;
         detachRoots();
         app = compile(msg.source);
         await mount();
-        if (id === generation) post('COMPILED', { ok: true });
+        if (id === generation) post('COMPILED', { ok: true, ...version });
       } else if (msg.type === 'CHECK') {
+        if (!codeStages.includes(msg.stage)) throw Error('Missão técnica desconhecida.');
         const result = await check(msg.stage);
-        if (id === generation) post('CHECKED', { stage: msg.stage, ...result });
+        if (id === generation) post('CHECKED', { stage: msg.stage, ...result, ...version });
+      } else if (msg.type === 'CHECK_ALL') {
+        if (!Array.isArray(msg.stages) || msg.stages.length !== codeStages.length ||
+            new Set(msg.stages).size !== codeStages.length ||
+            msg.stages.some(stage => !codeStages.includes(stage)))
+          throw Error('Lista de missões técnicas incompatível.');
+        const results = [];
+        for (const stage of msg.stages) {
+          if (id !== generation) return; // Uma nova compilação cancelou a revisão.
+          try {
+            const result = await check(stage);
+            results.push({ stage, ok: result.ok === true, detail: String(result.detail || '').slice(0,450) });
+          } catch(error) {
+            results.push({ stage, ok: false, detail: String(error?.message || error).slice(0,450) });
+          }
+        }
+        if (id === generation) post('CHECKED_ALL', { results, ...version });
       }
     } catch (error) {
-      if (id === generation) post(msg.type === 'CHECK' ? 'CHECKED' : 'COMPILED', { stage: msg.stage, ok: false, detail: String(error?.message || error).slice(0, 450) });
+      if (id !== generation) return;
+      const type = msg.type === 'CHECK_ALL' ? 'CHECKED_ALL' :
+        msg.type === 'CHECK' ? 'CHECKED' : 'COMPILED';
+      post(type, { stage: msg.stage, ok: false, ...version,
+        detail: String(error?.message || error).slice(0,450) });
     }
   });
   post('READY');

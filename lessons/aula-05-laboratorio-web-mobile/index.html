@@ -25,6 +25,7 @@
         <button type="button" id="component-open" class="header-action">Componentes básicos</button>
         <button type="button" id="help-open" class="header-action"><span aria-hidden="true">?</span> Como funciona</button>
         <button type="button" id="save-progress" class="header-action emphasis">Salvar progresso</button>
+        <button type="button" id="review-xp" class="header-action" title="Rever as missões técnicas no código atual sem apagar XP conquistados">Conferir progresso</button>
         <button type="button" id="load-progress" class="header-action">Retomar arquivo</button>
         <button type="button" id="quick-pdf" class="header-action">Gerar PDF</button>
         <button type="button" id="evidence-open" class="header-action">Evidências <span aria-hidden="true">↗</span></button>
@@ -154,6 +155,7 @@ app/lab05.tsx               ← importa o componente
        ↙ Web (React Native Web)
        ↘ Mobile (Expo em dispositivo real)</code></pre>
       <p>A prévia móvel da bancada é uma renderização estreita no navegador, não um teste nativo. Também não há sincronização entre os contadores: as duas instâncias têm estado próprio.</p>
+      <p><strong>XP acumulativos:</strong> ao modificar o código ou executar uma nova missão, os XP já conquistados permanecem. Uma conferência reprovada explica o problema atual, mas não apaga uma conquista anterior. Se seu progresso antigo foi afetado, clique <em>Conferir progresso</em>: o laboratório testa novamente as missões técnicas em conjunto e credita as que forem aprovadas, sem exigir navegação missão por missão. O resultado é formativo, não certificação do código atual.</p>
       <p><strong>Ritmo sugerido:</strong> exercícios 01–08 durante os 100 minutos; 09–14 como aprofundamento, sem obrigação de 100 XP na mesma aula.</p>
       <p><a href="./docs/GUIA_ALUNO.md" target="_blank" rel="noopener">Guia de consulta</a> · <a href="https://thalesvalente.github.io/teaching-mobile/" target="_blank" rel="noopener">Portal Mobile</a></p>
     </div>
@@ -167,6 +169,11 @@ app/lab05.tsx               ← importa o componente
       <p id="progress-status" class="progress-status" role="status" aria-live="polite">Rascunho salvo automaticamente neste navegador quando disponível. Salve um JSON para levar a outro dispositivo.</p>
       <div class="evidence-actions priority-actions"><button type="button" id="dialog-save-progress" class="btn run">Salvar progresso (.json)</button><button type="button" id="dialog-load-progress" class="btn secondary">Retomar (.json)</button><button type="button" id="dialog-pdf" class="btn secondary">Gerar PDF parcial (A4)</button></div>
       <div class="evidence-score"><strong><span id="xp-evidence">0</span>/100 XP</strong><span id="evidence-count">0 concluídos · 14 pendentes</span></div>
+      <p class="xp-explanation">Os XP são <strong>acumulativos</strong>: cada missão aprovada credita pontos uma vez. Alterar o código ou testar outra missão não reduz esses pontos. Conferências novas informam se o código atual atende aos critérios.</p>
+      <div class="review-controls">
+        <button type="button" id="review-xp-dialog" class="btn secondary">Conferir todas as missões técnicas</button>
+        <p id="review-status" role="status" aria-live="polite">Você pode verificar as missões técnicas de uma vez para recuperar aprovações demonstráveis pelo código atual. Os XP anteriores não serão apagados.</p>
+      </div>
       <label for="observacao">O que mudou no código e o que aconteceu nas duas prévias?</label>
       <textarea id="observacao" rows="4" placeholder="Descreva a linha alterada e o comportamento que você observou."></textarea>
       <label for="limite-real">O que ainda deve ser testado em um celular real?</label>
@@ -194,7 +201,7 @@ app/lab05.tsx               ← importa o componente
       </fieldset>
       <details><summary>Ver situação de cada exercício</summary><ul id="evidence-list" class="evidence-list"></ul></details>
       <div class="evidence-actions"><button type="button" id="export-json" class="btn secondary">Exportar evidências JSON</button><button type="button" id="export-md" class="btn secondary">Exportar Markdown</button><button type="button" id="print" class="btn secondary">Imprimir / salvar PDF A4</button></div>
-      <p class="privacy">Rascunho salvo somente neste navegador, se o armazenamento estiver disponível. Código e evidências não são enviados automaticamente. Os XP técnicos são revalidados após cada edição ou recarga.</p>
+      <p class="privacy">Rascunho salvo somente neste navegador, se o armazenamento estiver disponível. Código e evidências não são enviados automaticamente. XP já conquistados são preservados; a conferência do código atual pode ser repetida quando desejar.</p>
       <p id="evidence-status" role="status" aria-live="polite"></p>
     </div>
   </dialog>

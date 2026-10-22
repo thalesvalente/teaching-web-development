@@ -142,14 +142,14 @@ test('quizzes aparecem NO painel de missão, sem rolagem ou caça a cartão',asy
   expect(await page.evaluate(()=>document.scrollingElement.scrollTop)).toBe(0);
 });
 
-test('editar invalida só XP técnicos, sem apagar respostas conceituais',async({page})=>{
+test('editar e executar mantêm XP conquistados sem apagar respostas conceituais',async({page})=>{
   await open(page);
   await checkCode(page,'run');
   await answer(page,'map');
   await expect(page.locator('#xp-top')).toHaveText('10');
   const editor=page.locator('#code');
   await editor.fill((await editor.inputValue())+'\n// alteração sem quebrar sintaxe');
-  await expect(page.locator('#xp-top')).toHaveText('5');
+  await expect(page.locator('#xp-top')).toHaveText('10');
   await mission(page,'run');
   await page.locator('#guide-check').click();
   await expect(page.locator('#guide-feedback')).toContainText('Primeiro clique Executar');

@@ -221,3 +221,13 @@
   #print-report .doc-end{border-top:1pt solid #c6d7ca;padding-top:9pt;margin-top:15pt;color:#597063;font-size:8.7pt}
   #print-report .doc-end p{margin:1pt 0}
 }
+
+
+/* XP acumulativos: revisão do código atual sem apagar conquistas anteriores. */
+.xp-explanation{font-size:12px;line-height:1.5;padding:10px 12px;background:#f2f8f4;border-left:3px solid #167447;border-radius:6px;color:#214b33;margin:10px 0}
+.review-controls{border:1px solid #c4ddcb;border-radius:8px;padding:10px 12px;background:#f8fbf8;margin:12px 0 18px}
+.review-controls #review-xp-dialog{min-height:44px;width:100%;white-space:normal}
+#review-status{font-size:12px;line-height:1.45;color:#315b40;margin:9px 0 0;overflow-wrap:anywhere;white-space:pre-wrap}
+#review-status[data-kind="failed"]{color:#942921}
+#review-status[data-kind="success"]{color:#0d6440;font-weight:650}
+@media(max-width:710px){.review-controls{padding:8px;margin:9px 0}.xp-explanation{font-size:11px;padding:8px}}

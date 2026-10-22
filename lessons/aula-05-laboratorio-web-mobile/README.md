@@ -31,7 +31,7 @@ O arquivo React Native é realmente executado **duas vezes via React Native Web*
 
 ## Integridade e qualidade
 
-`npm run check:logic` valida estrutura e 14 missões. `npm run test:e2e` executa browser real com Playwright e verifica ausência de rolagem do documento, ações próximas à missão, quizzes contextualizados, renderização, XP, exportações, responsividade e links lógicos. Nenhum dado vai automaticamente ao professor; o TSX roda em `iframe sandbox="allow-scripts"`, de origem opaca, sem `allow-same-origin`. Não coloque senhas ou dados pessoais no editor.
+`npm run check:logic` valida estrutura e 14 missões. A regressão XP percorre as 14 missões e oito alterações cumulativas, exercita falha de compilação e revisão coletiva, e prova que nenhuma aprovação anterior é apagada. `npm run test:e2e` executa browser real com Playwright e verifica ausência de rolagem do documento, ações próximas à missão, quizzes contextualizados, renderização, XP, exportações, responsividade e links lógicos. Nenhum dado vai automaticamente ao professor; o TSX roda em `iframe sandbox="allow-scripts"`, de origem opaca, sem `allow-same-origin`. Não coloque senhas ou dados pessoais no editor.
 
 A versão 4 usa uma **nova chave de rascunho**. Rascunhos v3/v1 ficam intactos no armazenamento local e, quando encontrados, aparecem por um botão **Baixar meu código anterior**. O tutorial novo não apaga nem carrega automaticamente códigos antigos que não contenham a orientação visual corrigida. Testes automatizados não substituem auditoria WCAG 2.2 AA com tecnologias assistivas.
 
