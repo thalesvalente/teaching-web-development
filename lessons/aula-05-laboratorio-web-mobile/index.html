@@ -67,7 +67,7 @@
             <button type="button" role="tab" data-pane="code" aria-selected="true" aria-controls="code-panel" id="view-code">Código</button>
             <button type="button" role="tab" data-pane="preview" aria-selected="false" aria-controls="result-panel" id="view-preview">Resultado</button>
           </div>
-          <div class="toolbar-buttons"><button type="button" class="text-button" id="reset">Restaurar código</button><button type="button" class="text-button" id="download-code">Baixar .tsx</button><button type="button" class="text-button legacy" id="legacy-export" hidden>Backup v1</button></div>
+          <div class="toolbar-buttons"><button type="button" class="text-button" id="reset">Restaurar código</button><button type="button" class="text-button" id="download-code">Baixar .tsx</button><button type="button" class="text-button legacy" id="legacy-export" hidden>Baixar meu código anterior</button></div>
         </div>
         <div class="workspace-panes">
           <section class="code-panel" id="code-panel" role="tabpanel" aria-labelledby="view-code">
@@ -78,6 +78,7 @@
               <button type="button" role="tab" aria-selected="false" aria-controls="editor-source" id="tab-vue" data-file="vue">Comparar Vue</button>
             </div>
             <p id="editor-context" class="editor-context">Código completo: localize as seções [01] a [07]; a execução atualiza as duas prévias.</p>
+            <p id="migration-note" class="migration-note" role="status" hidden>Seu código anterior foi preservado. Esta versão abre com a orientação visual corrigida; use “Baixar meu código anterior” para recuperar sua versão anterior sem sobrescrevê-la.</p>
             <div class="source-container" id="editor-source" role="tabpanel" aria-labelledby="tab-shared">
               <label for="code" class="sr-only">Edite o código completo do componente React Native</label>
               <textarea id="code" spellcheck="false" autocomplete="off" autocapitalize="off" autocorrect="off" wrap="off" aria-describedby="code-help"></textarea>
