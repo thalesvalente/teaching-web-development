@@ -34,3 +34,15 @@ React Native Web estreito **não** é execução nativa Android/iOS. WCAG 2.2 AA
 
 A auditoria WCAG 2.2 AA com tecnologias assistivas permanece pendente; o workflow comprova somente os cenários implementados.
 
+
+
+## Gates de continuidade e diagramação A4
+
+- [ ] O JSON de progresso contém código TSX, questão parcialmente respondida, missão ativa, notas, marcadores concluídos e XP; seu conteúdo sobrevive a recarga e importa num **segundo contexto de navegador**, sem estado compartilhado.
+- [ ] Arquivos com JSON malformado, schema incompatível, IDs duplicados, XP divergentes ou código ausente são rejeitados **sem substituir o trabalho atual**; cancelar a importação também o preserva.
+- [ ] O PDF de 0/100 e o PDF com pontos parciais mostram exatamente 14 missões, pontuação atual e respostas não respondidas; não alteram XP nem acionam Apps Script.
+- [ ] O documento impresso é A4, tem cores IFMA verde/vermelho, cabeçalho institucional, identificação, resultados por missão e observações, sem Markdown bruto, com texto selecionável e paginação.
+- [ ] Texto arbitrário digitado pelo aluno usa `textContent`, sem interpretá-lo como HTML no relatório.
+- [ ] Gerar PDF pode repetir-se sem acumular cópias do relatório oculto.
+
+Os testes automatizados não substituem inspeção visual de páginas complexas nem auditoria assistiva integral WCAG 2.2 AA.
