@@ -75,7 +75,7 @@
         error?reject(error):resolve(receipt);
       };
       const receive=event=>{
-        if(event.source!==frame.contentWindow || !validOrigin(event.origin))return;
+        if(!validOrigin(event.origin))return; // GAS envia do iframe interno (top.postMessage).
         const d=event.data;
         if(!d || d.channel!==CHANNEL || d.nonce!==nonce)return;
         if(!d.ok)return end(Error(d.error||'Servidor recusou a evidência.'));
