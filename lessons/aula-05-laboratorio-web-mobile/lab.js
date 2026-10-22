@@ -846,7 +846,7 @@ function registrar() {
       note: byId('observacao').value,
       nativeNote: byId('limite-real').value,
       xp: getScore(),
-      warning: 'XP formativos, não nota oficial. Revalidar tarefas se modificar o código.'
+      warning: 'XP acumulativos e formativos, não nota oficial. Alterar código não apaga conquistas; Conferir progresso testa a versão atual.'
     };
   }
   function progressMessage(message, error = false) {
