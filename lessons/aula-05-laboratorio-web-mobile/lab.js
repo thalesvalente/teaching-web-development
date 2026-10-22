@@ -750,7 +750,7 @@ function registrar() {
     const current = evidence();
     byId('print-report').textContent = reportText().split('## Arquivo completo entregue')[0] +
       '\n\nRelatório parcial: ' + current.exercicios.filter(ex => ex.estado === 'APROVADO').length +
-      ' de 14 missões concluídas. As demais continuam pendentes.\\n';
+      ' de 14 missões concluídas; ' + (14 - current.exercicios.filter(ex => ex.estado === 'APROVADO').length) + ' de 14 pendentes.\\n';
     window.print();
   }
   for (const id of ['print','quick-pdf','dialog-pdf']) byId(id).addEventListener('click', printPartial);
