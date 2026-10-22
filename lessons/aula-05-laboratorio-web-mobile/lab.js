@@ -794,7 +794,10 @@ function registrar() {
     try {
       if (file.size > 100000) throw Error('Arquivo excede 100 KB.');
       const raw = await file.text();
-      restoreCheckpoint(JSON.parse(raw));
+      let parsed;
+      try { parsed = JSON.parse(raw); }
+      catch { throw Error('Arquivo JSON malformado: sintaxe inválida.'); }
+      restoreCheckpoint(parsed);
     } catch (error) {
       progressMessage('Não foi possível retomar: '+String(error.message || error), true);
     } finally { fileInput.value = ''; }
