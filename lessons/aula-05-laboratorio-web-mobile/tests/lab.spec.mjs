@@ -167,7 +167,7 @@ test('erro de compilação mostra feedback na própria bancada e permite evidên
   await page.locator('#evidence-open').click();
   await page.locator('#observacao').fill('Parcial: preciso rever a sintaxe.');
   const [download]=await Promise.all([page.waitForEvent('download'),page.locator('#export-json').click()]);
-  expect(download.suggestedFilename()).toBe('Aula05_Laboratorio_Evidencia_v3.json');
+  expect(download.suggestedFilename()).toBe('Aula05_Laboratorio_Evidencia_v4.json');
   const payload=JSON.parse(await readFile(await download.path(),'utf8'));
   expect(payload.xp).toBe(0);
   expect(payload.maximoXp).toBe(100);
