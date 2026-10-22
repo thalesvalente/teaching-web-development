@@ -156,6 +156,7 @@ function registrar() {
   let activeFile = 'shared';
   let activeIndex = 0;
   let ready = false, sourceLoaded = false, lastCompiled = false, pending = null;
+  let revealPreviewAfterExplicitRun = false;
   const nonce = 'aula05-' + String(Date.now()) + '-' + Math.random().toString(36).slice(2);
   const passed = Object.fromEntries(tasks.map(task => [task.id, false]));
   const completedDetail = {};
@@ -257,6 +258,10 @@ function registrar() {
     select.value = task.id;
     const needsQuiz = task.type === 'quiz';
     quizBank.hidden = !needsQuiz;
+    // Questões no topo do enunciado: no celular aparecem antes dos detalhes,
+    // enquanto o botão de conferir permanece sempre fixo no rodapé da missão.
+    if (needsQuiz) byId('guide-title').after(quizBank);
+    else byId('guide-line').after(quizBank);
     quizBank.querySelectorAll('[data-quiz]').forEach(group => { group.hidden = group.dataset.quiz !== task.id; });
     byId('guide-check').textContent = needsQuiz ? 'Conferir respostas' : 'Conferir missão';
     const feedback = feedbackState[task.id];
@@ -403,6 +408,7 @@ function registrar() {
     if (activeFile !== 'shared') showFile('shared');
     panels.shared = codeEditor.value;
     pending = null; enableChecks();
+    revealPreviewAfterExplicitRun = !initial;
     invalidateCodeTasks();
     if (send('RUN', { source: panels.shared })) setStatus('Compilando TSX completo para as duas prévias…');
     if (!initial) save();
@@ -500,7 +506,8 @@ function registrar() {
       lastCompiled = !!data.ok;
       setStatus(data.ok ? '✓ Executado nas duas prévias React Native Web. Estados independentes.' :
         `Erro no código: ${data.detail || 'revise o arquivo completo.'}`, !data.ok);
-      if (data.ok && window.matchMedia('(max-width: 1040px)').matches) setPane('preview');
+      if (data.ok && revealPreviewAfterExplicitRun && window.matchMedia('(max-width: 1040px)').matches) setPane('preview');
+      revealPreviewAfterExplicitRun = false;
     } else if (data.type === 'CHECKED' && data.stage === pending) {
       const id = pending; pending = null;enableChecks();
       passed[id] = !!data.ok;
