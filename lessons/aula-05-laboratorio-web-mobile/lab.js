@@ -613,6 +613,72 @@ function registrar() {
     }
   });
 
+  // Consultar componentes básicos sem criar arquivos ou exercícios adicionais.
+  // O botão localiza o JSX REAL editado pelo estudante, não um fragmento inventado.
+  const basicComponents = Object.freeze({
+    View: {
+      name: 'View · agrupa elementos',
+      explanation: 'É um contêiner de interface (semelhante à ideia de uma div em HTML). Organiza título, entrada, botão e resumo.',
+      observe: 'Observe que o formulário inteiro e o resumo estão agrupados em regiões nas duas prévias.',
+      marker: '<View style={styles.pagina}'
+    },
+    Text: {
+      name: 'Text · apresenta informações',
+      explanation: 'Exibe textos, como o título, a regra de validação e a última memória. Não serve como campo para digitar.',
+      observe: 'Altere TITULO_APLICACAO em [02], execute e veja o Text do título mudar nas duas prévias.',
+      marker: '<Text style={styles.titulo}>'
+    },
+    TextInput: {
+      name: 'TextInput · recebe texto',
+      explanation: 'É o campo editável. value={titulo} lê o estado; onChangeText chama setTitulo ao digitar. O placeholder é um exemplo, não a regra.',
+      observe: 'Digite algo no campo da Web e note que a prévia móvel mantém seu próprio estado.',
+      marker: '<TextInput'
+    },
+    Pressable: {
+      name: 'Pressable · recebe o toque/clique',
+      explanation: 'É o elemento acionável. onPress={registrar} chama a função quando a pessoa toca ou clica; não chame registrar() na declaração.',
+      observe: 'Teste um título curto e outro válido usando o botão. O mesmo onPress funciona nas duas prévias.',
+      marker: '<Pressable'
+    }
+  });
+  let selectedComponent = 'View';
+  function drawComponent() {
+    const info = basicComponents[selectedComponent];
+    byId('component-name').textContent = info.name;
+    byId('component-explanation').textContent = info.explanation;
+    byId('component-fragment').textContent = info.marker;
+    byId('component-observe').textContent = info.observe;
+    document.querySelectorAll('[data-component]').forEach(button => {
+      const selected = button.dataset.component === selectedComponent;
+      button.setAttribute('aria-pressed', String(selected));
+    });
+  }
+  byId('component-open').addEventListener('click', () => {
+    drawComponent();
+    byId('component-dialog').showModal();
+  });
+  document.querySelectorAll('[data-component]').forEach(button => button.addEventListener('click', () => {
+    selectedComponent = button.dataset.component;
+    drawComponent();
+  }));
+  byId('component-locate').addEventListener('click', () => {
+    const marker = basicComponents[selectedComponent].marker;
+    showFile('shared');
+    const pos = panels.shared.indexOf(marker);
+    if (pos < 0) {
+      byId('component-explanation').textContent =
+        'Este trecho não foi encontrado no seu código atual. Confira se o componente foi alterado ou removido.';
+      return;
+    }
+    byId('component-dialog').close();
+    setPane('code');
+    codeEditor.focus({ preventScroll: true });
+    codeEditor.setSelectionRange(pos, pos + marker.length);
+    const line = panels.shared.slice(0, pos).split('\n').length;
+    codeEditor.scrollTop = Math.max(0,(line - 6) * (parseFloat(getComputedStyle(codeEditor).lineHeight) || 21));
+    setStatus('Componente '+selectedComponent+' localizado no arquivo completo, linha '+line+'.');
+  });
+
   // Ajuda e evidências são janelas auxiliares; a bancada jamais perde seu lugar.
   for (const [buttonId, dialogId] of [['help-open','help-dialog'],['evidence-open','evidence-dialog']]) {
     byId(buttonId).addEventListener('click', () => byId(dialogId).showModal());
