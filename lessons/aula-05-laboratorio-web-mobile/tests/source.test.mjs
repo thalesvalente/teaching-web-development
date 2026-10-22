@@ -71,7 +71,7 @@ test('alternância por viewport preserva duas prévias e localização de linha 
 test('rascunho preservado e evidências parciais acessíveis por janela local', () => {
   assert.match(ui,/ifma-web-aula05-lab-v2/);
   assert.match(ui,/ifma-web-aula05-lab-v1/);
-  assert.match(ui,/ifma-web-aula05-lab-v3/);
+  assert.match(ui,/ifma-web-aula05-lab-v4/);
   assert.match(ui,/delete completedDetail\[task\.id\]/);
   assert.match(ui,/if \(task\.type === 'quiz'\) continue/);
   assert.match(ui,/exercicios: tasks\.map/);
