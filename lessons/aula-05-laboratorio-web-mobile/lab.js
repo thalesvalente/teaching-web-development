@@ -664,25 +664,70 @@ function registrar() {
     if (!data || data.from !== 'ifma-aula05') return;
     if (data.type === 'READY') { ready = true; if (sourceLoaded) run({ initial: true }); return; }
     if (data.token !== nonce) return;
+    // A resposta assíncrona deve vir da VERSÃO compilada que continua aberta.
+    // Editar/reexecutar durante uma conferência descarta resultados antigos.
+    if (data.runId !== runSequence || data.revision !== sourceRevision) return;
     if (data.type === 'COMPILED') {
-      lastCompiled = !!data.ok;
-      setStatus(data.ok ? '✓ Executado nas duas prévias React Native Web. Estados independentes.' :
-        `Erro no código: ${data.detail || 'revise o arquivo completo.'}`, !data.ok);
-      if (!data.ok) {
-        // Compilação inválida não pode manter XP técnicos previamente restaurados.
-        invalidateCodeTasks(); save();
+      lastCompiled = data.ok === true;
+      setStatus(lastCompiled ? '✓ Executado nas duas prévias React Native Web. Estados independentes.' :
+        `Erro no código: ${data.detail || 'revise o arquivo completo.'} · XP anteriores preservados.`, !lastCompiled);
+      if (!lastCompiled) {
+        markCodeForReview('O código atual não compilou. Corrija-o antes de novas conferências; XP conquistados não desaparecem.');
+        if (reviewAfterCompile) {
+          reviewAfterCompile = false;
+          setReviewStatus('Não foi possível conferir: o código atual não compilou. Seus XP estão preservados.', 'failed');
+        }
+        save();
       }
-      if (data.ok && revealPreviewAfterExplicitRun && window.matchMedia('(max-width: 1040px)').matches) setPane('preview');
+      if (lastCompiled && reviewAfterCompile) {
+        reviewAfterCompile = false;
+        startReview();
+      }
+      if (lastCompiled && revealPreviewAfterExplicitRun && window.matchMedia('(max-width: 1040px)').matches) setPane('preview');
       revealPreviewAfterExplicitRun = false;
     } else if (data.type === 'CHECKED' && data.stage === pending) {
-      const id = pending; pending = null;enableChecks();
-      passed[id] = !!data.ok;
-      if (data.ok) completedDetail[id] = data.detail;
-      else delete completedDetail[id];
-      feedbackState[id] = data.ok
+      const id = pending;
+      stopPendingChecks();
+      if (data.ok === true) {
+        passed[id] = true;
+        completedDetail[id] = String(data.detail || 'Critério aprovado.').slice(0, 250);
+      }
+      // Falha na versão atual não anula o XP acumulado por aprovação anterior.
+      feedbackState[id] = data.ok === true
         ? { kind: 'success', text: `✓ Aprovado · ${data.detail}` }
-        : { kind: 'failed', text: `Revisar · ${data.detail}` };
+        : { kind: 'failed', text: `A conferência atual falhou: ${data.detail || 'revise o código.'}` };
       render();save();
+    } else if (data.type === 'CHECKED_ALL' && reviewPending) {
+      stopPendingChecks();
+      const results = data.results;
+      if (!Array.isArray(results) || results.length !== codeTaskIds.length ||
+          new Set(results.map(item => item?.stage)).size !== codeTaskIds.length ||
+          results.some(item => !item || !codeTaskIds.includes(item.stage) || typeof item.ok !== 'boolean')) {
+        setReviewStatus('Não foi possível validar a conferência coletiva. Os XP já conquistados permanecem.', 'failed');
+        return;
+      }
+      const scoreBefore = getScore();
+      let approvedNow = 0, notApprovedNow = 0, newlyApproved = 0;
+      for (const item of results) {
+        const id = item.stage;
+        const current = item.ok === true;
+        if (current) {
+          approvedNow++;
+          if (!passed[id]) newlyApproved++;
+          passed[id] = true;
+          completedDetail[id] = String(item.detail || 'Critério conferido.').slice(0, 250);
+          feedbackState[id] = { kind: 'success', text: '✓ Conferência coletiva: ' + (item.detail || 'aprovado.') };
+        } else {
+          notApprovedNow++;
+          feedbackState[id] = { kind: 'failed',
+            text: 'A versão atual não passou: ' + String(item.detail || 'revise o critério.').slice(0, 250) };
+        }
+      }
+      render();save();
+      const gained = getScore() - scoreBefore;
+      const message = `Conferência concluída: ${approvedNow}/${codeTaskIds.length} missões técnicas aprovadas no código atual; ${newlyApproved} novas conquistas (+${gained} XP). Total acumulado: ${getScore()}/100 XP. ${notApprovedNow} não passaram na versão atual. Nenhuma conquista anterior foi apagada.`;
+      setReviewStatus(message, 'success');
+      setStatus('✓ '+message);
     }
   });
 
