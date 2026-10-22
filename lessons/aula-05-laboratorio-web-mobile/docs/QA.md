@@ -7,7 +7,7 @@
 - [ ] Em telas estreitas, Código/Resultado alternam sem recarregar o arquivo nem perder a missão, e a missão continua no viewport.
 - [ ] Os quizzes das missões 02 e 14 são respondidos **dentro do painel da missão** e os resultados aparecem junto à questão.
 - [ ] Localizar marca o trecho dentro de `ProjetoUniversal.tsx` e move apenas a rolagem interna do editor.
-- [ ] 14 exercícios, 3 ciclos, 100 XP, pontuação idempotente e invalidação após edição preservadas.
+- [ ] 14 exercícios, 3 ciclos, 100 XP, pontuação idempotente e XP acumulativos preservados entre edição, execução, conferência, recarga e importação.
 - [ ] Runtime React Native Web executa fonte TSX real em duas instâncias independentes; erros de compilação bloqueiam XP.
 - [ ] Exportação parcial JSON, Markdown e impressão continuam disponíveis em janela sem quebrar o lugar do estudante.
 - [ ] Rascunhos v3/v1 permanecem preservados sob chaves anteriores; a v4 abre com código de referência atualizado e oferece exportação explícita do backup, sem sobrescrever.
