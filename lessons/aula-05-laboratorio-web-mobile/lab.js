@@ -1,5 +1,5 @@
 /**
- * AULA 05 | Guia de missões e observação das duas prévias.
+ * AULA 05 | Laboratório Vivo: tutoria conceitual e testes observáveis.
  * O código editado roda exclusivamente no iframe de origem opaca (preview.js).
  * Este arquivo organiza a aula e recebe os resultados dos testes comportamentais;
  * não interpreta manualmente o código do aluno nem atribui nota oficial.
@@ -30,20 +30,20 @@
       hint: 'Procure TITULO_APLICACAO no bloco [02] e depois onde {TITULO_APLICACAO} aparece no [06].' },
     { id: 'placeholder', xp: 6, name: 'Oriente quem vai digitar', phase: 1, minutes: 6,
       focus: 'export const DICA_CAMPO', type: 'code',
-      do: 'Troque a dica “Ex.: Feira de ciências” por outro exemplo realista fictício, como “Ex.: Biblioteca escolar”.',
+      do: 'Altere DICA_CAMPO no bloco [02] para “Ex.: Biblioteca escolar”. Execute; compare o exemplo dentro do campo com a regra visível abaixo.',
       observe: 'A dica aparece dentro dos dois campos quando estão vazios.',
-      why: 'A configuração no [02] chega à propriedade placeholder no JSX [06].',
+      why: 'placeholder mostra apenas um exemplo; accessibilityHint orienta a tecnologia assistiva; o Text abaixo do campo apresenta a regra para todos.',
       hint: 'A constante é DICA_CAMPO. Você pode procurar pelo nome no editor e localizar placeholder={DICA_CAMPO}.' },
     { id: 'limit', xp: 12, name: 'Valide o limite mínimo', phase: 2, minutes: 8,
       focus: 'export const MINIMO_CARACTERES', type: 'code',
       do: 'Altere MINIMO_CARACTERES de 5 para 7. Teste um título de 6 e depois outro de 7 caracteres.',
-      observe: 'Seis deve produzir erro; sete deve permitir o registro. Espaços externos não contam.',
+      observe: 'Seis deve produzir erro; sete deve permitir o registro. A regra visível passa a dizer 7–60. Espaços nas pontas não contam.',
       why: 'É a mesma função validarTitulo que decide o resultado na Web e no Mobile.',
       hint: 'Modifique somente a constante. No [03], a condição texto.length < MINIMO_CARACTERES usa essa configuração.' },
     { id: 'maximum', xp: 10, name: 'Teste também o limite máximo', phase: 2, minutes: 8,
       focus: 'export const MAXIMO_CARACTERES', type: 'code',
       do: 'Altere MAXIMO_CARACTERES de 60 para 30. Faça testes com 30 e 31 caracteres.',
-      observe: 'Trinta deve ser aceito; trinta e um devem mostrar o erro de tamanho máximo.',
+      observe: 'Trinta deve ser aceito; trinta e um devem mostrar erro. A regra visível passa a indicar máximo de 30.',
       why: 'Agora você reconhece dois ramos if dentro de uma função completa.',
       hint: 'Observe no bloco [03] a segunda condição: texto.length > MAXIMO_CARACTERES.' },
     { id: 'button', xp: 7, name: 'Um botão, duas renderizações', phase: 2, minutes: 7,
@@ -101,7 +101,68 @@
     { name: 'Ciclo 3 — Teste, explique e entregue', objective: 'Exercite as regras, identifique os limites e exporte evidências.', time: '35 min', xp: 29 },
   ];
   const TOTAL_XP = tasks.reduce((sum, task) => sum + task.xp, 0);
-  const key = 'ifma-web-aula05-lab-v2'; // Guarda rascunho NOVO; não sobrescreve o v1.
+  // Tutorial da missão: conceito e teste sem deslocar o estudante da bancada.
+  // Os textos são renderizados como texto, sem executar HTML externo.
+  const tutorial = {
+  "run": {
+    "concept": "Componente é uma função que descreve a interface. O mesmo TSX pode ser renderizado duas vezes; cada instância mantém seu estado.",
+    "test": "Digite “1” na Web e registre: deve aparecer erro, contador 0. Depois registre “Biblioteca” e confirme que Mobile continua em 0."
+  },
+  "map": {
+    "concept": "useState devolve o valor atual e uma função para atualizá-lo. onChangeText chama a função na digitação; em Vue, ref/v-model cumprem papéis parecidos.",
+    "test": "Localize [04] (estado) e [06] (digitação). Responda às perguntas desta missão."
+  },
+  "title": {
+    "concept": "Uma constante nomeada evita repetir textos. O JSX lê TITULO_APLICACAO do bloco [02] para montar a tela.",
+    "test": "Modifique TITULO_APLICACAO, clique Executar e confira os dois títulos."
+  },
+  "placeholder": {
+    "concept": "Rótulo identifica. placeholder é exemplo passageiro. accessibilityHint auxilia leitores de tela. O Text abaixo do campo mostra a regra para todos.",
+    "test": "Limpe o campo para ver a dica. Digite “1”: a dica some, mas a regra 5–60 permanece; o contador exibe 1."
+  },
+  "limit": {
+    "concept": "A mesma constante MINIMO_CARACTERES alimenta a função validarTitulo e a orientação visível e acessível. O usuário não deve receber regras contraditórias.",
+    "test": "Mude o mínimo para 7, execute, confira regra visível 7–60; teste “123456” (erro) e “1234567” (aceito)."
+  },
+  "maximum": {
+    "concept": "MAXIMO_CARACTERES é o limite superior inclusivo da validação. O contador usa trim(), como a regra do bloco [03].",
+    "test": "Mude o máximo para 30 e execute. Confira a regra visível e teste 30 caracteres e depois 31."
+  },
+  "button": {
+    "concept": "TEXTO_BOTAO aparece no Pressable e em accessibilityLabel. Uma única constante controla o texto e o nome acessível.",
+    "test": "Renomeie o botão; execute e confira nas duas renderizações."
+  },
+  "error": {
+    "concept": "validarTitulo retorna uma mensagem; registrar a coloca em erro; JSX mostra o aviso só quando erro não está vazio.",
+    "test": "Registre “1” para ver o erro; digite novamente e veja-o desaparecer."
+  },
+  "success": {
+    "concept": "A confirmação depende de validação aprovada, mas não significa envio ao professor ou armazenamento permanente.",
+    "test": "Tente registrar um título inválido, depois um válido; compare mensagem e contador."
+  },
+  "color": {
+    "concept": "StyleSheet.create concentra os estilos. Um token COR_BOTAO controla a cor das duas renderizações.",
+    "test": "Troque COR_BOTAO por #1f4f83; execute e compare os botões."
+  },
+  "trim": {
+    "concept": "trim() remove espaços nas pontas antes de validar e registrar, preservando espaços internos.",
+    "test": "Registre “  Memória  coletiva  ”. Confira a última memória exibida e o outro contador."
+  },
+  "invalid": {
+    "concept": "return interrompe registrar ao falhar. onChangeText limpa o erro antigo durante a correção, sem registrar nada.",
+    "test": "Tente só espaços e “abc”. Corrija, observe a mensagem desaparecer e registre um título válido."
+  },
+  "isolation": {
+    "concept": "Compartilhar código não compartilha useState. Sincronização real de dados exigiria uma origem comum, como uma API.",
+    "test": "Registre um título na Web e outro na prévia estreita; compare contadores e últimas memórias."
+  },
+  "quiz": {
+    "concept": "React Native Web renderiza componentes no navegador; o teste em um dispositivo Android/iOS precisa de um projeto Expo compatível.",
+    "test": "Responda às duas perguntas nesta missão sobre código compartilhado e teste nativo."
+  }
+};
+
+  const key = 'ifma-web-aula05-lab-v4'; // Nunca sobrescreve rascunhos da versão anterior.
   const byId = id => document.getElementById(id);
   const codeEditor = byId('code');
   const frame = byId('preview');
@@ -249,6 +310,11 @@ function registrar() {
     byId('guide-do').textContent = task.do;
     byId('guide-observe').textContent = task.observe;
     byId('guide-why').textContent = task.why;
+    byId('guide-concept').textContent = tutorial[task.id].concept;
+    const instruction = byId('guide-test');
+    const label = document.createElement('strong');
+    label.textContent = 'Teste concreto: ';
+    instruction.replaceChildren(label, document.createTextNode(tutorial[task.id].test));
     byId('guide-line').textContent = `Localizar em ProjetoUniversal.tsx: ${task.focus}`;
     byId('guide-hint').textContent = task.hint;
     byId('guide-hint-box').open = false;
@@ -328,10 +394,22 @@ function registrar() {
       if (index >= 0) activeIndex = index;
     }
   }
-  // O rascunho v1 permanece exportável; o v2 continua na mesma chave de armazenamento.
-  let legacy = null;
-  try { legacy = JSON.parse(localStorage.getItem('ifma-web-aula05-lab-v1') || 'null'); } catch { /* não encontrado */ }
-  if (typeof legacy?.code === 'string' && legacy.code.length < 30000) byId('legacy-export').hidden = false;
+  // O tutorial V4 abre com a fonte atualizada. O código anterior continua
+  // disponível para download; não é sobrescrito nem migrado sem consentimento.
+  let legacy = null, legacyTag = '';
+  for (const [storageKey, tag] of [['ifma-web-aula05-lab-v2', 'v3'], ['ifma-web-aula05-lab-v1', 'v1']]) {
+    try {
+      const prior = JSON.parse(localStorage.getItem(storageKey) || 'null');
+      if (typeof prior?.code === 'string' && prior.code.length < 30000) {
+        legacy = prior; legacyTag = tag; break;
+      }
+    } catch { /* ignorar rascunho inválido */ }
+  }
+  if (legacy) {
+    byId('legacy-export').hidden = false;
+    byId('legacy-export').textContent = 'Baixar meu código anterior';
+    byId('migration-note').hidden = false;
+  }
   render();
 
   async function loadSource() {
@@ -530,8 +608,8 @@ function registrar() {
   });
 
   function evidence() {
-    return { schema: 'ifma-web-aula05-lab-v3', geradoEm: new Date().toISOString(),
-      atividade: 'Aula 05 — Bancada Web ↔ Mobile · interface sem navegação longa',
+    return { schema: 'ifma-web-aula05-lab-v4', geradoEm: new Date().toISOString(),
+      atividade: 'Aula 05 — Laboratório Vivo · Tutorial Web ↔ Mobile',
       tipo: 'formativo-nao-e-nota', xp: getScore(), maximoXp: TOTAL_XP,
       exercicios: tasks.map(task => ({ id: task.id, ciclo: task.phase, titulo: task.name,
         xp: passed[task.id] ? task.xp : 0, maximoXp: task.xp,
@@ -551,12 +629,12 @@ function registrar() {
   }
   byId('download-code').addEventListener('click', () => download('ProjetoUniversal.tsx', panels.shared, 'text/plain;charset=utf-8'));
   byId('legacy-export').addEventListener('click', () => {
-    if (typeof legacy?.code === 'string') download('Aula05_Rascunho_v1_Backup.tsx', legacy.code, 'text/plain;charset=utf-8');
+    if (typeof legacy?.code === 'string') download('Aula05_Rascunho_' + legacyTag + '_Backup.tsx', legacy.code, 'text/plain;charset=utf-8');
   });
-  byId('export-json').addEventListener('click', () => download('Aula05_Laboratorio_Evidencia_v3.json', JSON.stringify(evidence(), null, 2), 'application/json;charset=utf-8'));
+  byId('export-json').addEventListener('click', () => download('Aula05_Laboratorio_Evidencia_v4.json', JSON.stringify(evidence(), null, 2), 'application/json;charset=utf-8'));
   function reportText() {
     const data = evidence();
-    const lines = ['# Aula 05 — Laboratório Web ↔ Mobile', '', `Gerado em: ${data.geradoEm}`,
+    const lines = ['# Aula 05 — Laboratório Vivo · Tutorial Web ↔ Mobile', '', `Gerado em: ${data.geradoEm}`,
       `XP formativos: **${data.xp}/${data.maximoXp}** (NÃO são nota).`, '', '## Exercícios'];
     data.exercicios.forEach(ex => lines.push(`- ${ex.estado}: ${ex.titulo} (${ex.xp}/${ex.maximoXp} XP)${ex.comentario ? ' — ' + ex.comentario : ''}`));
     lines.push('', '## O que modifiquei e observei', data.observacao || '(não respondido)',
@@ -565,7 +643,7 @@ function registrar() {
       '', '## Arquivo completo entregue', '```tsx', data.codigoFonteCompleto, '```', '');
     return lines.join('\n');
   }
-  byId('export-md').addEventListener('click', () => download('Aula05_Laboratorio_Evidencia_v3.md', reportText(), 'text/markdown;charset=utf-8'));
+  byId('export-md').addEventListener('click', () => download('Aula05_Laboratorio_Evidencia_v4.md', reportText(), 'text/markdown;charset=utf-8'));
   byId('print').addEventListener('click', () => {
     byId('print-report').textContent = reportText().split('## Arquivo completo entregue')[0];
     window.print();
