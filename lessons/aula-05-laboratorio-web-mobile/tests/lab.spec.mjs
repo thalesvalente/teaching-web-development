@@ -390,9 +390,9 @@ test('PDF parcial usa pontuação corrente e preserva perguntas não respondidas
   await checkCode(page,'run');
   await page.locator('#quick-pdf').click();
   const report=await page.evaluate(()=>window.__printed);
-  expect(report).toContain('5/100');
-  expect(report).toContain('13 de 14');
-  expect(report).toContain('PENDENTE');
+  expect(report).toContain('5 / 100 XP');
+  expect(report).toContain('13 pendentes');
+  expect(report).toContain('Pendente');
 });
 
 
