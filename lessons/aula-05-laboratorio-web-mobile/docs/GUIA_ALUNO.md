@@ -38,7 +38,7 @@ No painel de edição, a aba **Comparar Vue** mostra o exemplo Vue integral; a a
 
 ## Ritmo e XP
 
-O roteiro possui **14 exercícios, 100 XP formativos**, mas **01–08 são o núcleo sugerido para os 100 minutos**; 09–14 são aprofundamento. XP não equivale à nota E3-I1 da Aula 4. Corrigir um erro é parte da aprendizagem; mudanças de código invalidam XP técnicos antigos até você executar e conferir novamente.
+O roteiro possui **14 exercícios, 100 XP formativos**, mas **01–08 são o núcleo sugerido para os 100 minutos**; 09–14 são aprofundamento. XP não equivale à nota E3-I1 da Aula 4. Corrigir um erro é parte da aprendizagem. **Os XP conquistados são acumulativos**: modificar ou executar o código não retira pontos ganhos em missões anteriores. Se um teste do código atual falhar, o laboratório mostra o que precisa ser revisto, sem apagar a conquista histórica. O botão **Conferir progresso** reexecuta as verificações técnicas em conjunto e pode recuperar XP que ainda não foram registrados, sem visitar missão por missão.
 
 ## Web x Mobile
 
