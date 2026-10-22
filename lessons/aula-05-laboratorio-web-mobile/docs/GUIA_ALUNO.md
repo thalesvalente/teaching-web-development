@@ -64,3 +64,13 @@ Seu código e suas respostas podem ser guardados no armazenamento local deste na
 
 O tutorial v4 inicia com o código atualizado para todos verem a regra visual. Se você havia editado código na versão anterior, seu rascunho **não é apagado**; use o botão **Baixar meu código anterior**, quando disponível, para fazer cópia e comparar. A atualização não copia automaticamente alterações antigas para o exemplo novo.
 
+
+
+## Salvar agora e continuar depois
+
+1. No cabeçalho do laboratório, clique **Salvar progresso** e guarde o arquivo `Aula05_Continuar_Depois.json`.
+2. Volte quando quiser, neste computador ou em outro, e clique **Retomar arquivo**; escolha o JSON e confirme a substituição do progresso da sessão atual.
+3. Confira o código, as respostas, a missão em andamento e os XP formativos restaurados. Missões não concluídas permanecem pendentes. Se você editar o código novamente, execute e confira as missões técnicas alteradas.
+4. Para imprimir um comprovante de tudo que fez até agora, clique **Gerar PDF**; na janela do navegador, selecione **Salvar como PDF**. O documento A4 tem capa do IFMA e tabela das 14 missões, inclusive pendências. **Não use o PDF para tentar retomar o editor.**
+
+A exportação é local. Nenhuma nota oficial ou entrega ao professor é registrada por salvar o JSON ou PDF.
