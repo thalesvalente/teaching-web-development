@@ -45,7 +45,7 @@ test('modelo A4 tem capa IFMA, identidade, 14 missões, parcial e textos sem Mar
   const text=await area.textContent();
   expect(text).not.toContain('**');
   expect(text).toContain('Comparei as prévias Web e Mobile.');
-  expect(text).toContain('não constituem nota oficial');
+  expect(text).toContain('não constitui nota oficial');
   await expect(page.locator('#xp-top')).toHaveText('5');
 });
 test('Chromium imprime PDF A4 real com texto legível, cores e paginação',async({page})=>{
