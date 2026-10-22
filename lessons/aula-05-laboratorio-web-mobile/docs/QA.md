@@ -1,4 +1,4 @@
-# QA — Aula 05 v3: bancada sem rolagem descontextualizada
+# QA — Aula 05 v4: Laboratório Vivo, regra visual e tutorial contextual
 
 ## Gates principais
 
@@ -10,7 +10,7 @@
 - [ ] 14 exercícios, 3 ciclos, 100 XP, pontuação idempotente e invalidação após edição preservadas.
 - [ ] Runtime React Native Web executa fonte TSX real em duas instâncias independentes; erros de compilação bloqueiam XP.
 - [ ] Exportação parcial JSON, Markdown e impressão continuam disponíveis em janela sem quebrar o lugar do estudante.
-- [ ] O rascunho v2 é preservado e o rascunho v1 pode ser exportado; sem perda da produção anterior.
+- [ ] Rascunhos v3/v1 permanecem preservados sob chaves anteriores; a v4 abre com código de referência atualizado e oferece exportação explícita do backup, sem sobrescrever.
 - [ ] Acessibilidade básica: navegação por teclado, aria-live no feedback, nomes acessíveis, modal, contraste e foco visíveis.
 - [ ] Iframe com `sandbox="allow-scripts"`, sem `allow-same-origin`; sem CDN no Pages; build local reproduzível.
 
@@ -21,3 +21,16 @@ Execute `npm ci && npm run build && npm run check:logic && npm run test:e2e` em 
 ## Limites explícitos
 
 React Native Web estreito **não** é execução nativa Android/iOS. WCAG 2.2 AA requer testes assistivos manuais adicionais; Playwright, rolagem controlada e inspeção de DOM são verificações parciais. Sem teste nativo no laboratório, marcar NÃO VERIFICADO. Não publicar soluções da atividade avaliativa anterior.
+
+## Gates adicionais v4
+
+- [ ] `accessibilityHint={orientacao}` e o `Text` visível `testID="ajuda-titulo"` exibem a mesma regra dinâmica, sem usar placeholder como instrução.
+- [ ] Contador `testID="contador-caracteres"` usa `titulo.trim().length` e reage à digitação, mesmo após tentativa inválida.
+- [ ] Alterar limites de 5–60 para 7–30 atualiza a instrução visual **em ambas as prévias** e preserva a validação de fronteira.
+- [ ] Todas as 14 missões mostram conceito-chave e teste concreto na própria bancada, sem HTML executável vindo dos enunciados.
+- [ ] Rascunho antigo disponível para download e carregamento inicial do exemplo novo, sem perda silenciosa.
+- [ ] Glossário distingue rótulo, placeholder, acessibilidade, regra visível e erro; em tela estreita não surge rolagem de documento.
+- [ ] E2E verifica teste de entrada inválida, ajuda permanente, correção, estados independentes, limites alterados e backup.
+
+A auditoria WCAG 2.2 AA com tecnologias assistivas permanece pendente; o workflow comprova somente os cenários implementados.
+
