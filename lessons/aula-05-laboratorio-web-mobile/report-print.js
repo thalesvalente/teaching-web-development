@@ -59,10 +59,12 @@
     const institution=add(identityLine,'div','doc-institution');
     add(institution,'strong',null,'INSTITUTO FEDERAL DO MARANHÃO');
     add(institution,'span',null,'Campus Itapecuru-Mirim');
+    add(institution,'span','doc-course','Técnico em Informática Integrado ao Ensino Médio');
+    add(institution,'span','doc-discipline','INF031 — Desenvolvimento de Sistemas Web');
     const edition=add(identityLine,'div','doc-edition');
     add(edition,'span',null,'AULA 05');
     add(edition,'strong',null,'2026.2');
-    add(cover,'p','doc-eyebrow','DESENVOLVIMENTO DE SISTEMAS WEB  |  DOCUMENTO DIDÁTICO');
+    add(cover,'p','doc-eyebrow','REGISTRO INDIVIDUAL DE APRENDIZAGEM  |  AULA 05');
     add(cover,'h1',null,'Relatório de aprendizagem');
     add(cover,'p','doc-subtitle','Laboratório Vivo — Tutorial Web e Mobile');
     add(cover,'p','doc-status',pending?'RELATÓRIO PARCIAL':'RELATÓRIO CONCLUÍDO');
@@ -70,7 +72,12 @@
     infoRow(metadata,'Estudante',safeText(identity.name,'Não informado'));
     infoRow(metadata,'Matrícula',safeText(identity.enrollment,'Não informada'));
     infoRow(metadata,'Turma / equipe',safeText(identity.team,'Não informada'));
+    infoRow(metadata,'Docente','Prof. Dr. Thales Levi Azevedo Valente');
     infoRow(metadata,'Emissão (BRT)',when);
+    const control=add(cover,'div','doc-control');
+    add(control,'p',null,'Controle documental: WEB-A05-LV-2026');
+    add(control,'p',null,'Versão do relatório: 1.0.0');
+    add(control,'p',null,'Natureza: registro individual de evidências; progresso formativo autodeclarado e testado localmente.');
     // Progresso formativo — não é nota acadêmica.
     const score=add(article,'section','doc-score');
     add(score,'p','doc-score-label','RESULTADO FORMATIVO DO LABORATÓRIO');
