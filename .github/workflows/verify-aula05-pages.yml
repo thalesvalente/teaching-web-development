@@ -30,6 +30,7 @@ jobs:
             'lessons/aula-05-laboratorio-web-mobile/index.html',
             'lessons/aula-05-laboratorio-web-mobile/preview.html',
             'lessons/aula-05-laboratorio-web-mobile/lab.js',
+            'lessons/aula-05-laboratorio-web-mobile/report-print.js',
             'lessons/aula-05-laboratorio-web-mobile/preview.js',
             'lessons/aula-05-laboratorio-web-mobile/assets/vendor.js',
             'lessons/aula-05-laboratorio-web-mobile/shared/ProjetoUniversal.tsx',
@@ -65,6 +66,6 @@ jobs:
               if attempt<9:time.sleep(15)
           if last:raise SystemExit('Publicacao nao validada: '+str(last))
           with open(os.environ['GITHUB_STEP_SUMMARY'],'a',encoding='utf-8') as f:
-            f.write('## Publicacao verificada\n\n7 arquivos HTTP 200 com hashes iguais aos do HEAD da main. Portal e links antigos preservados.\n')
+            f.write('## Publicacao verificada\n\n8 arquivos HTTP 200 com hashes iguais aos do HEAD da main. Portal e links antigos preservados.\n')
           print('AULA05_PAGES_PASS',flush=True)
           PY

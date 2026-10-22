@@ -763,7 +763,10 @@ function registrar() {
     if (isCheckpoint && (!Number.isSafeInteger(data.xp) ||
         data.xp !== ids.reduce((n,id)=>n+tasks.find(t=>t.id===id).xp,0)))
       throw Error('Pontuação inconsistente no arquivo.');
-    if (!confirm('Retomar o arquivo selecionado? O código e o progresso desta sessão serão substituídos.')) return;
+    if (!confirm('Retomar o arquivo selecionado? O código e o progresso desta sessão serão substituídos.')) {
+      progressMessage('Retomada cancelada. O código, as respostas e os XP atuais foram preservados.');
+      return;
+    }
     panels.shared = source;
     codeEditor.value = source;
     for (const task of tasks) {
@@ -791,7 +794,10 @@ function registrar() {
     try {
       if (file.size > 100000) throw Error('Arquivo excede 100 KB.');
       const raw = await file.text();
-      restoreCheckpoint(JSON.parse(raw));
+      let parsed;
+      try { parsed = JSON.parse(raw); }
+      catch { throw Error('Arquivo JSON malformado: sintaxe inválida.'); }
+      restoreCheckpoint(parsed);
     } catch (error) {
       progressMessage('Não foi possível retomar: '+String(error.message || error), true);
     } finally { fileInput.value = ''; }
@@ -812,12 +818,27 @@ function registrar() {
     return lines.join('\n');
   }
   byId('export-md').addEventListener('click', () => download('Aula05_Laboratorio_Evidencia_v4.md', reportText(), 'text/markdown;charset=utf-8'));
+  // Documento A4 estruturado: a versão anterior imprimia Markdown como
+  // texto plano, com bullets e asteriscos literais. Agora o HTML de impressão
+  // segue a identidade das fichas do IFMA, mantendo resultados PARCIAIS.
   function printPartial() {
-    const current = evidence();
-    byId('print-report').textContent = reportText().split('## Arquivo completo entregue')[0] +
-      '\n\nRelatório parcial: ' + current.exercicios.filter(ex => ex.estado === 'APROVADO').length +
-      ' de 14 missões concluídas; ' + (14 - current.exercicios.filter(ex => ex.estado === 'APROVADO').length) + ' de 14 pendentes.\\n';
-    window.print();
+    try {
+      const current=evidence();
+      if (!window.WebLabReport?.prepare)
+        throw Error('O gerador do relatório institucional não está disponível.');
+      const student={
+        name:byId('web-student-name')?.value || '',
+        enrollment:byId('web-student-id')?.value || '',
+        team:byId('web-team')?.value || ''
+      };
+      const summary=window.WebLabReport.prepare(byId('print-report'),current,student);
+      progressMessage('Relatório A4 preparado: '+summary.xp+'/100 XP e '+
+        summary.pending+' missões pendentes. Na janela do navegador, escolha “Salvar como PDF”.');
+      window.print();
+    } catch(error) {
+      progressMessage('Não foi possível preparar o PDF: '+
+        String(error?.message||'verifique os dados.'),true);
+    }
   }
   for (const id of ['print','quick-pdf','dialog-pdf']) byId(id).addEventListener('click', printPartial);
   // Integração externa só pode obter o mesmo snapshot usado nos exports.

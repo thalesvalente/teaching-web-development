@@ -8,6 +8,7 @@
   <title>Aula 05 · Laboratório Vivo · Tutorial Web ↔ Mobile | IFMA</title>
   <link rel="stylesheet" href="./style.css">
   <script defer src="./entrega-config.js"></script>
+  <script defer src="./report-print.js"></script>
   <script defer src="./lab.js"></script>
   <script defer src="./entrega-appscript.js"></script>
 </head>
@@ -161,10 +162,10 @@ app/lab05.tsx               ← importa o componente
   <dialog class="resource-dialog evidence-dialog" id="evidence-dialog" aria-labelledby="evidence-title">
     <div class="dialog-header"><h2 id="evidence-title">Evidências do laboratório</h2><button type="button" class="close-dialog" data-close-dialog="evidence-dialog" aria-label="Fechar evidências">×</button></div>
     <div class="dialog-body">
-      <p><strong>Continue de onde parou:</strong> use <strong>Salvar progresso</strong> para baixar um JSON que guarda código, respostas, missão atual e XP formativos. Em outro momento ou dispositivo, clique em <strong>Retomar arquivo</strong>. O PDF é um relatório parcial para leitura e impressão; para continuar editando, use o JSON.</p>
+      <p><strong>Continue de onde parou:</strong> use <strong>Salvar progresso</strong> para baixar um JSON que guarda código, respostas, missão atual e XP formativos. Em outro momento ou dispositivo, clique em <strong>Retomar arquivo</strong>. O PDF segue o modelo institucional A4 do IFMA e pode conter missões pendentes. O botão Gerar PDF abre o diálogo de impressão: selecione Salvar como PDF. Para continuar editando, use o JSON.</p>
       <p>Pode exportar <strong>agora</strong>, mesmo com exercícios pendentes. XP são formativos, não nota oficial.</p>
       <p id="progress-status" class="progress-status" role="status" aria-live="polite">Rascunho salvo automaticamente neste navegador quando disponível. Salve um JSON para levar a outro dispositivo.</p>
-      <div class="evidence-actions priority-actions"><button type="button" id="dialog-save-progress" class="btn run">Salvar progresso (.json)</button><button type="button" id="dialog-load-progress" class="btn secondary">Retomar (.json)</button><button type="button" id="dialog-pdf" class="btn secondary">Gerar PDF parcial</button></div>
+      <div class="evidence-actions priority-actions"><button type="button" id="dialog-save-progress" class="btn run">Salvar progresso (.json)</button><button type="button" id="dialog-load-progress" class="btn secondary">Retomar (.json)</button><button type="button" id="dialog-pdf" class="btn secondary">Gerar PDF parcial (A4)</button></div>
       <div class="evidence-score"><strong><span id="xp-evidence">0</span>/100 XP</strong><span id="evidence-count">0 concluídos · 14 pendentes</span></div>
       <label for="observacao">O que mudou no código e o que aconteceu nas duas prévias?</label>
       <textarea id="observacao" rows="4" placeholder="Descreva a linha alterada e o comportamento que você observou."></textarea>
@@ -192,12 +193,12 @@ app/lab05.tsx               ← importa o componente
         </p>
       </fieldset>
       <details><summary>Ver situação de cada exercício</summary><ul id="evidence-list" class="evidence-list"></ul></details>
-      <div class="evidence-actions"><button type="button" id="export-json" class="btn secondary">Exportar evidências JSON</button><button type="button" id="export-md" class="btn secondary">Exportar Markdown</button><button type="button" id="print" class="btn secondary">Imprimir / salvar PDF</button></div>
+      <div class="evidence-actions"><button type="button" id="export-json" class="btn secondary">Exportar evidências JSON</button><button type="button" id="export-md" class="btn secondary">Exportar Markdown</button><button type="button" id="print" class="btn secondary">Imprimir / salvar PDF A4</button></div>
       <p class="privacy">Rascunho salvo somente neste navegador, se o armazenamento estiver disponível. Código e evidências não são enviados automaticamente. Os XP técnicos são revalidados após cada edição ou recarga.</p>
       <p id="evidence-status" role="status" aria-live="polite"></p>
     </div>
   </dialog>
-  <div class="print-only" id="print-report" aria-hidden="true"></div>
+  <div class="print-only" id="print-report" aria-hidden="true" role="document"></div>
   <noscript>Este laboratório exige JavaScript para editar, executar código e verificar exercícios.</noscript>
 </body>
 </html>

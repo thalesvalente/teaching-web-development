@@ -44,8 +44,23 @@ jobs:
         run: npm run check:logic
       - name: Chromium para testes reais
         run: npx playwright install --with-deps chromium
-      - name: Interacao, XP e responsividade
+      - name: Instalar verificador PDF e confirmar comandos
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq poppler-utils
+          command -v pdfinfo
+          command -v pdftotext
+          command -v pdftoppm
+      - name: Interacao, XP, salvamento e PDF A4 no Chromium
         run: npm run test:e2e
+      - name: Anexar PDF fictício e imagem de prova visual
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: aula05-pdf-qa
+          path: lessons/aula-05-laboratorio-web-mobile/test-artifacts/*
+          retention-days: 7
+          if-no-files-found: ignore
       - name: Verificar build versionado sem alteracao
         run: git diff --exit-code -- assets/vendor.js
       - name: Resultado verificavel

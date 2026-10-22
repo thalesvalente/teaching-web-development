@@ -93,3 +93,131 @@
 .component-description code{overflow-wrap:anywhere}
 #component-locate{width:100%;min-height:44px}
 @media(max-width:490px){.component-choices{grid-template-columns:1fr}}
+
+
+/* DOCUMENTO A4 — mesmo padrão institucional das fichas Mobile/PPI.
+   Layout vetorial de impressão do navegador: texto selecionável, Unicode,
+   cabeçalho IFMA, faixas verde/vermelha, tabela paginável e rodapé. */
+@page{
+  size:A4 portrait;
+  margin:16mm 15mm 19mm;
+  @bottom-left {
+    content:"IFMA · Desenvolvimento Web · Aula 05 · 2026.2";
+    font-family:Arial,sans-serif;font-size:8pt;color:#4f6456;
+  }
+  @bottom-right {
+    content:"Página " counter(page) " de " counter(pages);
+    font-family:Arial,sans-serif;font-size:8pt;color:#4f6456;
+  }
+}
+@media print{
+  html,body{height:auto!important;width:auto!important;overflow:visible!important;margin:0!important;background:#fff!important;color:#15281c!important}
+  html,body,#print-report{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
+  .app-shell,dialog,.skip{display:none!important}
+  #print-report,#print-report.print-only{
+    display:block!important;width:100%!important;margin:0!important;padding:0!important;
+    border:0!important;background:#fff!important;white-space:normal!important;
+    font:10.5pt/1.5 Arial,"Liberation Sans",sans-serif!important;
+    color:#15281c!important;overflow:visible!important
+  }
+  #print-report *{box-sizing:border-box}
+  #print-report h1,#print-report h2,#print-report h3,#print-report p,#print-report dl{margin:0}
+  #print-report .doc-report{width:100%;max-width:none;margin:0;padding:0}
+  #print-report .doc-cover{margin:0 0 13pt;break-inside:avoid-page}
+  #print-report .doc-top-rule{
+    height:6pt;margin-bottom:16pt;
+    background:linear-gradient(90deg,#006b3c 0 92%,#d71920 92% 100%)!important
+  }
+  #print-report .doc-institution-row{
+    display:grid;grid-template-columns:55pt minmax(0,1fr) 72pt;
+    align-items:center;gap:11pt;margin-bottom:17pt
+  }
+  #print-report .doc-wordmark{
+    padding:7pt 4pt;background:#006b3c!important;color:#fff!important;
+    font-size:15pt;font-weight:900;letter-spacing:-.045em;text-align:center;
+    border-bottom:4pt solid #d71920
+  }
+  #print-report .doc-institution strong{display:block;font-size:9.5pt;line-height:1.2;color:#006b3c}
+  #print-report .doc-institution span{display:block;margin-top:4pt;font-size:9pt;color:#596f60}
+  #print-report .doc-institution .doc-course{font-size:8.2pt;margin-top:6pt}
+  #print-report .doc-institution .doc-discipline{font-size:8.2pt;margin-top:2pt}
+  #print-report .doc-edition{text-align:right;color:#35523f;font-size:9pt;line-height:1.2}
+  #print-report .doc-edition span,#print-report .doc-edition strong{display:block}
+  #print-report .doc-edition strong{font-size:10.5pt;color:#006b3c}
+  #print-report .doc-eyebrow{
+    color:#5a7060;font-size:8.5pt;letter-spacing:.06em;font-weight:750;margin-bottom:6pt
+  }
+  #print-report .doc-cover h1{font-size:24pt;line-height:1.17;letter-spacing:-.02em;color:#006b3c;margin-bottom:4pt}
+  #print-report .doc-subtitle{font-size:12.2pt;color:#264634;margin-bottom:9pt}
+  #print-report .doc-status{display:inline-block;padding:4pt 7pt;margin-bottom:13pt;border:1pt solid #c3d7c8;background:#f0f6f1!important;color:#125334;font-size:8.5pt;font-weight:850;letter-spacing:.03em}
+  #print-report .doc-metadata{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8pt 16pt}
+  #print-report .doc-info-row{display:block;min-width:0;padding:0 0 5pt;border-bottom:.5pt solid #d9e5dc}
+  #print-report .doc-info-label{font-size:8.1pt;text-transform:uppercase;color:#577363;font-weight:800;margin-bottom:2pt}
+  #print-report .doc-info-value{margin:0;font-size:10pt;overflow-wrap:anywhere;white-space:pre-wrap}
+  #print-report .doc-control{
+    border-top:.8pt solid #7ca38a;margin-top:13pt;padding-top:8pt;
+    color:#506d5a;font-size:8.5pt;line-height:1.4
+  }
+  #print-report .doc-control p{margin:1pt 0}
+  #print-report .doc-score{
+    background:#f0f7f2!important;border-left:4pt solid #006b3c;
+    padding:11pt 13pt;margin-bottom:17pt;break-inside:avoid-page
+  }
+  #print-report .doc-score-label{font-size:9pt;letter-spacing:.025em;font-weight:850;color:#006b3c}
+  #print-report .doc-score-line{display:flex;align-items:flex-end;justify-content:space-between;gap:15pt;margin:6pt 0 10pt}
+  #print-report .doc-score-number{font-size:22pt;line-height:1.1;color:#006b3c}
+  #print-report .doc-score-summary{font-size:9pt;color:#284e34;text-align:right}
+  #print-report .doc-score-summary span{display:block}
+  #print-report .doc-score-track{height:5pt;background:#d6e8d8!important;border-radius:8pt;overflow:hidden}
+  #print-report .doc-score-fill{height:100%;background:#007943!important}
+  #print-report .doc-score-note{font-size:9.1pt;line-height:1.45;color:#455d4b;margin-top:8pt}
+  #print-report .doc-section{margin-top:17pt}
+  #print-report .doc-section h2{
+    font-size:14.5pt;line-height:1.2;color:#006b3c;
+    margin:0 0 9pt;padding:2pt 0 2pt 10pt;
+    border-left:3pt solid #d71920;break-after:avoid-page
+  }
+  #print-report .doc-section-lead{font-size:9.4pt;line-height:1.4;margin-bottom:9pt;color:#4b6252}
+  #print-report .doc-missions{
+    width:100%;border-collapse:collapse;table-layout:fixed;font-size:9pt;line-height:1.35
+  }
+  #print-report .doc-missions thead{display:table-header-group}
+  #print-report .doc-missions tbody{display:table-row-group}
+  #print-report .doc-missions th,#print-report .doc-missions td{
+    text-align:left;padding:5.5pt 7pt;border-bottom:.6pt solid #d2dfd5;
+    vertical-align:top;overflow-wrap:anywhere
+  }
+  #print-report .doc-missions thead th{
+    font-size:8.6pt;color:#174a2f;background:#e6f2e9!important;
+    font-weight:850;border-bottom:1.3pt solid #91c4a5
+  }
+  #print-report .doc-missions th:nth-child(1){width:8%}
+  #print-report .doc-missions th:nth-child(2){width:60%}
+  #print-report .doc-missions th:nth-child(3){width:19%}
+  #print-report .doc-missions th:nth-child(4){width:13%}
+  #print-report .doc-missions .doc-col-index{font-size:8.8pt;color:#718274}
+  #print-report .doc-missions .doc-col-title{font-weight:600}
+  #print-report .doc-missions .doc-col-xp{text-align:right;white-space:nowrap}
+  #print-report .doc-missions .doc-cycle-row th{
+    background:#f1f6f1!important;color:#215538;
+    padding:7pt;font-size:8.8pt;font-weight:850;text-align:left
+  }
+  #print-report .doc-missions .doc-cycle-row{break-after:avoid-page}
+  #print-report .doc-missions tr{break-inside:avoid-page;page-break-inside:avoid}
+  #print-report .doc-ok{font-weight:800;color:#006b3c}
+  #print-report .doc-pending{color:#6b706b}
+  #print-report .doc-missions .doc-total{background:#e6f2e9!important;font-weight:850}
+  #print-report .doc-missions .doc-total td{text-align:right;white-space:nowrap}
+  #print-report .doc-field{margin:0 0 12pt}
+  #print-report .doc-field h3{font-size:10.5pt;line-height:1.35;color:#204a32;margin:0 0 5pt;break-after:avoid-page}
+  #print-report .doc-answer,#print-report .doc-unanswered{
+    border-left:2pt solid #b3ccba;background:#f7faf7!important;
+    padding:8pt 10pt;line-height:1.5;white-space:pre-wrap;overflow-wrap:anywhere;
+    font-size:9.8pt;orphans:3;widows:3
+  }
+  #print-report .doc-unanswered{background:#fbfbfb!important;color:#6d756e;font-style:italic;border-left-color:#d7dfd7}
+  #print-report .doc-limits ul{padding-left:18pt;margin:0}
+  #print-report .doc-limits li{padding-left:1pt;margin-bottom:5pt;font-size:9.4pt;line-height:1.45}
+  #print-report .doc-end{border-top:1pt solid #c6d7ca;padding-top:9pt;margin-top:15pt;color:#597063;font-size:8.7pt}
+  #print-report .doc-end p{margin:1pt 0}
+}

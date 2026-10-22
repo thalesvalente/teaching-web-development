@@ -45,3 +45,11 @@ Mude `MINIMO_CARACTERES` ou `MAXIMO_CARACTERES`, clique **Executar** e compare, 
 
 A atualização é apenas didática; XP não é nota, nenhuma API sincroniza os dados e a prévia estreita não equivale a teste nativo em Android/iOS.
 
+
+
+## PDF A4 institucional e continuidade (revisão de QA 2026-10-22)
+
+- **Gerar PDF** abre a janela de impressão. Selecione **Destino → Salvar como PDF**. O relatório segue o padrão das fichas IFMA: cabeçalho institucional verde/vermelho, identificação opcional, XP, tabela de 14 missões, reflexões e paginação A4. A fonte vem do instantâneo formativo real; nenhum campo vazio é preenchido automaticamente.
+- **Salvar progresso** baixa `Aula05_Continuar_Depois.json` com TSX, respostas, missão atual, observações, exercícios verificados e XP. **Retomar arquivo** importa esse JSON, inclusive em outro navegador/dispositivo, mediante confirmação do usuário.
+- O navegador também salva um rascunho local, quando permitido. **O PDF é evidência estática**, não substitui o JSON para continuar editando. Nenhum desses botões envia dados ao Google Sheets.
+- A CI executa Playwright com exportação/importação real do arquivo, sessão independente, erros/cancelamento e um PDF real extraído por Poppler (`pdfinfo`, `pdftotext`, `pdftoppm`). Dados usados no teste são fictícios.

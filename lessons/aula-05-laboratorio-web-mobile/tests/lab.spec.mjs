@@ -1,6 +1,10 @@
 /** QA do laboratório v3: a missão, a execução e o resultado estão juntos. */
 import { test, expect } from '@playwright/test';
 import { readFile } from 'node:fs/promises';
+import { mkdtempSync, mkdirSync, writeFileSync } from 'node:fs';
+import { execFileSync } from 'node:child_process';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 
 const frameFor = page => page.frameLocator('#preview');
 async function open(page) {
@@ -390,9 +394,9 @@ test('PDF parcial usa pontuação corrente e preserva perguntas não respondidas
   await checkCode(page,'run');
   await page.locator('#quick-pdf').click();
   const report=await page.evaluate(()=>window.__printed);
-  expect(report).toContain('5/100');
-  expect(report).toContain('13 de 14');
-  expect(report).toContain('PENDENTE');
+  expect(report).toContain('5 / 100 XP');
+  expect(report).toContain('13 pendentes');
+  expect(report).toContain('Pendente');
 });
 
 
