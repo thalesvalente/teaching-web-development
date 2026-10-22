@@ -233,7 +233,7 @@ function webReturn(result) {
   var safe=JSON.stringify(result).replace(/</g,'\\u003c')
     .replace(/>/g,'\\u003e').replace(/&/g,'\\u0026');
   var html='<!doctype html><html><meta charset="utf-8"><body>'+
-    '<script>window.parent.postMessage('+safe+',"https://thalesvalente.github.io");<\/script>'+
+    '<script>top.postMessage('+safe+',"https://thalesvalente.github.io");</scr'+'ipt>'+
     '</body></html>';
   return HtmlService.createHtmlOutput(html)
     .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
