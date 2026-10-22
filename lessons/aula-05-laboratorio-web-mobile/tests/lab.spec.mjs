@@ -394,3 +394,47 @@ test('PDF parcial usa pontuação corrente e preserva perguntas não respondidas
   expect(report).toContain('13 de 14');
   expect(report).toContain('PENDENTE');
 });
+
+
+test('componentes básicos podem ser vistos e localizados no código completo',async({page})=>{
+  await open(page);
+  await expect(page.locator('#component-open')).toBeVisible();
+  await page.locator('#component-open').click();
+  await expect(page.locator('#component-dialog')).toBeVisible();
+  await expect(page.locator('#component-name')).toContainText('View');
+  for(const [id,fragment] of [['Text','<Text style={styles.titulo}>'],['TextInput','<TextInput'],['Pressable','<Pressable'],['View','<View style={styles.pagina}']]){
+    await page.locator('[data-component="'+id+'"]').click();
+    await expect(page.locator('#component-fragment')).toHaveText(fragment);
+    await page.locator('#component-locate').click();
+    await expect(page.locator('#component-dialog')).toBeHidden();
+    const selected=await page.locator('#code').evaluate(el=>el.value.slice(el.selectionStart,el.selectionEnd));
+    expect(selected).toBe(fragment);
+    await expect(page.locator('#compiler-status')).toContainText('Componente '+id);
+    await page.locator('#component-open').click();
+  }
+  await page.locator('[data-close-dialog="component-dialog"]').click();
+  await expect(page.locator('#xp-top')).toHaveText('0');
+  await expect(page.locator('#mission-select option')).toHaveCount(14);
+});
+
+test('salvar e restaurar progresso preserva código e respostas sem obrigar a concluir a aula',async({page})=>{
+  await open(page);
+  await checkCode(page,'run');
+  await answer(page,'map');
+  await mission(page,'limit');
+  const code=await page.locator('#code').inputValue();
+  const [download]=await Promise.all([page.waitForEvent('download'),page.locator('#save-progress').click()]);
+  const data=JSON.parse(await readFile(await download.path(),'utf8'));
+  expect(data.schema).toBe('ifma-web-aula05-checkpoint-v1');
+  expect(data.xp).toBe(10);
+  expect(data.activeTask).toBe('limit');
+  await page.evaluate(()=>localStorage.clear());
+  await page.reload();
+  await expect(page.locator('#compiler-status')).toContainText('Executado',{timeout:30000});
+  page.once('dialog',d=>d.accept());
+  await page.locator('#progress-file').setInputFiles({name:'progresso.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(data))});
+  await expect(page.locator('#xp-top')).toHaveText('10');
+  await expect(page.locator('#code')).toHaveValue(code);
+  await expect(page.locator('#mission-select')).toHaveValue('limit');
+  await expect(page.locator('#evidence-count')).toContainText('12 pendentes');
+});
