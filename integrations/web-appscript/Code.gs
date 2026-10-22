@@ -42,6 +42,14 @@ function webText(value, max, label) {
     webFail('Campo inválido: ' + label);
   return value.trim();
 }
+/** Não altera bytes de TSX: o SHA-256 do cliente deve bater com o servidor. */
+function webCode(value) {
+  if (typeof value !== 'string' || value.length > 30000 ||
+      /[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/.test(value))
+    webFail('Campo inválido: arquivo TSX');
+  if (!value.trim()) webFail('Código TSX ausente.');
+  return value;
+}
 function webSafe(value) {
   var str = String(value === null || value === undefined ? '' : value).trim();
   return /^[=+\-@]/.test(str) ? "'" + str : str;
@@ -89,8 +97,7 @@ function webEvidence(value) {
     webFail('XP declarado inconsistente.');
   // A verificação acima valida apenas a CONSISTÊNCIA do relato; ela NÃO
   // executa o código do estudante nem comprova a autoria/nota.
-  var source=webText(value.codigoFonteCompleto,30000,'arquivo TSX');
-  if (!source) webFail('Código TSX ausente.');
+  var source=webCode(value.codigoFonteCompleto); // Preserva whitespace e hash byte a byte.
   var observation=webText(value.observacao || '',2000,'observação');
   var nativeNote=webText(value.testeNativoPendente || '',1000,'teste nativo');
   return {
@@ -177,12 +184,20 @@ function webRosterUpsert(book, identity, xp) {
 function webAuditUpsert(book,identity,evidence,meta) {
   var sheet=book.getSheetByName('Auditoria');
   var key=identity.enrollment+'|'+WEB_CFG.activity;
-  var last=sheet.getLastRow(),row=0;
+  // getLastRow() inclui metadados permanentes nas colunas V:Y (linhas 1–6).
+  // Nunca ordenar linhas vazias A:T somente porque esses metadados existem.
+  var last=sheet.getLastRow(),row=0,occupied=0;
   if(last>=2){
     var keys=sheet.getRange(2,16,last-1,1).getDisplayValues();
-    for(var i=0;i<keys.length;i++)if(keys[i][0]===key){row=i+2;break;}
+    for(var i=0;i<keys.length;i++){
+      var current=String(keys[i][0]||'').trim();
+      if(!current) continue;
+      if(i!==occupied) webFail('Auditoria com lacunas: revise as linhas antes de receber novas entregas.');
+      occupied++;
+      if(current===key) row=i+2;
+    }
   }
-  if(!row)row=webNextRow(sheet);
+  if(!row) row=2+occupied;
   sheet.getRange(row,2).setNumberFormat('@');
   // Escrever até R: preservar S/T (observação e revisão DOCENTES).
   var entry=[
@@ -193,8 +208,10 @@ function webAuditUpsert(book,identity,evidence,meta) {
     WEB_CFG.version,JSON.stringify(evidence),key,meta.codeHash,'github-pages-web'
   ];
   sheet.getRange(row,1,1,18).setValues([entry]);
-  last=sheet.getLastRow();
-  if(last>2)sheet.getRange(2,1,last-1,20).sort([{column:1,ascending:true},{column:2,ascending:true}]);
+  // Somente linhas com chave de entrega são classificadas.
+  // S/T seguem cada estudante; metadados V:Y ficam inalterados.
+  var records=occupied+(row===occupied+2?1:0);
+  if(records>1)sheet.getRange(2,1,records,20).sort([{column:1,ascending:true},{column:2,ascending:true}]);
 }
 function webStore(input, nonce) {
   var book=webSpreadsheet();
