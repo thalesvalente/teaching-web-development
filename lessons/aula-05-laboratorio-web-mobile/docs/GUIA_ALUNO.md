@@ -1,4 +1,4 @@
-# Guia do estudante — Laboratório Aula 05 v3
+# Guia do estudante — Laboratório Vivo · Tutorial Aula 05 v4
 
 ## Uma missão de cada vez
 
@@ -12,7 +12,7 @@ No computador, o editor e as prévias aparecem lado a lado. No celular ou notebo
 
 ## Seu ciclo de aprendizagem
 
-**Faça:** escolha a missão no seletor, leia o objetivo e clique **Localizar linha**. Modifique uma coisa no trecho destacado. Não é necessário reescrever o componente inteiro.
+**Compreenda:** leia o **Conceito-chave de agora** e o **Teste concreto** da missão, sem sair da bancada. Depois, **Faça:** escolha a missão no seletor, leia o objetivo e clique **Localizar linha**. Modifique uma coisa no trecho destacado. Não é necessário reescrever o componente inteiro.
 
 **Execute:** clique **Executar**, no próprio painel da missão. Alterações só mudam o resultado depois da execução. O status informa se houve erro de TSX.
 
@@ -45,3 +45,22 @@ O roteiro possui **14 exercícios, 100 XP formativos**, mas **01–08 são o nú
 A prévia estreita **é React Native Web no navegador**, não um Android ou iPhone emulado. As duas instâncias executam o mesmo código, mas seus estados são separados. Consulte `docs/EXPO-REAL.md` para executar esse componente em um projeto Expo no aparelho.
 
 Seu código e suas respostas podem ser guardados no armazenamento local deste navegador, sem envio automático. Evite colar dados pessoais ou credenciais.
+
+## Entenda as cinco informações em torno do TextInput
+
+| No código | O que faz | O que você vê |
+|---|---|---|
+| `<Text>Título da memória</Text>` | Rótulo visual | Título acima do campo |
+| `accessibilityLabel` | Nome acessível | Não desenha outro rótulo |
+| `placeholder={DICA_CAMPO}` | Exemplo de preenchimento | Só dentro do campo vazio |
+| `accessibilityHint={orientacao}` | Orientação complementar para tecnologias assistivas | Não aparece automaticamente como texto |
+| `<Text>{orientacao}</Text>` | Regra permanente de preenchimento | Ex.: “Digite de 5 a 60 caracteres ...” |
+| `<Text>{titulo.trim().length}</Text>` | Contador de caracteres considerados | Atualiza a cada digitação |
+| `erro ? <Text>...</Text> : null` | Feedback após tentativa inválida | Aparece apenas quando necessário |
+
+**Pratique:** digite `1` e clique no botão. Depois digite `Biblioteca` e repita. Mude o mínimo de 5 para 7 no bloco [02], execute e compare a regra visível, o contador e a validação. O mesmo comportamento aparece nas duas renderizações, mas cada uma tem estado independente.
+
+## Seu rascunho das versões anteriores
+
+O tutorial v4 inicia com o código atualizado para todos verem a regra visual. Se você havia editado código na versão anterior, seu rascunho **não é apagado**; use o botão **Baixar meu código anterior**, quando disponível, para fazer cópia e comparar. A atualização não copia automaticamente alterações antigas para o exemplo novo.
+
