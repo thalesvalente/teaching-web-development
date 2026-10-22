@@ -30,7 +30,10 @@ function blank(rows,n) {
 class MockSheet {
   constructor(name,headers) {
     this.name=name;this.rows=[headers.slice(),[]];
-    if(name!=='Auditoria')this.rows[1][headers.length-1]='=IF(A2="";"";0)';
+    // A planilha real tem metadados em V:Y até a linha 6:
+    // getLastRow é 6, embora A:T ainda não tenha nenhuma entrega.
+    if(name==='Auditoria')this.rows.push([],[],[],[]);
+    else this.rows[1][headers.length-1]='=IF(A2="";"";0)';
   }
   getName(){return this.name;}
   getLastRow(){return this.rows.length;}
@@ -199,7 +202,8 @@ test('reenvio da mesma matrícula+atividade faz upsert e não altera nota da Aul
   assert.equal(revised.ok,true);
   assert.equal(h.tabs['4º Bimestre'].rows[1][3],16);
   assert.equal(h.tabs['3º Bimestre'].rows[1][3],2.5);
-  assert.equal(h.tabs['Auditoria'].rows.length,2);
+  assert.equal(h.tabs['Auditoria'].rows.slice(1).filter(row=>row[15]).length,1);
+  assert.equal(h.tabs['Auditoria'].rows[1][0],'Ana Exemplo');
   assert.equal(h.tabs['Auditoria'].rows[1][10],16);
   assert.equal(h.tabs['Auditoria'].rows[1][11],'');
   assert.equal(h.writes(),2);
@@ -213,7 +217,10 @@ test('planilha mantém ordem alfabética e identidades distintas não são confu
   assert.equal(rows.length,3);
   assert.equal(rows[1][0],'Ana Exemplo');
   assert.equal(rows[2][0],'Zelia Exemplo');
-  assert.equal(h.tabs['Auditoria'].rows.length,3);
+  const audit=h.tabs['Auditoria'].rows.slice(1).filter(row=>row[15]);
+  assert.equal(audit.length,2);
+  assert.equal(audit[0][0],'Ana Exemplo');
+  assert.equal(audit[1][0],'Zelia Exemplo');
 });
 test('payload adulterado, tamanho e versão incompatíveis são recusados',()=>{
   const h=harness();h.properties.set('WEB_WEB_SUBMISSIONS_ENABLED','true');
@@ -232,4 +239,40 @@ test('retorno neutraliza HTML e registra canal/nonce da própria requisição',(
   assert.equal(r.channel,'web-entrega-aula05');
   assert.equal(r.nonce,nonce);
   assert.equal(h.ctx.webSafe('-1+1'),"'-1+1");
+});
+
+test('Hash do TSX preserva espaços e quebra de linha exatamente como enviados',()=>{
+  const h=harness();h.properties.set('WEB_WEB_SUBMISSIONS_ENABLED','true');
+  const e=h.evidence(['run']);
+  e.codigoFonteCompleto='  \n'+e.codigoFonteCompleto+'\n\n ';
+  const receipt=extract(h.ctx.doPost(h.evt(e)));
+  assert.equal(receipt.ok,true);
+  const expected=crypto.createHash('sha256').update(e.codigoFonteCompleto,'utf8').digest('hex');
+  assert.equal(receipt.codeSha256,expected);
+  const saved=JSON.parse(h.tabs['Auditoria'].rows[1][14]);
+  assert.equal(saved.codigoFonteCompleto,e.codigoFonteCompleto);
+});
+test('Metadados V:Y não causam lacunas na Auditoria durante dois envios',()=>{
+  const h=harness();h.properties.set('WEB_WEB_SUBMISSIONS_ENABLED','true');
+  const first=extract(h.ctx.doPost(h.evt(h.evidence())));
+  assert.equal(first.ok,true);
+  const second=h.evt(h.evidence(['run']));
+  const payload=JSON.parse(second.parameter.payload);
+  payload.identity.name='Zelia Exemplo';
+  payload.identity.enrollment='20260099';
+  second.parameter.payload=JSON.stringify(payload);
+  assert.equal(extract(h.ctx.doPost(second)).ok,true);
+  const audit=h.tabs['Auditoria'].rows;
+  assert.equal(audit.length,6,'Metadados laterais definem a linha 6, não a última entrega');
+  assert.equal(audit[1][0],'Ana Exemplo');
+  assert.equal(audit[2][0],'Zelia Exemplo');
+  assert.equal(audit[3][0],undefined);
+});
+test('Auditoria com linha vazia entre entregas interrompe gravação em vez de corromper revisão',()=>{
+  const h=harness();h.properties.set('WEB_WEB_SUBMISSIONS_ENABLED','true');
+  h.tabs['Auditoria'].rows[1][15]='20260099|WEB-AULA05-2026';
+  h.tabs['Auditoria'].rows[3][15]='20260098|WEB-AULA05-2026';
+  const reply=extract(h.ctx.doPost(h.evt(h.evidence())));
+  assert.equal(reply.ok,false);
+  assert.match(reply.error,/Auditoria com lacunas/);
 });
