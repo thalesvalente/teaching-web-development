@@ -63,7 +63,10 @@ test('Chromium imprime PDF A4 real com texto legível, cores e paginação',asyn
   writeFileSync(target,pdf);
   const info=execFileSync('pdfinfo',[target],{encoding:'utf8'});
   const content=execFileSync('pdftotext',['-layout',target,'-'],{encoding:'utf8'});
-  expect(info).toMatch(/Page size:\s+595[.,]\d+ x 841[.,]\d+ pts \(A4\)/);
+  const dimensions=info.match(/Page size:\s+([\d.]+) x ([\d.]+) pts \(A4\)/);
+  expect(dimensions,'PDF deve ser rotulado como papel A4').not.toBeNull();
+  expect(Math.abs(Number(dimensions[1])-595.28)).toBeLessThan(1);
+  expect(Math.abs(Number(dimensions[2])-841.89)).toBeLessThan(1);
   const pages=Number(info.match(/^Pages:\s+(\d+)/m)?.[1]||0);
   expect(pages).toBeGreaterThanOrEqual(2);
   expect(pages).toBeLessThanOrEqual(5);
