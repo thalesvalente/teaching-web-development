@@ -498,26 +498,37 @@ function registrar() {
     codeEditor.scrollTop = Math.max(0, (linesBefore - 6) * lineHeight);
     byId('guide-line').textContent = `↳ ProjetoUniversal.tsx · linha ${linesBefore} destacada no editor ao lado`;
   }
-  function invalidateCodeTasks() {
+  // Ao editar, a compilação antiga deixa de ser a versão atual,
+  // porém as missões JÁ APROVADAS continuam creditadas.
+  function markCodeForReview(message) {
     for (const task of tasks) {
-      // Respostas teóricas não dependem de um build anterior.
       if (task.type === 'quiz') continue;
-      passed[task.id] = false;
-      delete completedDetail[task.id];
-      feedbackState[task.id] = { kind: 'pending', text: 'Código alterado. Execute novamente antes de conferir.' };
+      feedbackState[task.id] = { kind: 'pending', text: message ||
+        'Código atualizado. Execute e confira novamente se desejar; XP conquistados continuam no histórico.' };
     }
     lastCompiled = false;
     render();
   }
   function enableChecks() { byId('guide-check').disabled = false; }
+  function setReviewBusy(busy) {
+    for (const id of ['review-xp', 'review-xp-dialog']) byId(id).disabled = busy;
+  }
+  function stopPendingChecks() {
+    pending = null;
+    reviewPending = false;
+    enableChecks();
+    setReviewBusy(false);
+  }
   function run({ initial = false } = {}) {
     if (!sourceLoaded) return;
     if (activeFile !== 'shared') showFile('shared');
     panels.shared = codeEditor.value;
-    pending = null; enableChecks();
+    stopPendingChecks();
     revealPreviewAfterExplicitRun = !initial;
-    if (!initial) invalidateCodeTasks();
-    if (send('RUN', { source: panels.shared })) setStatus('Compilando TSX completo para as duas prévias…');
+    lastCompiled = false;
+    const thisRun = ++runSequence;
+    if (send('RUN', { source: panels.shared, revision: sourceRevision, runId: thisRun }))
+      setStatus('Compilando TSX completo para as duas prévias…');
     if (!initial) save();
   }
   function showFile(which) {
@@ -579,12 +590,18 @@ function registrar() {
     if (!confirm('Restaurar o arquivo original? O código que você editou será substituído, mas as observações continuam.')) return;
     panels.shared = window.__IFMA_LAB_INITIAL__;
     codeEditor.value = panels.shared;
+    sourceRevision++;
+    markCodeForReview('Código original restaurado. XP anteriores preservados como histórico de aprendizagem.');
     run();
   });
   codeEditor.addEventListener('input', () => {
     panels.shared = codeEditor.value;
-    invalidateCodeTasks(); save();
-    setStatus('Código modificado. Clique Executar ao lado da missão para ver o resultado.');
+    sourceRevision++;
+    stopPendingChecks();
+    reviewAfterCompile = false;
+    markCodeForReview('Arquivo editado. Execute para conferir a nova versão; XP acumulados não diminuem.');
+    save();
+    setStatus('Código modificado. Seus XP foram preservados. Clique Executar para testar o novo arquivo.');
   });
   codeEditor.addEventListener('keydown', event => {
     if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
@@ -594,9 +611,9 @@ function registrar() {
   document.querySelectorAll('[data-file]').forEach(button => button.addEventListener('click', () => showFile(button.dataset.file)));
   quizBank.querySelectorAll('input[type="radio"]').forEach(input => input.addEventListener('change', () => {
     const id = input.name.startsWith('map-') ? 'map' : 'quiz';
-    passed[id] = false;
-    delete completedDetail[id];
-    feedbackState[id] = { kind: 'pending', text: 'Resposta alterada. Clique Conferir respostas quando desejar.' };
+    // Alterar a resposta NÃO retira os XP conquistados em conferência anterior.
+    // O estado atual fica pendente até uma nova conferência conceitual.
+    feedbackState[id] = { kind: 'pending', text: 'Resposta alterada. Confira a resposta atual; XP já conquistados permanecem.' };
     render();save();
   }));
   byId('observacao').addEventListener('input', save);
