@@ -48,3 +48,18 @@
   .glossary{grid-template-columns:1fr}
   .migration-note{font-size:10px;padding:5px 8px}
 }
+
+
+/* Recebimento individual de evidências: jamais confundido com nota oficial. */
+.web-submission-fields{border:1px solid #bad6c4;border-radius:10px;padding:14px;margin:18px 0;background:#f8fbf8;min-width:0}
+.web-submission-fields legend{padding:0 6px;font-size:14px;font-weight:850;color:#135436}
+.web-submission-fields label{font-size:12px;font-weight:750}
+.web-submission-fields input{width:100%;min-height:44px;border:1px solid #8ba997;border-radius:7px;background:#fff;color:#16392b;font-size:15px;padding:9px 12px}
+.web-submission-fields input:focus-visible{outline:3px solid #d5ad54;outline-offset:2px}
+.web-submission-explanation{font-size:12px;line-height:1.5;color:#385d47;margin:14px 0}
+#web-submit{min-height:44px;width:100%}
+#web-submit:disabled{opacity:.67;cursor:not-allowed}
+#web-delivery-status{font-size:12px;white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.5;margin-top:11px;color:#375645;background:#eef4ee;border-radius:6px;padding:8px}
+#web-delivery-status[data-kind="success"]{background:#e4f5e9;color:#145337}
+#web-delivery-status[data-kind="error"]{background:#fff0eb;color:#9b2c25}
+@media(max-width:710px){.web-submission-fields{padding:10px;margin:12px 0}.web-submission-fields input{font-size:16px}}
