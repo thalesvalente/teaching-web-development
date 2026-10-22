@@ -100,10 +100,15 @@ test('Conferir novamente uma missão já aprovada, mesmo com falha atual, preser
   await expect(page.locator('#guide-feedback')).toContainText('Revisar código atual',{timeout:20000});
   await expect(page.locator('#guide-feedback')).toContainText('12 XP conquistados preservados');
   await waitXp(page,17);
+  const xpBeforeReview=Number(await page.locator('#xp-top').textContent());
   await page.locator('#review-xp').click();
   await expect(page.locator('#review-status')).toContainText('Conferência concluída',{timeout:60000});
-  await waitXp(page,17);
-  await expect(page.locator('#progress')).toHaveAttribute('aria-valuenow','17');
+  // No TSX atual, trim/invalid/isolation passam, somando 24 XP legítimos.
+  // A prova correta é nunca SUBTRAIR conquistas anteriores e creditar novos PASS.
+  await expect(page.locator('#review-status')).toContainText('+24 XP');
+  await waitXp(page,41);
+  expect(Number(await page.locator('#xp-top').textContent())).toBeGreaterThanOrEqual(xpBeforeReview);
+  await expect(page.locator('#progress')).toHaveAttribute('aria-valuenow','41');
 });
 
 test('Conferir progresso recupera XP de critérios efetivamente presentes no TSX em uma operação',async({page})=>{
