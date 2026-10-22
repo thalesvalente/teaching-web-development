@@ -44,8 +44,10 @@ jobs:
         run: npm run check:logic
       - name: Chromium para testes reais
         run: npx playwright install --with-deps chromium
-      - name: Conferir utilitários PDF para QA textual e dimensional
+      - name: Instalar verificador PDF e confirmar comandos
         run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq poppler-utils
           command -v pdfinfo
           command -v pdftotext
           command -v pdftoppm
