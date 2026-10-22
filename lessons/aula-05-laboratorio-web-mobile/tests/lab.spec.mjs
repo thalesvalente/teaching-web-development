@@ -7,8 +7,11 @@ async function open(page) {
   await page.goto('/index.html');
   await expect(page.locator('#compiler-status')).toContainText('Executado', { timeout: 30000 });
   const frame=frameFor(page);
-  await expect(frame.locator('#web-root [data-testid="app-universal"]')).toBeVisible();
-  await expect(frame.locator('#mobile-root [data-testid="app-universal"]')).toBeVisible();
+  // Em telas estreitas, a aba Código inicia aberta e o iframe fica oculto;
+  // React continua montado. Visibilidade só deve ser exigida quando a aba
+  // Resultado estiver selecionada, não durante o carregamento inicial.
+  await expect(frame.locator('#web-root [data-testid="app-universal"]')).toHaveCount(1);
+  await expect(frame.locator('#mobile-root [data-testid="app-universal"]')).toHaveCount(1);
   return frame;
 }
 async function mission(page,id) {
