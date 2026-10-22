@@ -749,7 +749,7 @@ function registrar() {
   function printPartial() {
     const current = evidence();
     byId('print-report').textContent = reportText().split('## Arquivo completo entregue')[0] +
-      '\\n\\nRelatório parcial: ' + current.exercicios.filter(ex => ex.estado === 'APROVADO').length +
+      '\n\nRelatório parcial: ' + current.exercicios.filter(ex => ex.estado === 'APROVADO').length +
       ' de 14 missões concluídas. As demais continuam pendentes.\\n';
     window.print();
   }
