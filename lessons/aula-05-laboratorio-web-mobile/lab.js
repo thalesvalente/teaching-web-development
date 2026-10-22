@@ -648,5 +648,8 @@ function registrar() {
     byId('print-report').textContent = reportText().split('## Arquivo completo entregue')[0];
     window.print();
   });
+  // Integração externa só pode obter o mesmo snapshot usado nos exports.
+  // O Apps Script recebe evidência relatada, não um certificado de nota.
+  window.WebLabEvidence = Object.freeze({ snapshot: evidence });
   loadSource();
 })();
