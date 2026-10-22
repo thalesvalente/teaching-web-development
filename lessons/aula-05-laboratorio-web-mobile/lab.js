@@ -555,10 +555,11 @@ function registrar() {
       updateGuide();return;
     }
     const ok = answers[0] === 'a' && answers[1] === 'b';
-    passed[id] = ok;
-    if (ok) completedDetail[id] = id === 'map' ? 'useState guarda; onChangeText atualiza.' :
-      'React Native Web renderiza no navegador; Expo permite execução em dispositivo real.';
-    else delete completedDetail[id];
+    if (ok) {
+      passed[id] = true; // XP ganho é acumulativo: conferir depois não o remove.
+      completedDetail[id] = id === 'map' ? 'useState guarda; onChangeText atualiza.' :
+        'React Native Web renderiza no navegador; Expo permite execução em dispositivo real.';
+    }
     feedbackState[id] = ok
       ? { kind: 'success', text: '✓ Você identificou a relação entre código e resultado.' }
       : { kind: 'failed', text: id === 'map' ? 'Revise [04] e onChangeText no bloco [06].' : 'Prévia móvel não é execução Android/iOS; consulte Como funciona.' };
@@ -572,13 +573,50 @@ function registrar() {
       feedbackState[id] = { kind: 'failed', text: 'Primeiro clique Executar. Depois confira esta missão aqui.' };
       updateGuide(); return;
     }
-    if (pending !== null) return;
+    if (pending !== null || reviewPending) return;
     pending = id;
     byId('guide-check').disabled = true;
     feedbackState[id] = { kind: 'pending', text: 'Testando o código executado nas duas prévias…' };
     updateGuide();
-    if (!send('CHECK', { stage: id })) { pending = null; enableChecks(); }
+    if (!send('CHECK', { stage: id, revision: sourceRevision, runId: runSequence })) {
+      pending = null; enableChecks();
+    }
   }
+  // Conferência única das doze missões técnicas. Útil para recuperar XP
+  // que foram zerados pelo bug anterior, quando o código final ainda atende
+  // aos critérios. Somente resultados PASS ganham XP, sem tirar os anteriores.
+  function setReviewStatus(message, kind = '') {
+    const node = byId('review-status');
+    node.textContent = message;
+    node.dataset.kind = kind;
+  }
+  function startReview() {
+    if (reviewPending || pending !== null || !lastCompiled) return;
+    reviewPending = true;
+    setReviewBusy(true);
+    byId('guide-check').disabled = true;
+    setReviewStatus('Conferindo as 12 missões técnicas no código executado. Os XP já conquistados estão protegidos.');
+    if (!send('CHECK_ALL', { stages: codeTaskIds, revision: sourceRevision, runId: runSequence })) {
+      stopPendingChecks();
+      setReviewStatus('Não foi possível iniciar a conferência. Seus XP foram preservados.', 'failed');
+    }
+  }
+  function reviewProgress() {
+    if (reviewPending || pending !== null) return;
+    if (!ready || !sourceLoaded) {
+      setReviewStatus('Aguarde o carregamento do laboratório para conferir.', 'failed');
+      return;
+    }
+    if (!lastCompiled) {
+      reviewAfterCompile = true;
+      setReviewStatus('Executando o TSX atual antes de conferir as missões. Os XP anteriores permanecem.');
+      run({ initial: true }); // Não troca de aba nem altera os pontos.
+      return;
+    }
+    startReview();
+  }
+  for (const id of ['review-xp','review-xp-dialog'])
+    byId(id).addEventListener('click', reviewProgress);
   select.addEventListener('change', () => setActive(select.value));
   byId('guide-prev').addEventListener('click', () => setActive(activeIndex - 1));
   byId('guide-next').addEventListener('click', () => setActive(activeIndex + 1));
