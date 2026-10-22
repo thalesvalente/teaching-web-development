@@ -763,7 +763,10 @@ function registrar() {
     if (isCheckpoint && (!Number.isSafeInteger(data.xp) ||
         data.xp !== ids.reduce((n,id)=>n+tasks.find(t=>t.id===id).xp,0)))
       throw Error('Pontuação inconsistente no arquivo.');
-    if (!confirm('Retomar o arquivo selecionado? O código e o progresso desta sessão serão substituídos.')) return;
+    if (!confirm('Retomar o arquivo selecionado? O código e o progresso desta sessão serão substituídos.')) {
+      progressMessage('Retomada cancelada. O código, as respostas e os XP atuais foram preservados.');
+      return;
+    }
     panels.shared = source;
     codeEditor.value = source;
     for (const task of tasks) {
