@@ -19,23 +19,49 @@
 .notch{height:5px;width:55px;background:#364a3f;border-radius:20px;margin:0 auto 8px}
 .mobile-wrapper{background:#f1f7f2;min-height:390px;padding:5px 3px 10px}
 small{display:block;padding:7px 8px;color:#53675b;background:white;font-size:10px;line-height:1.4}
-@media(max-width:445px){.dual{grid-template-columns:1fr}.viewport{min-height:310px}.phone{max-width:350px;min-height:0}}
+.preview-switch{display:none;background:#dcece2;padding:7px;gap:7px;border-bottom:1px solid #bad2bf}
+.preview-switch button{background:#fff;color:#145537;border:1px solid #a9c9b4;border-radius:6px;min-height:36px;padding:5px 15px;font:700 12px system-ui,Arial,sans-serif}
+.preview-switch button[aria-selected="true"]{background:#164d32;color:#fff}
+@media(max-width:445px){
+  .preview-switch{display:flex;position:sticky;top:0;z-index:3}
+  .dual{display:block;padding:5px}
+  .display:not(.is-current){display:none}
+  .viewport{min-height:310px}
+  .phone{max-width:350px;min-height:0}
+}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important}}
 </style>
 </head>
 <body>
+<nav class="preview-switch" role="tablist" aria-label="Escolher saída da prévia no celular">
+  <button type="button" role="tab" data-subview="web" aria-selected="true">Web</button>
+  <button type="button" role="tab" data-subview="mobile" aria-selected="false">Mobile</button>
+</nav>
 <div class="dual">
-  <section class="display" aria-label="Interface Web executada no navegador">
+  <section class="display is-current" data-preview="web" aria-label="Interface Web executada no navegador">
     <div class="top"><span class="dot"></span><strong>WEB</strong> · navegador</div>
     <div class="viewport"><div id="web-root"></div></div>
     <small>React Native Web: execução da mesma fonte.</small>
   </section>
-  <section class="display" aria-label="Prévia de largura móvel executada no navegador">
+  <section class="display" data-preview="mobile" aria-label="Prévia de largura móvel executada no navegador">
     <div class="top"><span class="dot"></span><strong>MOBILE</strong> · largura estreita</div>
     <div class="mobile-wrapper"><div class="phone"><div class="notch" aria-hidden="true"></div><div id="mobile-root"></div></div></div>
     <small>Prévia no navegador. Não é Android/iOS nativo.</small>
   </section>
 </div>
+<script>
+// No viewport móvel, as duas instâncias continuam montadas; só mudamos
+// qual visualização é mostrada. Não há rolagem até uma segunda "tela".
+(() => {
+  const tabs = [...document.querySelectorAll('[data-subview]')];
+  const views = [...document.querySelectorAll('[data-preview]')];
+  tabs.forEach(tab => tab.addEventListener('click', () => {
+    const selected = tab.dataset.subview;
+    tabs.forEach(item => item.setAttribute('aria-selected', String(item.dataset.subview === selected)));
+    views.forEach(view => view.classList.toggle('is-current', view.dataset.preview === selected));
+  }));
+})();
+</script>
 <script src="./assets/vendor.js"></script>
 <script src="./preview.js"></script>
 </body>
