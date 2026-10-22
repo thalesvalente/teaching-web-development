@@ -3,9 +3,9 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="description" content="Aula 05: bancada de programação guiada. Uma missão por vez, código React Native comentado e duas prévias em tempo de execução.">
+  <meta name="description" content="Aula 05: Laboratório Vivo com tutorial guiado, código React Native comentado, regras visíveis e duas prévias interativas Web e Mobile.">
   <meta name="theme-color" content="#10472e">
-  <title>Aula 05 · Bancada Web ↔ Mobile | IFMA</title>
+  <title>Aula 05 · Laboratório Vivo · Tutorial Web ↔ Mobile | IFMA</title>
   <link rel="stylesheet" href="./style.css">
   <script defer src="./lab.js"></script>
 </head>
@@ -13,7 +13,7 @@
   <a class="skip" href="#missao-atual">Pular para a missão atual</a>
   <div class="app-shell">
     <header class="app-header">
-      <a href="../../index.html" class="brand" aria-label="Voltar ao portal Web do IFMA"><strong>IFMA</strong><span>Aula 05 <span class="brand-separator">/</span> Laboratório Web ↔ Mobile</span></a>
+      <a href="../../index.html" class="brand" aria-label="Voltar ao portal Web do IFMA"><strong>IFMA</strong><span>Aula 05 <span class="brand-separator">/</span> Laboratório Vivo</span></a>
       <div class="overall" aria-label="Progresso formativo">
         <div class="overall-caption"><span id="score-summary">0 de 14 exercícios concluídos</span><strong><span id="xp-top">0</span> / 100 XP</strong></div>
         <div class="progress" id="progress" role="progressbar" aria-label="XP formativos" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div id="progress-fill"></div></div>
@@ -29,12 +29,17 @@
         <div class="mission-copy" id="mission-copy">
           <div class="mission-overline"><span id="guide-number">MISSÃO 01 / 14 · CICLO 1</span><span class="xp-pill" id="guide-time">4 min · 5 XP</span></div>
           <h1 id="guide-title">Primeiro contato: execute o projeto</h1>
-          <p class="mission-intro">Tudo acontece nesta bancada. Não é necessário procurar o editor ou os testes em outra parte da página.</p>
+          <p class="mission-intro">Tutorial vivo: compreenda uma ideia, encontre o código, experimente nas duas telas e confira o resultado sem sair desta bancada.</p>
+          <div class="key-concept" aria-labelledby="concept-title">
+            <strong id="concept-title">Conceito-chave de agora</strong>
+            <p id="guide-concept">Um componente é uma função que descreve uma parte da interface.</p>
+          </div>
           <div class="mission-directions">
             <section class="direction do" aria-labelledby="label-do"><h2 id="label-do"><span>1</span> Faça</h2><p id="guide-do">Execute nas duas telas.</p></section>
             <section class="direction see" aria-labelledby="label-observe"><h2 id="label-observe"><span>2</span> Observe</h2><p id="guide-observe">As duas renderizações usam um arquivo.</p></section>
             <section class="direction why" aria-labelledby="label-why"><h2 id="label-why"><span>3</span> Entenda</h2><p id="guide-why">Relacione mudança e resultado.</p></section>
           </div>
+          <p class="mission-test" id="guide-test"><strong>Teste concreto:</strong> Digite uma entrada curta e compare o resultado nas duas telas.</p>
           <p class="code-location" id="guide-line">shared/ProjetoUniversal.tsx · seção [06]</p>
           <div id="quiz-bank" class="inline-quiz" aria-label="Perguntas desta missão" hidden></div>
           <details id="guide-hint-box" class="hint"><summary>Preciso de uma pista</summary><p id="guide-hint">Encontre o comentário [06] no código.</p></details>
@@ -57,7 +62,7 @@
 
       <section class="workspace" id="laboratorio" aria-label="Código editável e resultados lado a lado">
         <div class="workspace-toolbar">
-          <div class="workspace-identity"><strong>ProjetoUniversal.tsx</strong><span>Uma fonte real · duas instâncias</span></div>
+          <div class="workspace-identity"><strong>ProjetoUniversal.tsx</strong><span>Um arquivo TSX · duas instâncias</span></div>
           <div class="pane-switch" role="tablist" aria-label="Alternar entre edição e resultado em telas estreitas">
             <button type="button" role="tab" data-pane="code" aria-selected="true" aria-controls="code-panel" id="view-code">Código</button>
             <button type="button" role="tab" data-pane="preview" aria-selected="false" aria-controls="result-panel" id="view-preview">Resultado</button>
@@ -66,22 +71,22 @@
         </div>
         <div class="workspace-panes">
           <section class="code-panel" id="code-panel" role="tabpanel" aria-labelledby="view-code">
-            <div class="panel-caption"><span class="status-dot green" aria-hidden="true"></span><strong>Código completo e comentado</strong><span class="editable-chip">EDITÁVEL</span></div>
+            <div class="panel-caption"><span class="status-dot green" aria-hidden="true"></span><strong>Código completo e comentado · siga [01]–[07]</strong><span class="editable-chip">EDITÁVEL</span></div>
             <div class="file-tabs" role="tablist" aria-label="Arquivos completos do projeto">
               <button type="button" role="tab" aria-selected="true" aria-controls="editor-source" id="tab-shared" data-file="shared">ProjetoUniversal.tsx</button>
               <button type="button" role="tab" aria-selected="false" aria-controls="editor-source" id="tab-route" data-file="route">Rota Expo</button>
               <button type="button" role="tab" aria-selected="false" aria-controls="editor-source" id="tab-vue" data-file="vue">Comparar Vue</button>
             </div>
-            <p id="editor-context" class="editor-context">Arquivo inteiro, comentado de [01] importações até [07] estilos.</p>
+            <p id="editor-context" class="editor-context">Código completo: localize as seções [01] a [07]; a execução atualiza as duas prévias.</p>
             <div class="source-container" id="editor-source" role="tabpanel" aria-labelledby="tab-shared">
               <label for="code" class="sr-only">Edite o código completo do componente React Native</label>
               <textarea id="code" spellcheck="false" autocomplete="off" autocapitalize="off" autocorrect="off" wrap="off" aria-describedby="code-help"></textarea>
               <pre id="readonly-code" hidden class="readonly-source" tabindex="0"></pre>
             </div>
-            <p id="code-help" class="sr-only">Use o botão Localizar linha, edite e clique Executar na missão à esquerda. Este é o arquivo completo.</p>
+            <p id="code-help" class="sr-only">Use o botão Localizar linha, edite e clique Executar na missão à esquerda. Este é o arquivo completo. O placeholder é um exemplo; o accessibilityHint é para tecnologia assistiva; a regra visual aparece em um Text.</p>
           </section>
           <section class="result-panel" id="result-panel" role="tabpanel" aria-labelledby="view-preview">
-            <div class="panel-caption"><span class="status-dot blue" aria-hidden="true"></span><strong>Resultado executável</strong><span class="preview-kind">Web + largura móvel</span><button type="button" id="expand-preview" class="expand-preview" aria-pressed="false">Ampliar prévias</button></div>
+            <div class="panel-caption"><span class="status-dot blue" aria-hidden="true"></span><strong>Resultado vivo · Web e prévia móvel</strong><span class="preview-kind">Web + largura móvel</span><button type="button" id="expand-preview" class="expand-preview" aria-pressed="false">Ampliar prévias</button></div>
             <iframe id="preview" title="Duas prévias reais do mesmo componente usando React Native Web" src="./preview.html" referrerpolicy="no-referrer" sandbox="allow-scripts"></iframe>
             <p class="preview-caveat">As duas telas executam <strong>React Native Web</strong>. A tela estreita <strong>não</strong> é Android/iOS nativo.</p>
           </section>
@@ -94,9 +99,22 @@
   <dialog class="resource-dialog" id="help-dialog" aria-labelledby="help-title">
     <div class="dialog-header"><h2 id="help-title">Como funciona a bancada</h2><button type="button" class="close-dialog" data-close-dialog="help-dialog" aria-label="Fechar ajuda">×</button></div>
     <div class="dialog-body">
-      <p><strong>Sem caça ao editor:</strong> escolha o exercício à esquerda; leia Faça → Observe → Entenda; use Localizar linha, Executar e Conferir missão sem sair desta bancada. O feedback aparece imediatamente sob o enunciado.</p>
+      <p><strong>Aprendizagem sem caça ao editor:</strong> escolha o exercício à esquerda; leia Faça → Observe → Entenda; use Localizar linha, Executar e Conferir missão sem sair desta bancada. O feedback aparece imediatamente sob o enunciado.</p>
+      <h3>Como experimentar em 4 passos</h3>
+      <p><strong>1 — Observe:</strong> leia o exemplo, a regra visível e o contador abaixo do campo.
+      <strong>2 — Digite:</strong> teste um texto de quatro caracteres e outro válido.
+      <strong>3 — Execute:</strong> edite a constante de mínimo no TSX e clique em Executar.
+      <strong>4 — Comprove:</strong> veja a orientação mudar nas duas prévias e use Conferir missão.</p>
       <h3>O caminho da informação</h3>
       <div class="concept-flow"><span>TextInput</span><b>→</b><span>onChangeText</span><b>→</b><span>useState</span><b>→</b><span>validarTitulo</span><b>→</b><span>Mensagem</span></div>
+      <h3>Uma entrada, cinco conceitos diferentes</h3>
+      <dl class="glossary">
+        <div><dt>Rótulo</dt><dd>“Título da memória” identifica o campo na tela. <code>accessibilityLabel</code> fornece um nome equivalente ao leitor de tela.</dd></div>
+        <div><dt>Placeholder</dt><dd>“Ex.: Feira de ciências” é só um exemplo que desaparece quando você digita. Ele não informa os limites.</dd></div>
+        <div><dt>Regra visível</dt><dd>O texto abaixo do campo diz o mínimo e o máximo. Ele permanece visível ao digitar e muda quando você altera as constantes.</dd></div>
+        <div><dt>accessibilityHint</dt><dd>É orientação complementar para tecnologias assistivas. Não é desenhada automaticamente na interface e não substitui a regra visível.</dd></div>
+        <div><dt>Mensagem de erro</dt><dd>Surge depois de tentar registrar uma entrada inválida. Quando você edita novamente, o erro anterior é limpo.</dd></div>
+      </dl>
       <h3>Ponte com a Aula 4</h3>
       <div class="compare-table"><p><strong>Vue</strong><br><code>ref()</code> guarda o valor; <code>v-model</code> acompanha a digitação.</p><p><strong>React Native</strong><br><code>useState()</code> guarda o valor; <code>onChangeText</code> chama o atualizador.</p></div>
       <p>Para ver os <strong>arquivos inteiros</strong>, use as abas <em>Comparar Vue</em>, <em>Rota Expo</em> e <em>ProjetoUniversal.tsx</em> dentro da bancada.</p>
