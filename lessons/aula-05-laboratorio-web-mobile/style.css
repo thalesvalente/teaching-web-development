@@ -139,6 +139,8 @@
   }
   #print-report .doc-institution strong{display:block;font-size:9.5pt;line-height:1.2;color:#006b3c}
   #print-report .doc-institution span{display:block;margin-top:4pt;font-size:9pt;color:#596f60}
+  #print-report .doc-institution .doc-course{font-size:8.2pt;margin-top:6pt}
+  #print-report .doc-institution .doc-discipline{font-size:8.2pt;margin-top:2pt}
   #print-report .doc-edition{text-align:right;color:#35523f;font-size:9pt;line-height:1.2}
   #print-report .doc-edition span,#print-report .doc-edition strong{display:block}
   #print-report .doc-edition strong{font-size:10.5pt;color:#006b3c}
@@ -152,6 +154,11 @@
   #print-report .doc-info-row{display:block;min-width:0;padding:0 0 5pt;border-bottom:.5pt solid #d9e5dc}
   #print-report .doc-info-label{font-size:8.1pt;text-transform:uppercase;color:#577363;font-weight:800;margin-bottom:2pt}
   #print-report .doc-info-value{margin:0;font-size:10pt;overflow-wrap:anywhere;white-space:pre-wrap}
+  #print-report .doc-control{
+    border-top:.8pt solid #7ca38a;margin-top:13pt;padding-top:8pt;
+    color:#506d5a;font-size:8.5pt;line-height:1.4
+  }
+  #print-report .doc-control p{margin:1pt 0}
   #print-report .doc-score{
     background:#f0f7f2!important;border-left:4pt solid #006b3c;
     padding:11pt 13pt;margin-bottom:17pt;break-inside:avoid-page
