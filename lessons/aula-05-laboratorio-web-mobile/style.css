@@ -73,3 +73,10 @@
 .progress-status[data-kind="error"]{background:#fff0e8;color:#a12420}
 @media(max-width:1040px){.header-tools{flex:1 1 100%;justify-content:center}.header-tools .header-action{font-size:12px;padding:7px 9px}}
 @media(max-width:710px){.header-tools{flex-wrap:nowrap;overflow-x:auto;justify-content:flex-start;scrollbar-width:thin;max-width:100%;padding:2px 0}.header-tools .header-action{flex:0 0 auto;min-height:44px}.priority-actions{position:static}.priority-actions .btn{flex:1 1 140px}}
+
+
+/* O cabeçalho cresce com os atalhos: sem cortar controles pela linha fixa de 62px. */
+.app-shell{grid-template-rows:auto minmax(0,1fr)}
+.app-header{min-height:62px}
+@media(max-width:1040px){.app-header{flex-wrap:wrap;gap:6px;padding:5px 12px}.overall{flex:1 1 220px;max-width:none}.header-tools{flex:1 1 100%}}
+@media(max-width:710px){.app-header{gap:4px}.brand{font-size:11px}.overall{flex:1 1 155px}.header-tools{justify-content:flex-start}}
