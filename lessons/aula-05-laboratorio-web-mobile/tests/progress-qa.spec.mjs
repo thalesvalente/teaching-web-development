@@ -104,7 +104,7 @@ test('JSON inválido, pontuação adulterada e IDs repetidos não apagam progres
   const code=await page.locator('#code').inputValue();
   const correct=JSON.parse(await saveFile(page));
   const variants=[
-    ['não é JSON','Erro de sintaxe'],
+    ['não é JSON','sintaxe inválida'],
     [{...correct,schema:'outra-aula-v1'},'não é um progresso'],
     [{...correct,xp:100},'Pontuação inconsistente'],
     [{...correct,completed:['run','run']},'Lista de exercícios inválida'],
