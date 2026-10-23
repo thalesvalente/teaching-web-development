@@ -4,9 +4,9 @@ import crypto from 'node:crypto';
 import { readFile } from 'node:fs/promises';
 const fake='https://script.google.com/macros/s/WEB-QA-MOCK-2026/exec';
 async function enabled(page,active=true){
-  await page.route('**/entrega-config.js',route=>route.fulfill({
+  await page.route('**/entrega-config.js*',route=>route.fulfill({
     status:200,contentType:'application/javascript',
-    body:"window.WebEntregaConfig=Object.freeze({endpoint:'"+fake+
+    body:"window.WebEntregaConfig=Object.freeze({schema:'web-a05-submission-v2',endpoint:'"+fake+
       "',activity:'WEB-AULA05-2026',activated:"+active+"});"
   }));
 }
@@ -385,10 +385,10 @@ test('duplicidade com apostrofos tipograficos distintos bloqueia a equipe',async
 test('ativos de validação possuem versão para evitar cache anterior no GitHub Pages',async({page})=>{
   await page.goto('/index.html');
   for(const name of ['equipe.js','report-print.js','entrega-appscript.js']) {
-    await expect(page.locator('script[src="./'+name+'?v=web-id03-qa02"]')).toHaveCount(1);
+    await expect(page.locator('script[src="./'+name+'?v=web-id03-qa03"]')).toHaveCount(1);
   }
-  await expect(page.locator('script[src="./lab.js?v=web-id03-qa02"]')).toHaveCount(1);
-  await expect(page.locator('link[href="./style.css?v=web-id03-qa02"]')).toHaveCount(1);
+  await expect(page.locator('script[src="./lab.js?v=web-id03-qa03"]')).toHaveCount(1);
+  await expect(page.locator('link[href="./style.css?v=web-id03-qa03"]')).toHaveCount(1);
 });
 
 

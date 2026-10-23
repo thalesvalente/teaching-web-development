@@ -4,7 +4,7 @@ const names=['Ana Teste Ficticio','Bruno Teste Ficticio','Carla Teste Ficticio',
 for(const size of [{width:320,height:650},{width:1440,height:900}]){
  test('conflito do oitavo integrante fica dentro da área visível em '+size.width+'px',async({page})=>{
   await page.setViewportSize(size);await page.emulateMedia({reducedMotion:'reduce'});
-  await page.route('**/entrega-config.js',route=>route.fulfill({status:200,contentType:'application/javascript',body:'window.WebEntregaConfig=Object.freeze('+JSON.stringify({endpoint:ENDPOINT,activity:'WEB-AULA05-2026',activated:true})+');'}));
+  await page.route('**/entrega-config.js*',route=>route.fulfill({status:200,contentType:'application/javascript',body:'window.WebEntregaConfig=Object.freeze('+JSON.stringify({schema:'web-a05-submission-v2',endpoint:ENDPOINT,activity:'WEB-AULA05-2026',activated:true})+');'}));
   await page.route(ENDPOINT,route=>{
    const p=new URLSearchParams(route.request().postData()||'');
    const r={ok:false,channel:'web-entrega-aula05',nonce:p.get('nonce'),code:'MATRICULA_NOME_DIVERGENTE',memberIndex:7,field:'enrollment',message:'Matrícula vinculada a um nome diferente.',action:'Confira a matrícula do integrante 8.'};

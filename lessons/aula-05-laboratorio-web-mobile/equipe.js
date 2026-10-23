@@ -10,6 +10,10 @@
   const KEY='ifma-web-aula05-equipe-v3';
   const LEGACY_KEY='ifma-web-aula05-equipe-v2';
   const MAX=8;
+  const config=window.WebEntregaConfig||{};
+  // Config já carregada: não depender da inicialização posterior de WebEntrega.
+  const onlineEnabled=config.activated===true && config.schema==='web-a05-submission-v2' &&
+    /^https:\/\/script\.google\.com\/macros\/s\/[\w-]+\/exec$/.test(String(config.endpoint||''));
   const blank=()=>({name:'',enrollment:''});
   function newId(){
     if(globalThis.crypto?.randomUUID)return crypto.randomUUID();
@@ -59,65 +63,66 @@
     return {teamId:group.teamId,team:group.team,
       members:group.members.map(member=>({name:member.name,enrollment:member.enrollment}))};
   }
-  function getIdentity(options={}){
-    const requireEnrollment=options.requireEnrollment!==false;
-    const data=validatePartial(snapshot());
-    if(data.team.length<3)throw Error('Informe o nome da equipe (mínimo 3 caracteres).');
-    const seenNames=new Map(),seenEnrollments=new Map();
+  function collectIssues(data,{requireEnrollment=true}={}){
+    const issues=[],seenNames=new Map(),seenEnrollments=new Map();
+    const add=(message,fields)=>issues.push({message,fields});
+    if(data.team.length<3)add('Informe o nome da equipe (mínimo 3 caracteres).',['web-team']);
     data.members.forEach((member,index)=>{
-      if(!fullName(member.name))throw Error('Informe nome e sobrenome do integrante '+(index+1)+'.');
-      const nameKey=normalized(member.name);
-      if(seenNames.has(nameKey))throw Error('Nome duplicado: integrantes '+(seenNames.get(nameKey)+1)+' e '+(index+1)+'. Nome informado: '+member.name+'.');
-      seenNames.set(nameKey,index);
+      const nameId='web-member-'+index+'-name',matId='web-member-'+index+'-enrollment';
+      const who='Integrante '+(index+1)+' — Nome informado: '+(member.name||'(não informado)')+
+        ' · Matrícula informada: '+(member.enrollment||'(não informada)')+'. ';
+      if(!fullName(member.name))add(who+'Informe nome e sobrenome do integrante '+(index+1)+'.',[nameId]);
+      const key=normalized(member.name);
+      if(key && seenNames.has(key)){
+        const old=seenNames.get(key);
+        add(who+'Nome duplicado: integrantes '+(old+1)+' e '+(index+1)+'. Confira os nomes; homônimos precisam de conferência docente.',
+          ['web-member-'+old+'-name',nameId]);
+      }else if(key)seenNames.set(key,index);
       if(requireEnrollment){
-        if(!member.enrollment)throw Error('Matrícula obrigatória — integrante '+(index+1)+': '+member.name+'. Informe a matrícula.');
-        if(!/^\d{1,32}$/.test(member.enrollment))
-          throw Error('Matrícula em formato inválido — integrante '+(index+1)+': '+member.name+
-            ' · '+member.enrollment+'. Use somente algarismos, inclusive zeros iniciais.');
-        if(seenEnrollments.has(member.enrollment)){
+        if(!member.enrollment)add(who+'Matrícula obrigatória. Informe a matrícula deste integrante.',[matId]);
+        else if(!/^\d{1,32}$/.test(member.enrollment))
+          add(who+'Matrícula em formato inválido. Use somente algarismos (até 32), mantendo zeros iniciais.',[matId]);
+        if(member.enrollment && seenEnrollments.has(member.enrollment)){
           const old=seenEnrollments.get(member.enrollment);
-          throw Error('Matrícula repetida nos integrantes '+(old+1)+' ('+data.members[old].name+
-            ' — '+member.enrollment+') e '+(index+1)+' ('+member.name+' — '+member.enrollment+
-            '). Cada integrante deve informar a própria matrícula.');
-        }
-        seenEnrollments.set(member.enrollment,index);
+          add('Matrícula repetida nos integrantes '+(old+1)+' ('+data.members[old].name+' — '+member.enrollment+
+            ') e '+(index+1)+' ('+member.name+' — '+member.enrollment+'). Cada integrante deve informar a própria matrícula.',
+            ['web-member-'+old+'-enrollment',matId]);
+        }else if(member.enrollment)seenEnrollments.set(member.enrollment,index);
       }
     });
+    return issues;
+  }
+  function getIdentity(options={}){
+    const data=validatePartial(snapshot()),issues=collectIssues(data,options);
+    if(issues.length){const error=Error(issues.map(x=>x.message).join('\n\n'));error.issues=issues;throw error;}
     return data;
   }
-  function focusInvalid({memberIndices=null,field=null}={}){
-    const teamField=el('web-team');
-    const badTeam=group.team.trim().length<3;
-    teamField.setAttribute('aria-invalid',String(badTeam));
-    let focus=badTeam?teamField:null;
-    const duplicateNames=new Map(),duplicateMatriculas=new Map();
-    const problems=[];
-    group.members.forEach((member,i)=>{
-      const norm=normalized(member.name);
-      if(norm){const a=duplicateNames.get(norm);if(a!==undefined){problems.push([a,'name'],[i,'name']);}else duplicateNames.set(norm,i);}
-      const mat=(member.enrollment||'').trim();
-      if(mat){const a=duplicateMatriculas.get(mat);if(a!==undefined){problems.push([a,'enrollment'],[i,'enrollment']);}else duplicateMatriculas.set(mat,i);}
+  function focusInvalid({issues=null,memberIndices=null,field=null,requireEnrollment=onlineEnabled}={}){
+    const list=issues||collectIssues(validatePartial(snapshot()),{requireEnrollment});
+    const byField=new Map();
+    list.forEach(issue=>issue.fields.forEach(id=>{
+      if(!byField.has(id))byField.set(id,[]);byField.get(id).push(issue.message);
+    }));
+    if(Array.isArray(memberIndices))memberIndices.forEach(i=>{
+      if(Number.isInteger(i)&&i>=0&&i<group.members.length){
+        const kinds=field?[field]:['name','enrollment'];
+        kinds.forEach(kind=>byField.set('web-member-'+i+'-'+kind,['Confira o conflito descrito no resumo.']));
+      }
     });
-    group.members.forEach((member,i)=>{
-      const fields=[
-        ['name',!fullName(member.name)],
-        ['enrollment',!(/^\d{1,32}$/.test(member.enrollment||''))]
-      ];
-      fields.forEach(([kind,badFormat])=>{
-        const fieldEl=el('web-member-'+i+'-'+kind);
-        const remote=Array.isArray(memberIndices)&&memberIndices.includes(i)&&(!field||field===kind);
-        const duplicated=problems.some(([pos,f])=>pos===i&&f===kind);
-        const bad=remote||duplicated||badFormat;
-        fieldEl?.setAttribute('aria-invalid',String(bad));
-        if(!focus&&bad)focus=fieldEl;
-      });
+    clearValidity();
+    const inputs=[el('web-team'),...holder.querySelectorAll('input')];
+    let target=null;
+    inputs.forEach(input=>{
+      const messages=byField.get(input.id);if(!messages)return;
+      input.setAttribute('aria-invalid','true');
+      const hint=el(input.id+'-error');
+      if(hint){hint.textContent=messages.join(' ');hint.hidden=false;}
+      const descriptions=(input.getAttribute('aria-describedby')||'').split(/\s+/).filter(Boolean);
+      descriptions.push(hint?hint.id:'team-feedback');
+      input.setAttribute('aria-describedby',[...new Set(descriptions)].join(' '));
+      if(!target)target=input;
     });
-    if(focus){
-      focus.focus({preventScroll:true});
-      // O diálogo tem rolagem própria: foco lógico não garante campo visível.
-      // instant respeita movimento reduzido e evita anunciar um alvo fora da tela.
-      focus.scrollIntoView({block:'nearest',inline:'nearest',behavior:'instant'});
-    }
+    if(target){target.focus({preventScroll:true});target.scrollIntoView({block:'nearest',inline:'nearest',behavior:'instant'});}
   }
   function showRemoteConflict(meta){
     if(!meta||!Number.isInteger(meta.memberIndex))return;
@@ -127,11 +132,11 @@
       (member?'Nome informado: '+member.name+'\nMatrícula informada: '+member.enrollment+'\n':'')+
       'Problema: '+String(meta.message||'Confira os dados.')+'\n'+
       'Como resolver: '+String(meta.action||'Procure o professor.'),'error');
-    focusInvalid({memberIndices:[meta.memberIndex],field:meta.field});
+    focusInvalid({issues:[],memberIndices:[meta.memberIndex],field:meta.field});
   }
   function summary(){
     const names=group.members.map(x=>x.name.trim()).filter(Boolean);
-    const requireEnrollment=window.WebEntrega?.ativado===true;
+    const requireEnrollment=onlineEnabled;
     const ready=group.members.filter(m=>fullName(m.name)&&(!requireEnrollment||/^\d{1,32}$/.test(m.enrollment||''))).length;
     const teamValid=group.team.trim().length>=3;
     const pct=Math.round(((teamValid?1:0)+ready)/(group.members.length+1)*100);
@@ -145,7 +150,7 @@
     el('team-progress-label').textContent=complete?'Pronto para concluir':pct===100?'Revise os integrantes':pct+'% preenchido';
     el('team-progress-caption').textContent=complete
       ? 'A equipe está identificada' : 'Complete o nome da equipe e os integrantes';
-    el('team-summary-title').textContent=complete?'Equipe pronta para a atividade':'Identificação em andamento';
+    el('team-summary-title').textContent=complete?(onlineEnabled?'Identificação pronta para enviar':'Identificação pronta para PDF local'):'Identificação em andamento';
     el('team-summary-copy').textContent=complete
       ? group.team+' · '+names.length+' integrante(s): '+names.join(', ')
       : 'Seus nomes serão incluídos no PDF e no JSON de progresso.';
@@ -157,6 +162,11 @@
   function clearValidity(){
     el('web-team').removeAttribute('aria-invalid');
     holder.querySelectorAll('input[aria-invalid]').forEach(input=>input.removeAttribute('aria-invalid'));
+    [el('web-team'),...holder.querySelectorAll('input')].forEach(input=>{
+      const ids=(input.getAttribute('aria-describedby')||'').split(/\s+/).filter(id=>id&&id!=='team-feedback'&&!id.endsWith('-error'));
+      if(ids.length)input.setAttribute('aria-describedby',ids.join(' '));else input.removeAttribute('aria-describedby');
+    });
+    holder.querySelectorAll('.member-error').forEach(node=>{node.hidden=true;node.textContent='';});
   }
   function persist(){
     try{
@@ -211,14 +221,17 @@
     inputMat.type='text';inputMat.inputMode='numeric';inputMat.autocomplete='off';
     inputMat.id='web-member-'+index+'-enrollment';
     inputMat.dataset.index=String(index);inputMat.dataset.field='enrollment';
-    inputMat.maxLength=32;inputMat.required=true;
+    inputMat.maxLength=32;inputMat.required=onlineEnabled;inputMat.setAttribute('aria-required',String(onlineEnabled));
     inputMat.value=member.enrollment||'';inputMat.placeholder='Ex.: número da matrícula';
     labelMat.htmlFor=inputMat.id;
     const help=document.createElement('small');
     help.id=inputMat.id+'-help';help.textContent='Obrigatória para envio; zeros iniciais devem ser mantidos.';
     inputMat.setAttribute('aria-describedby',help.id);
     input.dataset.field='name';
-    fields.append(label,input,labelMat,inputMat,help);
+    const nameError=document.createElement('small'),matError=document.createElement('small');
+    nameError.id=input.id+'-error';matError.id=inputMat.id+'-error';
+    for(const error of [nameError,matError]){error.className='member-error';error.hidden=true;}
+    fields.append(label,input,nameError,labelMat,inputMat,help,matError);
     article.append(heading,fields,remove);
     return article;
   }
@@ -235,7 +248,7 @@
     group=candidate;
     render();
     persist();
-    feedback('Identificação da equipe restaurada. Revise os nomes antes da entrega.','success');
+    feedback('Identificação da equipe restaurada. Revise nomes e matrículas antes da entrega.','success');
   }
   let local=null;
   try{local=JSON.parse(localStorage.getItem(KEY)||localStorage.getItem(LEGACY_KEY)||'null');}catch{/* rascunho inválido */}
@@ -253,7 +266,7 @@
     catch(error){
       if(!modal.open)open(el('evidence-dialog').open?'evidence':'header');
       feedback('Para gerar PDF e enviar: '+String(error?.message||error),'error');
-      focusInvalid();
+      focusInvalid({issues:error.issues,requireEnrollment:options.requireEnrollment!==false});
       return null;
     }
   }
@@ -300,12 +313,12 @@
   });
   el('team-done').addEventListener('click',()=>{
     try{
-      const data=getIdentity({requireEnrollment:window.WebEntrega?.ativado===true});
+      const data=getIdentity({requireEnrollment:onlineEnabled});
       persist();
       clearValidity();
       feedback('Equipe '+data.team+' identificada com '+data.members.length+' integrante(s).','success');
       modal.close();
-    }catch(e){feedback(String(e.message||e),'error');focusInvalid();}
+    }catch(e){feedback(String(e.message||e),'error');focusInvalid({issues:e.issues});}
   });
-  window.WebTeam=Object.freeze({snapshot,restore,validatePartial,getIdentity,requireIdentity,showRemoteConflict,maxMembers:MAX});
+  window.WebTeam=Object.freeze({snapshot,restore,validatePartial,getIdentity,requireIdentity,showRemoteConflict,onlineEnabled,maxMembers:MAX});
 })();

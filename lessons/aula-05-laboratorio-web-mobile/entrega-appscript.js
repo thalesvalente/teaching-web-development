@@ -13,7 +13,7 @@
   const ACTIVITY = 'WEB-AULA05-2026';
   const CHANNEL = 'web-entrega-aula05';
   const validEndpoint = /^https:\/\/script\.google\.com\/macros\/s\/[\w-]+\/exec$/.test(ENDPOINT);
-  const activated = validEndpoint && config.activated === true;
+  const activated = validEndpoint && config.activated === true && config.schema==='web-a05-submission-v2' && window.WebTeam?.onlineEnabled===true;
   // HtmlService cria sandbox em hosts no formato n-...-script.googleusercontent.com.
   // Não aceitar *.googleusercontent.com genericamente. O nonce/contrato é
   // validado adicionalmente em receive(), nunca pela origem isolada.
@@ -29,7 +29,7 @@
   } else if (!activated) {
     status.textContent = 'O endereço Apps Script foi cadastrado, mas a entrega online segue em homologação. O professor precisa validar o POST real e ativar o recebimento. Exportações locais permanecem disponíveis.';
   } else {
-    status.textContent = 'Envio Web disponível. Somente o recibo retornado pelo Apps Script confirma o recebimento; XP não constituem nota oficial.';
+    status.textContent = 'Formulário pronto para tentar o envio. A disponibilidade será confirmada pelo servidor; somente o recibo válido comprova o recebimento, ainda sujeito à conferência docente.';
   }
   const inform = (text, kind = '') => {
     status.textContent = text;
@@ -82,7 +82,7 @@
         if(!validOrigin(event.origin))return; // GAS envia do iframe interno (top.postMessage).
         const d=event.data;
         if(!d || d.channel!==CHANNEL || d.nonce!==nonce)return;
-        if(!d.ok){
+        if(d.ok===false){
           const err=Error(d.message||d.error||'Servidor recusou a entrega.');
           err.code=typeof d.code==='string'?d.code:'ERRO_RECEBIMENTO';
           err.memberIndex=Number.isInteger(d.memberIndex)?d.memberIndex:null;
@@ -90,17 +90,17 @@
           err.action=typeof d.action==='string'?d.action:'Revise os dados informados.';
           return end(err);
         }
-        if(d.activity!==ACTIVITY || d.instrument!=='laboratorio-vivo-tsx-equipe' ||
+        if(d.ok!==true || d.activity!==ACTIVITY || d.instrument!=='laboratorio-vivo-tsx-equipe' ||
            d.codeSha256!==hash ||
-           typeof d.gradeReceived!=='number' || d.gradeReceived<0 || d.gradeReceived>10 ||
+           !Number.isFinite(d.gradeReceived) || d.gradeReceived<0 || d.gradeReceived>10 ||
            !Array.isArray(d.bestGrades) || d.bestGrades.length!==identity.members.length ||
-           d.bestGrades.some(v=>typeof v!=='number'||v<0||v>10) ||
+           d.bestGrades.some(v=>!Number.isFinite(v)||v<0||v>10) ||
            d.teamId!==identity.teamId || d.memberCount!==identity.members.length ||
            d.grade!==null || d.status!=='RECEBIDO_PENDENTE_VALIDACAO' ||
            !/^WEB-[\w-]+$/.test(String(d.receiptId||'')) ||
            !/^[0-9a-f]{64}$/.test(String(d.answersSha256||'')) ||
            !/^[0-9a-f]{64}$/.test(String(d.signature||'')) ||
-           !d.receivedAt)
+           !Number.isFinite(Date.parse(d.receivedAt)))
           return end(Error('Recibo de recebimento incompatível com a evidência.'));
         end(null,d);
       };
@@ -159,7 +159,7 @@
         'Nomes: '+checked.members.map(m=>m.name).join('; ')+'\n'+
         'Recibo: '+receipt.receiptId+'\nRecebido UTC: '+receipt.receivedAt+
         '\nNota recebida: '+receipt.gradeReceived.toFixed(1)+'/10\n'+
-        'Maiores notas individuais: '+receipt.bestGrades.map(v=>v.toFixed(1)).join('; ')+'\n'+
+        'Maiores notas individuais:\n'+checked.members.map((member,i)=>member.name+' — Matrícula: '+member.enrollment+' — '+receipt.bestGrades[i].toFixed(1)+'/10').join('\n')+'\n'+
         (receipt.teacherReviewRequired?'Aviso: '+String(receipt.warning||'Avaliação docente pendente.')+'\n':'')+
         'SHA-256 do código: '+receipt.codeSha256+
         '\nAssinatura do recibo: '+receipt.signature+

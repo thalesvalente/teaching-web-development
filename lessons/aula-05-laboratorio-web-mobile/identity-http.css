@@ -1,0 +1,13 @@
+/* WEB-ID03 HTTP QA: erro vinculado ao campo e identificação legível no PDF. */
+.team-dialog .member-error{font-size:12px;line-height:1.5;color:#8b241d;overflow-wrap:anywhere;margin-top:4px}
+.team-dialog .member-error[hidden]{display:none!important}
+.team-dialog .member-row-fields input{min-height:44px;font-size:16px}
+.team-dialog .member-row-fields label{font-size:12px}
+.team-dialog .team-remove-member,.team-dialog .team-close{min-width:44px;min-height:44px}
+.doc-identity-privacy{font-size:10pt;line-height:1.4;color:#32473c;margin:8pt 0}
+.doc-info-value{overflow-wrap:anywhere}
+@media(max-width:360px){
+  .team-panel-head{padding:12px 14px}.team-head-content{margin:10px 0;gap:8px}
+  .team-head-content #team-intro{font-size:12px}.team-head-icon{display:none}
+  .team-panel-body{padding:12px}.team-panel-footer{padding:10px 12px}
+}

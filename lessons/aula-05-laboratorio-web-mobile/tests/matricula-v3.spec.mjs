@@ -2,9 +2,9 @@ import {test,expect} from '@playwright/test';
 
 const ENDPOINT='https://script.google.com/macros/s/WEB-A05-ID03-QA-MOCK/exec';
 async function open(page,activated=true){
-  await page.route('**/entrega-config.js',route=>route.fulfill({
+  await page.route('**/entrega-config.js*',route=>route.fulfill({
     status:200,contentType:'application/javascript',
-    body:"window.WebEntregaConfig=Object.freeze({endpoint:'"+ENDPOINT+
+    body:"window.WebEntregaConfig=Object.freeze({schema:'web-a05-submission-v2',endpoint:'"+ENDPOINT+
       "',activity:'WEB-AULA05-2026',activated:"+activated+"});"
   }));
   await page.goto('/index.html');

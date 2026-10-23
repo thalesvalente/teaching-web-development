@@ -45,7 +45,7 @@
     if(!validated || !identity || validated.team!==identity.team ||
        !Array.isArray(identity.members) ||
        validated.members.length!==identity.members.length ||
-       validated.members.some((m,i)=>m.name!==identity.members[i]?.name))
+       validated.members.some((m,i)=>m.name!==identity.members[i]?.name || (m.enrollment||'')!==(identity.members[i]?.enrollment||'')))
       throw Error('PDF local requer nome da equipe e nome completo dos integrantes; matrícula só é exigida no envio online.');
     const total=snapshot.exercicios.length;
     const done=snapshot.exercicios.filter(item=>item.estado==='APROVADO').length;
@@ -82,12 +82,15 @@
       : [];
     infoRow(metadata,'Equipe',safeText(identity.team,'Não informada'));
     infoRow(metadata,'Integrantes (nomes)',members.length?members.join('; '):'Não informados');
+    validated.members.forEach((member,index)=>infoRow(metadata,'Integrante '+(index+1),
+      member.name+' — Matrícula: '+(member.enrollment||'não informada (PDF local)')));
+    add(cover,'p','doc-identity-privacy','Contém identificação acadêmica. Compartilhe somente com a equipe e o professor.');
     infoRow(metadata,'Quantidade de integrantes',members.length||'Não informada');
     infoRow(metadata,'Docente','Prof. Dr. Thales Levi Azevedo Valente');
     infoRow(metadata,'Emissão (BRT)',when);
     const control=add(cover,'div','doc-control');
     add(control,'p',null,'Controle documental: WEB-A05-LV-2026');
-    add(control,'p',null,'Versão do relatório: 1.0.0');
+    add(control,'p',null,'Versão do relatório: 1.1.0');
     add(control,'p',null,'Natureza: registro de equipe; progresso formativo declarado e testado localmente.');
     // Progresso formativo — não é nota acadêmica.
     const score=add(article,'section','doc-score');
@@ -168,5 +171,5 @@
     root.setAttribute('data-report-xp',String(snapshot.xp));
     return {xp:snapshot.xp,total,done,pending};
   }
-  window.WebLabReport=Object.freeze({prepare,version:'1.0.0'});
+  window.WebLabReport=Object.freeze({prepare,version:'1.1.0'});
 })();
