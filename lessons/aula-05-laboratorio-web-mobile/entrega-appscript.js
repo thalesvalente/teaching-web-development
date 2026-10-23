@@ -1,5 +1,5 @@
 /**
- * Aula 05 — recebimento formativo, sem alterar XP, editor ou exports locais.
+ * Aula 05 — recebimento por matrícula, sem alterar XP no laboratório ou artefatos locais.
  * Salva JSON antes de enviar. Somente um recibo REAL do servidor pode
  * afirmar que a evidência foi RECEBIDA, ainda pendente de validação docente.
  */
@@ -34,9 +34,9 @@
   const inform = (text, kind = '') => {
     status.textContent = text;
     status.dataset.kind = kind;
+    status.setAttribute('role',kind==='error'?'alert':'status');
   };
-  // A equipe fornece apenas seu nome e nomes dos integrantes; não há
-  // campos de matrícula, turma ou dados extras no formulário.
+  // Matrícula individual é obrigatória no POST. Dados antigos sem matrícula seguem válidos como rascunho offline.
   function teamIdentity() {
     if(!window.WebTeam?.getIdentity)
       throw Error('Identificação da equipe indisponível. Atualize o laboratório.');
@@ -57,7 +57,7 @@
   function post(identity, evidence, hash) {
     const nonce = crypto.randomUUID();
     const payload = JSON.stringify({
-      schema:'web-a05-submission-v1',activity:ACTIVITY,identity,evidence
+      schema:'web-a05-submission-v2',activity:ACTIVITY,identity,evidence
     });
     if (payload.length > 44000) return Promise.reject(Error('Arquivo muito grande para entrega online; exporte e consulte o professor.'));
     return new Promise((resolve,reject) => {
@@ -82,9 +82,19 @@
         if(!validOrigin(event.origin))return; // GAS envia do iframe interno (top.postMessage).
         const d=event.data;
         if(!d || d.channel!==CHANNEL || d.nonce!==nonce)return;
-        if(!d.ok)return end(Error(d.error||'Servidor recusou a evidência.'));
+        if(!d.ok){
+          const err=Error(d.message||d.error||'Servidor recusou a entrega.');
+          err.code=typeof d.code==='string'?d.code:'ERRO_RECEBIMENTO';
+          err.memberIndex=Number.isInteger(d.memberIndex)?d.memberIndex:null;
+          err.field=d.field==='enrollment'||d.field==='name'?d.field:null;
+          err.action=typeof d.action==='string'?d.action:'Revise os dados informados.';
+          return end(err);
+        }
         if(d.activity!==ACTIVITY || d.instrument!=='laboratorio-vivo-tsx-equipe' ||
-           d.codeSha256!==hash || d.xpReported!==evidence.xp ||
+           d.codeSha256!==hash ||
+           typeof d.gradeReceived!=='number' || d.gradeReceived<0 || d.gradeReceived>10 ||
+           !Array.isArray(d.bestGrades) || d.bestGrades.length!==identity.members.length ||
+           d.bestGrades.some(v=>typeof v!=='number'||v<0||v>10) ||
            d.teamId!==identity.teamId || d.memberCount!==identity.members.length ||
            d.grade!==null || d.status!=='RECEBIDO_PENDENTE_VALIDACAO' ||
            !/^WEB-[\w-]+$/.test(String(d.receiptId||'')) ||
@@ -108,9 +118,9 @@
   async function generatePdfAndSend(){
     if(busy)return;
     // Validação anterior ao PDF, ao JSON e a qualquer solicitação de rede.
-    const identity=window.WebTeam?.requireIdentity?.();
+    const identity=window.WebTeam?.requireIdentity?.({requireEnrollment:activated});
     if(!identity){
-      inform('ENVIO NÃO REALIZADO: preencha o nome da equipe e o nome e sobrenome de todos os integrantes. Nenhum dado foi enviado.','error');
+      inform('ENVIO NÃO REALIZADO: informe equipe, nome completo e, para entrega online, matrícula de cada integrante. Nenhum dado foi enviado.','error');
       return;
     }
     if(!window.WebLabEvidence?.printPartial?.()){
@@ -143,19 +153,35 @@
       inform('PDF preparado. Enviando as evidências e aguardando recibo do Apps Script...');
       showReceipt();
       const receipt=await post(checked,evidence,hash);
-      inform('ENVIO CONFIRMADO! EVIDÊNCIA RECEBIDA — AGUARDANDO CONFERÊNCIA DOCENTE.\n'+
+      inform('ENVIO CONFIRMADO! NOTA RECEBIDA — AGUARDANDO CONFERÊNCIA DOCENTE.\n'+
         'Equipe: '+checked.team+' ('+checked.members.length+' integrante(s))\n'+
         'Nomes: '+checked.members.map(m=>m.name).join('; ')+'\n'+
         'Recibo: '+receipt.receiptId+'\nRecebido UTC: '+receipt.receivedAt+
-        '\nXP formativos relatados: '+receipt.xpReported+'/100 (não são nota)\n'+
+        '\nNota recebida: '+receipt.gradeReceived.toFixed(1)+'/10\n'+
+        'Maiores notas individuais: '+receipt.bestGrades.map(v=>v.toFixed(1)).join('; ')+'\n'+
         'SHA-256 do código: '+receipt.codeSha256+
         '\nAssinatura do recibo: '+receipt.signature+
         '\nPDF: salve-o no dispositivo pela janela de impressão (não é enviado como arquivo).\n'+
         'Guarde seu JSON e o número do recibo.', 'success');
       showReceipt();
     }catch(error){
-      inform('ENVIO NÃO CONFIRMADO: '+String(error?.message||'Falha de entrega.')+
-        '\nConfira o recebimento antes de tentar novamente. PDF/JSON locais não comprovam entrega.','error');
+      const index=error?.memberIndex;
+      const member=Number.isInteger(index)?identity?.members?.[index]:null;
+      if(member && error?.field){
+        const message='ENTREGA BLOQUEADA — '+String(error.code||'IDENTIDADE_CONFLITANTE')+'\n'+
+          'Integrante '+(index+1)+'\n'+
+          'Nome informado: '+member.name+'\n'+
+          'Matrícula informada: '+member.enrollment+'\n'+
+          'Problema: '+String(error.message||'Dados inconsistentes.')+'\n'+
+          'Como resolver: '+String(error.action||'Procure o professor.')+'\n'+
+          'Nenhuma nota ou entrega foi confirmada.';
+        inform(message,'error');
+        window.WebTeam?.showRemoteConflict?.({memberIndex:index,field:error.field,
+          message:error.message,action:error.action});
+      }else{
+        inform('ENVIO NÃO CONFIRMADO: '+String(error?.message||'Falha de entrega.')+
+          '\nConfira a Auditoria antes de tentar novamente. PDF/JSON locais não comprovam entrega.','error');
+      }
       showReceipt();
     }finally{busy=false;button.disabled=false;quickButton.disabled=false;}
   }
