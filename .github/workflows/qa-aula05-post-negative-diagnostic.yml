@@ -1,0 +1,33 @@
+name: Diagnostico de retorno Apps Script POST invalido sem escrita
+on:
+  push:
+    branches: [qa/aula05-negative-post-diagnostics-20261023]
+    paths: ['.github/workflows/qa-aula05-post-negative-diagnostic.yml']
+permissions: {contents: read}
+jobs:
+  negative:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/setup-node@v4
+        with: {node-version: 24}
+      - name: Checar resposta de POST invalido antes da validacao (zero escrita)
+        env:
+          ENDPOINT: https://script.google.com/macros/s/AKfycbyDC9tGFBTOjZXau4m2vWQVPoYa3gZKMldc1NjAMZCUstHx0SICMG8Z4ekAWvLfnmlc/exec
+        run: |
+          node --input-type=module - <<'JS'
+          const res=await fetch(process.env.ENDPOINT,{
+            method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},
+            body:'nonce=x',redirect:'follow',signal:AbortSignal.timeout(30000)
+          });
+          const html=await res.text();
+          const stripped=html.slice(0,750).replace(/https?:\/\/[^\s"'<>]+/g,'[url]');
+          console.log(JSON.stringify({
+            status:res.status,urlHost:new URL(res.url).hostname,
+            contentType:res.headers.get('content-type'),bytes:html.length,
+            hasPostMessage:/top\.postMessage/.test(html),
+            hasGoogleScript:/google\.script/.test(html),
+            hasIframe:/iframe/i.test(html),
+            initialSnippet:stripped
+          }));
+          JS
