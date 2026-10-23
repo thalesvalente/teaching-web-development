@@ -65,7 +65,7 @@
     if(data.team.length<3)throw Error('Informe o nome da equipe (mínimo 3 caracteres).');
     const seenNames=new Map(),seenEnrollments=new Map();
     data.members.forEach((member,index)=>{
-      if(!fullName(member.name))throw Error('Informe nome e sobrenome completos do integrante '+(index+1)+'.');
+      if(!fullName(member.name))throw Error('Informe nome e sobrenome do integrante '+(index+1)+'.');
       const nameKey=normalized(member.name);
       if(seenNames.has(nameKey))throw Error('Nome duplicado: integrantes '+(seenNames.get(nameKey)+1)+' e '+(index+1)+'. Nome informado: '+member.name+'.');
       seenNames.set(nameKey,index);
