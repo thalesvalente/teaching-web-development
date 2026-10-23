@@ -5,7 +5,44 @@
 - Outras disciplinas: **não reutilizar** planilhas, endpoints, scripts nem segredos de Móveis ou PPI I.
 - Fonte Apps Script: [Code.gs](Code.gs).
 - Frontend: [entrega-config.js](../../lessons/aula-05-laboratorio-web-mobile/entrega-config.js) + [entrega-appscript.js](../../lessons/aula-05-laboratorio-web-mobile/entrega-appscript.js).
-- **Não há endpoint Web /exec implantado nesta entrega.** O botão online fica DESABILITADO enquanto a URL estiver vazia. JSON, Markdown, impressão/PDF e XP continuam funcionando offline.
+- **Sem implantação /exec confirmada:** o frontend permanece com `endpoint:''` e `activated:false`; preencher somente a URL não habilita os envios. JSON, Markdown, impressão/PDF e XP continuam funcionando offline.
+
+## Implantação assistida da versão Web
+
+**Situação verificada em 22/10/2026:** a planilha nativa existe, tem as cinco abas corretas e **nenhuma entrega real registrada**. Não foi encontrado projeto Apps Script de Web na conta Google conectada; não existe URL `/exec` confirmada. A configuração pública do laboratório continua `endpoint:''` e `activated:false`, ou seja, **nenhum envio está habilitado**.
+
+Este repositório contém o receptor pronto, mas **GitHub Pages e o conector Google Drive não criam nem implantam Apps Script automaticamente**. A conta proprietária precisa autorizar o projeto uma vez, no próprio editor do Google. O restante (configuração, QA, commits e publicação) pode ser concluído por este fluxo.
+
+### Passos mínimos, na planilha correta
+
+1. Abra a [planilha Web](https://docs.google.com/spreadsheets/d/1iLx-Tm0EFCsMxqKxbkXAuevJlCzjFAJuRyknbHYlbGM/edit) com acesso de edição e clique em **Extensões → Apps Script**.
+2. No **Code.gs** do novo projeto vinculado, cole **integralmente** [Code.gs](./Code.gs). O [manifesto appsscript.json](./appsscript.json) registra **V8** e **America/Fortaleza**; ele é opcional no fluxo pelo editor, mas recomendado para versionamento por `clasp`.
+3. Salve, selecione **`prepararIntegracaoWeb` → Executar** e autorize o acesso. Exija no log **`WEB_SETUP_PASS`**, cinco abas e **recebimento BLOQUEADO**. A função confere o vínculo com a planilha e cria `WEB_WEB_SUBMISSIONS_ENABLED=false` apenas se ausente; não registra alunos.
+4. Clique **Implantar → Nova implantação → Aplicativo da Web**; escolha executar como **Você**. Defina quem pode acessar segundo a política institucional. Uma página GitHub Pages pública não prova a identidade de quem digita uma matrícula; permitir **Qualquer pessoa** exige aceite explícito da instituição e análise LGPD. Copie a URL `https://script.google.com/macros/s/.../exec`.
+5. Execute a prova segura de leitura:
+   ```bash
+   node scripts/probe-web-appscript.mjs --url "https://script.google.com/macros/s/SEU-ID/exec"
+   ```
+   A resposta deve indicar versão `web-entregas-1.0.0` e inicialmente **BLOQUEADO**. Não ocorre POST nem escrita no Sheets.
+6. **Envie a URL `/exec` para integração no GitHub.** Primeiro será publicada com `endpoint:'.../exec'` e `activated:false`. Só após um teste **real** e conferência na planilha o botão poderá ser ativado por outro commit.
+
+### Teste de escrita controlado (somente com autorização)
+
+O `Code.gs` possui a propriedade de script `WEB_WEB_SUBMISSIONS_ENABLED`. O script não altera essa flag automaticamente. Quando autorizado o QA:
+
+1. No Apps Script, altere temporariamente a propriedade para `true` (somente no projeto de Web).
+2. A partir da raiz clonada do repositório, execute primeiro a simulação sem rede:
+   ```bash
+   node scripts/test-web-appscript-post.mjs --dry-run
+   ```
+3. Para o **único POST fictício autorizado**, execute:
+   ```bash
+   node scripts/test-web-appscript-post.mjs --url "https://script.google.com/macros/s/SEU-ID/exec" --confirm-write
+   ```
+   Ele envia matrícula fictícia `QA20261022WEB05`, 0/100 XP e **não concede nota**. Em caso de recibo `WEB_QA_POST_PASS`, confirme as linhas correspondentes nas quatro abas e em **Auditoria**. Reenvios com a mesma matrícula devem atualizar sua linha sem duplicar.
+4. Remova **somente** as linhas da matrícula QA fictícia após verificar; não mexa em registros de estudantes. Volte a flag para `false` até a liberação docente final. Depois de aprovar identidade e retenção, habilite no servidor `true` e no frontend `activated:true` em revisão separada.
+
+**Nunca** coloque credenciais OAuth, HMAC, tokens da conta ou matrícula real em GitHub. Os recibos indicam `RECEBIDO_PENDENTE_VALIDACAO`; a autenticação do estudante e a nota oficial continuam fora deste contrato.
 
 ## Contrato da planilha criada e verificada
 Abas:

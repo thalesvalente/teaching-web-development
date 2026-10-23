@@ -6,7 +6,7 @@ const fake='https://script.google.com/macros/s/WEB-QA-MOCK-2026/exec';
 async function enabled(page){
   await page.route('**/entrega-config.js',route=>route.fulfill({
     status:200,contentType:'application/javascript',
-    body:"window.WebEntregaConfig=Object.freeze({endpoint:'"+fake+"',activity:'WEB-AULA05-2026'});"
+    body:"window.WebEntregaConfig=Object.freeze({endpoint:'"+fake+"',activity:'WEB-AULA05-2026',activated:true});"
   }));
 }
 async function enter(page){
@@ -99,4 +99,25 @@ test('recibo emulado que inventa nota oficial é rejeitado',async({page})=>{
   await page.locator('#web-submit').click();
   await expect(page.locator('#web-delivery-status')).toContainText('ENVIO NÃO CONFIRMADO',{timeout:10000});
   await expect(page.locator('#web-delivery-status')).not.toContainText('EVIDÊNCIA RECEBIDA');
+});
+
+test('endpoint /exec preenchido mas não homologado mantém botão bloqueado',async({page})=>{
+  await page.route('**/entrega-config.js',route=>route.fulfill({
+    status:200,contentType:'application/javascript',
+    body:"window.WebEntregaConfig=Object.freeze({endpoint:'"+
+      fake+"',activity:'WEB-AULA05-2026',activated:false});"
+  }));
+  let calls=0;
+  await page.route(fake,route=>{calls++;return route.abort();});
+  await enter(page);
+  await expect(page.locator('#web-submit')).toBeDisabled();
+  await expect(page.locator('#web-delivery-status')).toContainText('homologação');
+  expect(calls).toBe(0);
+  const [download]=await Promise.all([
+    page.waitForEvent('download'),
+    page.locator('#export-json').click()
+  ]);
+  const data=JSON.parse(await readFile(await download.path(),'utf8'));
+  expect(data.maximoXp).toBe(100);
+  expect(data.exercicios).toHaveLength(14);
 });

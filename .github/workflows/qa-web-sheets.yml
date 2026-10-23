@@ -8,6 +8,8 @@ on:
       - 'integrations/web-appscript/**'
       - 'tests/web-entregas.test.cjs'
       - '.github/workflows/qa-web-sheets.yml'
+      - 'scripts/probe-web-appscript.mjs'
+      - 'scripts/test-web-appscript-post.mjs'
   pull_request:
     paths:
       - 'integrations/web-appscript/**'
@@ -37,21 +39,36 @@ jobs:
           node --check tests/web-entregas.test.cjs
           node --check lessons/aula-05-laboratorio-web-mobile/entrega-appscript.js
           node --check lessons/aula-05-laboratorio-web-mobile/entrega-config.js
+          node --check scripts/probe-web-appscript.mjs
+          node --check scripts/test-web-appscript-post.mjs
       - name: Testes de recepcao mockada e integridade
         run: node --test tests/web-entregas.test.cjs
-      - name: Garantir endpoint da WEB ainda desconectado
+      - name: Validar endpoint Web (vazio ou /exec) e ativacao explicita
         run: |
           node - <<'JS'
           const fs=require('fs');
           const cfg=fs.readFileSync('lessons/aula-05-laboratorio-web-mobile/entrega-config.js','utf8');
           const code=fs.readFileSync('integrations/web-appscript/Code.gs','utf8');
-          if(!cfg.includes("endpoint: ''"))throw Error('Publicacao nao autorizada de URL online');
-          if(!code.includes("getProperty('WEB_WEB_SUBMISSIONS_ENABLED')"))throw Error('Flag obrigatoria nao encontrada');
-          if(!code.includes("!==\x27true\x27"))throw Error('Bloqueio deny-by-default ausente');
-          console.log('PASS: endpoint desativado; backend protegido por flag.');
+          const endpoint=cfg.match(/endpoint:\s*'([^']*)'/)?.[1];
+          const flag=cfg.match(/activated:\s*(true|false)/)?.[1];
+          if(endpoint===undefined)throw Error('Endpoint da disciplina Web ausente');
+          if(flag===undefined)throw Error('Flag de ativação frontend ausente');
+          if(endpoint&&!/^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]+\/exec$/.test(endpoint))
+            throw Error('Endpoint não é um Web App /exec válido do Google Apps Script');
+          if(flag==='true'&&!endpoint)throw Error('Não é possível ativar envio Web sem implantação /exec');
+          if(!code.includes("getProperty('WEB_WEB_SUBMISSIONS_ENABLED')"))
+            throw Error('Flag de proteção do backend ausente');
+          if(!code.includes("!=='true'"))throw Error('Bloqueio deny-by-default ausente');
+          console.log('WEB CONFIG PASS | endpoint '+(endpoint?'presente':'pendente')+
+            ' | frontend '+(flag==='true'?'ativado':'bloqueado')+
+            ' | backend protegido por ScriptProperties');
           JS
+      - name: Validar fixture sem enviar POST ou criar linhas de aluno
+        run: node scripts/test-web-appscript-post.mjs --dry-run
+      - name: Consultar GET do Apps Script, se URL /exec estiver cadastrada
+        run: node scripts/probe-web-appscript.mjs
       - name: Relatorio de integracao
         run: |
           printf '## Integração Web · receptor Apps Script\n\n' >> "$GITHUB_STEP_SUMMARY"
           printf 'Testes Node simulados passaram.\n\n' >> "$GITHUB_STEP_SUMMARY"
-          printf 'NÃO houve escrita real no Sheets nem implantação do Web App.\n' >> "$GITHUB_STEP_SUMMARY"
+          printf 'QA mockado não escreve na planilha. GET /exec só é consultado quando existe URL configurada.\n' >> "$GITHUB_STEP_SUMMARY"
