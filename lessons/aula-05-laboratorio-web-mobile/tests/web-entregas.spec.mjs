@@ -183,3 +183,59 @@ test('recibo que inventa nota oficial é recusado mesmo para equipe válida',asy
   await expect(page.locator('#web-delivery-status')).toContainText('ENVIO NÃO CONFIRMADO',{timeout:10000});
   await expect(page.locator('#web-delivery-status')).not.toContainText('EVIDÊNCIA RECEBIDA');
 });
+
+
+test('painel visual: hierarquia, contagem dinâmica, foco e CTA em desktop e mobile',async({page})=>{
+  for(const size of [{width:1440,height:900},{width:390,height:844},{width:320,height:650}]){
+    await page.setViewportSize(size);
+    await page.goto('/index.html');
+    await page.locator('#team-open').click();
+    await expect(page.locator('#team-dialog')).toBeVisible();
+    await expect(page.locator('#team-title')).toHaveText('Identificação da equipe');
+    await expect(page.locator('#team-members-count')).toHaveText('0/8');
+    await expect(page.locator('#team-progress')).toHaveAttribute('aria-valuenow','0');
+    await expect(page.locator('#team-done')).toBeVisible();
+    const panel=await page.locator('#team-dialog').evaluate(el=>{
+      const r=el.getBoundingClientRect(),d=document.documentElement;
+      const button=el.querySelector('#team-done').getBoundingClientRect();
+      return {width:r.width,left:r.left,right:r.right,top:r.top,bottom:r.bottom,
+        buttonBottom:button.bottom,viewportWidth:innerWidth,viewportHeight:innerHeight,
+        docWidth:d.scrollWidth};
+    });
+    expect(panel.left).toBeGreaterThanOrEqual(-1);
+    expect(panel.right).toBeLessThanOrEqual(size.width+1);
+    expect(panel.buttonBottom).toBeLessThanOrEqual(size.height+1);
+    expect(panel.docWidth).toBeLessThanOrEqual(size.width+1);
+    await page.locator('#web-team').fill('Equipe Horizonte');
+    await page.locator('#web-member-0-name').fill('Ana Exemplo');
+    await expect(page.locator('#team-progress')).toHaveAttribute('aria-valuenow','100');
+    await expect(page.locator('#team-progress-label')).toContainText('Pronto para concluir');
+    await page.locator('#web-add-member').click();
+    await expect(page.locator('#team-members-count')).toHaveText('1/8');
+    await expect(page.locator('#team-progress')).not.toHaveAttribute('aria-valuenow','100');
+    await page.locator('#web-member-1-name').fill('Bia Exemplo');
+    await expect(page.locator('#team-progress')).toHaveAttribute('aria-valuenow','100');
+    const inputBounds=await page.locator('#web-member-1-name').boundingBox();
+    expect(inputBounds?.width).toBeGreaterThanOrEqual(150);
+    await page.locator('#team-done').click();
+    await expect(page.locator('#team-dialog')).toBeHidden();
+    await expect(page.locator('#team-count')).toContainText('2 nomes');
+  }
+});
+test('painel compacto usa lista sem matrícula ou turma e preserva remoção confirmada',async({page})=>{
+  await page.setViewportSize({width:375,height:667});
+  await page.goto('/index.html');
+  await page.locator('#team-open').click();
+  await page.locator('#web-team').fill('Equipe Bacuri');
+  await page.locator('#web-member-0-name').fill('Ana Exemplo');
+  await page.locator('#web-add-member').click();
+  await page.locator('#web-member-1-name').fill('Bia Exemplo');
+  await expect(page.locator('.team-member-number')).toHaveCount(2);
+  await expect(page.locator('.team-remove-member')).toHaveCount(2);
+  page.once('dialog',d=>d.accept());
+  await page.locator('.team-remove-member:not(:disabled)').click();
+  await expect(page.locator('#team-members-count')).toHaveText('1/8');
+  await expect(page.locator('#team-progress')).toHaveAttribute('aria-valuenow','100');
+  await expect(page.locator('#web-student-id')).toHaveCount(0);
+  await expect(page.locator('#web-class')).toHaveCount(0);
+});
