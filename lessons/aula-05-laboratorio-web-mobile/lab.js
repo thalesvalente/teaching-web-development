@@ -664,7 +664,15 @@ function registrar() {
     if (event.source !== frame.contentWindow) return;
     const data = event.data;
     if (!data || data.from !== 'ifma-aula05') return;
-    if (data.type === 'READY') { ready = true; if (sourceLoaded) run({ initial: true }); return; }
+    if (data.type === 'READY') {
+      // A mensagem READY pode anteceder a instalação do listener no host.
+      // Confirmar o handshake e executar somente na primeira READY válida.
+      const first=!ready;
+      ready=true;
+      frame.contentWindow?.postMessage({from:'ifma-aula05-host',type:'READY_ACK',token:nonce},'*');
+      if(first && sourceLoaded)run({initial:true});
+      return;
+    }
     if (data.token !== nonce) return;
     // A resposta assíncrona deve vir da VERSÃO compilada que continua aberta.
     // Editar/reexecutar durante uma conferência descarta resultados antigos.

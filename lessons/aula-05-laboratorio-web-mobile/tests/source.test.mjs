@@ -144,6 +144,8 @@ test('Aula 05 registra equipe e nomes sem exigir matrícula ou turma',()=>{
   assert.match(html,/id="quick-pdf"[^>]*>Gerar PDF e Enviar/);
   assert.match(html,/id="web-submit"[^>]*disabled>\s*Gerar PDF e Enviar/);
   assert.match(ui,/requireIdentity/);
+  assert.match(ui,/READY_ACK/);
+  assert.match(read('preview.js'),/announceReady/);
   assert.match(teamJs,/requireIdentity/);
   assert.match(delivery,/ENVIO CONFIRMADO/);
   assert.match(ui,/team: window\.WebTeam\?\.snapshot\(\)/);

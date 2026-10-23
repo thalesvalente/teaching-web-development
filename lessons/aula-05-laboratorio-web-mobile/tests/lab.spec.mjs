@@ -347,7 +347,7 @@ test('atalhos de PDF e salvar/retomar aparecem no cabeçalho e no diálogo',asyn
   for(const id of ['save-progress','load-progress','quick-pdf']) await expect(page.locator('#'+id)).toBeVisible();
   await page.locator('#evidence-open').click();
   for(const id of ['dialog-save-progress','dialog-load-progress','dialog-pdf']) await expect(page.locator('#'+id)).toBeVisible();
-  await expect(page.locator('#evidence-dialog')).toContainText('mesmo com exercícios pendentes');
+  await expect(page.locator('#evidence-dialog')).toContainText('Pode manter exercícios e reflexões');
 });
 test('recarregar mantém código, missão, quiz e XP formativos da sessão',async({page})=>{
   await open(page);
