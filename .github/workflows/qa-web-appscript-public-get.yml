@@ -1,0 +1,27 @@
+name: QA | Web Apps Script GET externo
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/qa-web-appscript-public-get.yml'
+      - 'lessons/aula-05-laboratorio-web-mobile/entrega-config.js'
+      - 'scripts/probe-web-appscript.mjs'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  probe-get:
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Testar somente GET da implantacao Web informada
+        run: node scripts/probe-web-appscript.mjs
+      - name: Estado de homologacao
+        if: always()
+        run: |
+          printf '## Web App de Desenvolvimento Web\n\n' >> "$GITHUB_STEP_SUMMARY"
+          printf 'Somente GET. Nenhum POST, matrícula real ou escrita no Sheets.\n' >> "$GITHUB_STEP_SUMMARY"
+          printf 'O POST real fictício permanece sujeito a autorização e controle de acesso.\n' >> "$GITHUB_STEP_SUMMARY"

@@ -15,10 +15,10 @@ async function enter(page){
   await page.locator('#evidence-open').click();
   await expect(page.locator('#evidence-dialog')).toBeVisible();
 }
-test('sem Apps Script implantado o botão fica desabilitado, JSON e PDF continuam independentes',async({page})=>{
+test('com Apps Script cadastrado mas não ativado o botão fica desabilitado, JSON e PDF independentes',async({page})=>{
   await enter(page);
   await expect(page.locator('#web-submit')).toBeDisabled();
-  await expect(page.locator('#web-delivery-status')).toContainText('não configurado');
+  await expect(page.locator('#web-delivery-status')).toContainText('homologação');
   const [download]=await Promise.all([page.waitForEvent('download'),page.locator('#export-json').click()]);
   const file=await readFile(await download.path(),'utf8');
   const data=JSON.parse(file);
