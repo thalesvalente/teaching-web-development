@@ -46,3 +46,15 @@ A auditoria WCAG 2.2 AA com tecnologias assistivas permanece pendente; o workflo
 - [ ] Gerar PDF pode repetir-se sem acumular cópias do relatório oculto.
 
 Os testes automatizados não substituem inspeção visual de páginas complexas nem auditoria assistiva integral WCAG 2.2 AA.
+
+
+## Gates para equipes e integrantes
+
+- [ ] Formulário solicita somente nome da equipe e nomes completos; não há campo de matrícula ou turma.
+- [ ] Inclusão e remoção de 1–8 integrantes, etiquetas acessíveis, foco e resumo atualizado.
+- [ ] Nomes duplicados normalizados e nomes sem sobrenome impedem submissão, mas não impedem exportação de progresso parcial.
+- [ ] JSON de continuidade conserva a equipe, os nomes e o ID técnico automático entre navegadores.
+- [ ] PDF institucional e Markdown incluem a identificação da equipe sem expor matrícula.
+- [ ] O receptor Apps Script 1.1.0 valida a equipe, cria uma linha por integrante nos quatro bimestres e uma linha por grupo em Equipes e Auditoria.
+- [ ] Reenvio da mesma equipe não duplica a linha coletiva nem sobrescreve notas da Aula 04.
+- [ ] URL /exec antiga (receptor 1.0.0) não é apresentada como compatível; receber alunos continua bloqueado até nova implantação e QA real.
