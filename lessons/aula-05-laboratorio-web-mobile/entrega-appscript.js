@@ -12,13 +12,18 @@
   const ACTIVITY = 'WEB-AULA05-2026';
   const CHANNEL = 'web-entrega-aula05';
   const validEndpoint = /^https:\/\/script\.google\.com\/macros\/s\/[\w-]+\/exec$/.test(ENDPOINT);
+  const activated = validEndpoint && config.activated === true;
   const validOrigin = origin => origin === 'https://script.google.com' ||
     /^https:\/\/(?:[a-z0-9-]+\.)?script\.googleusercontent\.com$/.test(origin);
   if (!button || !status) throw Error('Controles de envio Web não encontrados.');
   let busy = false;
-  button.disabled = !validEndpoint;
+  button.disabled = !activated;
   if (!validEndpoint) {
     status.textContent = 'Recebimento online ainda não configurado pelo professor. JSON, Markdown e PDF continuam disponíveis localmente.';
+  } else if (!activated) {
+    status.textContent = 'O endereço Apps Script foi cadastrado, mas a entrega online segue em homologação. O professor precisa validar o POST real e ativar o recebimento. Exportações locais permanecem disponíveis.';
+  } else {
+    status.textContent = 'Envio Web disponível. Somente o recibo retornado pelo Apps Script confirma o recebimento; XP não constituem nota oficial.';
   }
   const inform = (text, kind = '') => {
     status.textContent = text;
@@ -96,7 +101,7 @@
     });
   }
   button.addEventListener('click',async()=>{
-    if(busy || !validEndpoint)return;
+    if(busy || !activated)return;
     try{
       if(!window.WebLabEvidence || typeof window.WebLabEvidence.snapshot!=='function')
         throw Error('Laboratório ainda não preparado. Abra a aula e execute o código.');
@@ -123,7 +128,7 @@
     }catch(error){
       inform('ENVIO NÃO CONFIRMADO: '+String(error?.message||'Falha de entrega.')+
         '\nExportar JSON/Markdown/PDF continua disponível. Não há nota automática.', 'error');
-    }finally{busy=false;button.disabled=!validEndpoint;}
+    }finally{busy=false;button.disabled=!activated;}
   });
-  window.WebEntrega = Object.freeze({configurado:validEndpoint,atividade:ACTIVITY});
+  window.WebEntrega = Object.freeze({configurado:validEndpoint,ativado:activated,atividade:ACTIVITY});
 })();
