@@ -28,10 +28,13 @@
     const value=String(name||'').trim();
     if(value.length<5||value.length>100||!/^[\p{L}\p{M}'’\-\s]+$/u.test(value))return false;
     const parts=value.split(/\s+/);
-    return parts.length>=2 && parts.every(part=>
-      /^[\p{L}][\p{L}\p{M}'’\-]*$/u.test(part) &&
-      part.split(/[-'’]/).every(segment=>
-        (segment.match(/\p{L}/gu)||[]).length>=2));
+    return parts.length>=2 && parts.every(part=>{
+      if(!/^[\p{L}][\p{L}\p{M}'’\-]*$/u.test(part))return false;
+      const segments=part.split(/[-'’]/);
+      // D'Ávila e O'Connor são sobrenomes completos legítimos; B-C não é.
+      return segments.every(segment=>segment.length>0) &&
+        segments.some(segment=>(segment.match(/\p{L}/gu)||[]).length>=2);
+    });
   };
   const normalized=value=>String(value||'').trim().normalize('NFD')
     .replace(/[\u0300-\u036f]/g,'').replace(/\s+/g,' ').toLowerCase();

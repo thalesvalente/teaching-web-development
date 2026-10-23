@@ -84,8 +84,10 @@ function webIdentity(input) {
     if(!/^[\p{L}\p{M}'’\-\s]{5,100}$/u.test(name)||
        name.split(/\s+/).length<2||
        !name.split(/\s+/).every(function(part){
-         return /^[\p{L}][\p{L}\p{M}'’\-]*$/u.test(part) &&
-           part.split(/[-'’]/).every(function(segment){
+         if(!/^[\p{L}][\p{L}\p{M}'’\-]*$/u.test(part))return false;
+         var segments=part.split(/[-'’]/);
+         return segments.every(function(segment){return segment.length>0;}) &&
+           segments.some(function(segment){
              return (segment.match(/\p{L}/gu)||[]).length>=2;
            });
        }))

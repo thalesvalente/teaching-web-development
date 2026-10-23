@@ -298,6 +298,14 @@ test('sobrenome abreviado não é nome completo; aceita sobrenome composto',asyn
   await page.locator('#team-done').click();
   await expect(page.locator('#team-dialog')).toBeHidden();
   expect((await page.evaluate(()=>window.WebTeam.getIdentity())).members[0].name).toBe('Ana de Souza');
+  await page.locator('#team-open').click();
+  await page.locator('#web-member-0-name').fill("João D'Ávila");
+  await page.locator('#team-done').click();
+  expect((await page.evaluate(()=>window.WebTeam.getIdentity())).members[0].name).toBe("João D'Ávila");
+  await page.locator('#team-open').click();
+  await page.locator('#web-member-0-name').fill("Ana O'Connor");
+  await page.locator('#team-done').click();
+  expect((await page.evaluate(()=>window.WebTeam.getIdentity())).members[0].name).toBe("Ana O'Connor");
 });
 
 test('cancelar a identificação obrigatória restaura o diálogo de evidências e o foco',async({page})=>{
