@@ -1,0 +1,90 @@
+#!/usr/bin/env node
+/**
+ * Smoke POST REAL para desenvolvimento-web-2026.
+ * Inerte por padrão: --dry-run não faz rede; --confirm-write + --url /exec
+ * são OBRIGATÓRIOS para escrever um registro FICTÍCIO na planilha.
+ * Um recebimento válido não equivale à identidade ou nota certificada.
+ */
+import { createHash, randomUUID } from 'node:crypto';
+const stages=[
+  ['run',5],['map',5],['title',6],['placeholder',6],['limit',12],
+  ['maximum',10],['button',7],['error',7],['success',7],['color',6],
+  ['trim',8],['invalid',8],['isolation',8],['quiz',5]
+];
+const activity='WEB-AULA05-2026';
+const args=process.argv.slice(2);
+const value=(key)=>{
+  const i=args.indexOf(key);
+  if(i<0)return null;
+  if(i===args.length-1)throw Error('Falta valor para '+key);
+  return args[i+1];
+};
+const url=value('--url');
+const dryRun=args.includes('--dry-run');
+const authorized=args.includes('--confirm-write');
+const identity=Object.freeze({
+  name:'Teste Integracao Web',
+  enrollment:'QA20261022WEB05',
+  team:'QA FICTICIO - REMOVER APOS TESTE'
+});
+const evidence={
+  schema:'ifma-web-aula05-lab-v4',
+  tipo:'formativo-nao-e-nota',
+  xp:0,
+  maximoXp:100,
+  exercicios:stages.map(([id,xp])=>({id,estado:'PENDENTE',xp:0,maximoXp:xp})),
+  observacao:'QA EXCLUSIVAMENTE FICTICIO: validar recepcao, hashes e reenvio.',
+  testeNativoPendente:'Nao testado em dispositivo real.',
+  codigoFonteCompleto:'// QA FICTICIO. NAO EXECUTAR COMO ATIVIDADE DE ALUNO.\nexport default function App(){return null;}'
+};
+if(stages.reduce((s,t)=>s+t[1],0)!==100)throw Error('Catálogo de XP inconsistente.');
+const payload={
+  schema:'web-a05-submission-v1',
+  activity,
+  identity,
+  evidence
+};
+const serialized=JSON.stringify(payload);
+if(serialized.length>44000)throw Error('Fixture excedeu o contrato Apps Script.');
+if(dryRun){
+  console.log('WEB_QA_DRY_RUN_PASS | 14 missões | 0/100 XP | esquema WEB-AULA05-2026 | zero requisições | zero escrita');
+  process.exit(0);
+}
+if(!authorized)throw Error('Operação de escrita DESAUTORIZADA: use --dry-run ou inclua explicitamente --confirm-write.');
+if(!url||!/^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]+\/exec$/.test(url))
+  throw Error('Forneça --url https://script.google.com/macros/s/<deployment-id>/exec (Web App próprio de Web).');
+
+const nonce=randomUUID();
+const request=new URLSearchParams({nonce,payload:serialized});
+const response=await fetch(url,{
+  method:'POST',
+  headers:{'Content-Type':'application/x-www-form-urlencoded;charset=UTF-8'},
+  body:request.toString(),
+  redirect:'follow',
+  signal:AbortSignal.timeout(45000)
+});
+if(!response.ok)throw Error('POST HTTP '+response.status+'. Conferir acesso do Web App.');
+const html=await response.text();
+const startMarker='top.postMessage(';
+const endMarker=',"https://thalesvalente.github.io")';
+const i=html.indexOf(startMarker),j=i>=0?html.indexOf(endMarker,i+startMarker.length):-1;
+if(i<0||j<0)throw Error('Sem recibo legível na resposta HTML. NÃO presuma sucesso; consulte a aba Auditoria antes de repetir.');
+let receipt;
+try { receipt=JSON.parse(html.slice(i+startMarker.length,j)); }
+catch { throw Error('Resposta POST sem JSON de recibo válido; consulte a Auditoria antes de repetir.'); }
+if(receipt.ok===false)throw Error('Apps Script recusou QA: '+String(receipt.error||'erro sem detalhe'));
+const sha=createHash('sha256').update(evidence.codigoFonteCompleto,'utf8').digest('hex');
+if(receipt.ok!==true||receipt.channel!=='web-entrega-aula05'||
+  receipt.nonce!==nonce||receipt.activity!==activity||
+  receipt.instrument!=='laboratorio-vivo-tsx'||receipt.codeSha256!==sha||
+  receipt.xpReported!==0||receipt.grade!==null||
+  receipt.status!=='RECEBIDO_PENDENTE_VALIDACAO'||
+  !/^[0-9a-f]{64}$/.test(String(receipt.answersSha256||''))||
+  !/^[0-9a-f]{64}$/.test(String(receipt.signature||''))||
+  !/^WEB-[\w-]+$/.test(String(receipt.receiptId||'')))
+  throw Error('Resposta sem contrato íntegro de recibo. Verifique a planilha; não presuma recebimento.');
+console.log('WEB_QA_POST_PASS | id='+receipt.receiptId+
+  ' | matricula ficticia='+identity.enrollment+
+  ' | recebido='+receipt.receivedAt+
+  ' | 0/100 XP | SEM NOTA | SHA-256 do código='+sha);
+console.log('CONFERIR: abas 1º–4º Bimestres e Auditoria; depois REMOVER SOMENTE linhas da matrícula QA fictícia. NÃO apagar dados reais.');
