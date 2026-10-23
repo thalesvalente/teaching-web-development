@@ -248,7 +248,7 @@ test('reenvio da mesma equipe é idempotente e preserva nota e revisão docente'
   assert.equal(f.records('3º Bimestre',1)[0][3],2.5);
   assert.equal(f.records('Auditoria',15)[0][18],'Observação do professor');
   assert.equal(f.records('Equipes',8)[0][10],'Revisão da equipe');
-  assert.equal(f.flushes(),2);
+  assert.equal(f.flushes(),4); // read-after-write da aba Equipes em cada POST
 });
 test('equipes distintas com um mesmo nome não se confundem por causa do ID automático',()=>{
   const f=fixture();enabled(f);
