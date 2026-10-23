@@ -133,6 +133,7 @@
       showReceipt();
       return;
     }
+    let submittedIdentity=identity;
     busy=true;button.disabled=true;quickButton.disabled=true;
     try{
       if(!window.WebLabEvidence || typeof window.WebLabEvidence.snapshot!=='function')
@@ -140,7 +141,7 @@
       if(!window.crypto?.subtle || !crypto.randomUUID)
         throw Error('Envio seguro exige HTTPS/localhost e crypto disponível.');
       // Defesa adicional: revalidar imediatamente antes de fazer POST.
-      const checked=teamIdentity();
+      const checked=teamIdentity();submittedIdentity=checked;
       const evidence=window.WebLabEvidence.snapshot();
       if(evidence.schema!=='ifma-web-aula05-lab-v4'||evidence.maximoXp!==100 ||
          !Array.isArray(evidence.exercicios) || evidence.exercicios.length!==14)
@@ -159,6 +160,7 @@
         'Recibo: '+receipt.receiptId+'\nRecebido UTC: '+receipt.receivedAt+
         '\nNota recebida: '+receipt.gradeReceived.toFixed(1)+'/10\n'+
         'Maiores notas individuais: '+receipt.bestGrades.map(v=>v.toFixed(1)).join('; ')+'\n'+
+        (receipt.teacherReviewRequired?'Aviso: '+String(receipt.warning||'Avaliação docente pendente.')+'\n':'')+
         'SHA-256 do código: '+receipt.codeSha256+
         '\nAssinatura do recibo: '+receipt.signature+
         '\nPDF: salve-o no dispositivo pela janela de impressão (não é enviado como arquivo).\n'+
@@ -166,7 +168,7 @@
       showReceipt();
     }catch(error){
       const index=error?.memberIndex;
-      const member=Number.isInteger(index)?identity?.members?.[index]:null;
+      const member=Number.isInteger(index)?submittedIdentity?.members?.[index]:null;
       if(member && error?.field){
         const message='ENTREGA BLOQUEADA — '+String(error.code||'IDENTIDADE_CONFLITANTE')+'\n'+
           'Integrante '+(index+1)+'\n'+
@@ -177,12 +179,16 @@
           'Nenhuma nota ou entrega foi confirmada.';
         inform(message,'error');
         window.WebTeam?.showRemoteConflict?.({memberIndex:index,field:error.field,
-          message:error.message,action:error.action});
+          message:error.message,action:error.action,submittedMember:member});
+      }else if(error?.code==='ATIVIDADE_ENCERRADA'){
+        inform('ENTREGA BLOQUEADA — ATIVIDADE ENCERRADA\n'+String(error.message)+'\n'+
+          String(error.action)+'\nSuas respostas foram preservadas.','error');
+        showReceipt();
       }else{
         inform('ENVIO NÃO CONFIRMADO: '+String(error?.message||'Falha de entrega.')+
           '\nConfira a Auditoria antes de tentar novamente. PDF/JSON locais não comprovam entrega.','error');
+        showReceipt();
       }
-      showReceipt();
     }finally{busy=false;button.disabled=false;quickButton.disabled=false;}
   }
   button.addEventListener('click',generatePdfAndSend);

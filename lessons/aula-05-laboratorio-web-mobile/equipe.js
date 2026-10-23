@@ -116,9 +116,12 @@
   }
   function showRemoteConflict(meta){
     if(!meta||!Number.isInteger(meta.memberIndex))return;
-    if(!modal.open)open('header');
-    feedback('Erro na identificação — integrante '+(meta.memberIndex+1)+'. '+String(meta.message||'Confira os dados.')+
-      ' '+String(meta.action||'Procure o professor.'),'error');
+    if(!modal.open)open(el('evidence-dialog').open?'evidence':'header');
+    const member=meta.submittedMember||group.members[meta.memberIndex];
+    feedback('Erro na identificação — integrante '+(meta.memberIndex+1)+'.\n'+
+      (member?'Nome informado: '+member.name+'\nMatrícula informada: '+member.enrollment+'\n':'')+
+      'Problema: '+String(meta.message||'Confira os dados.')+'\n'+
+      'Como resolver: '+String(meta.action||'Procure o professor.'),'error');
     focusInvalid({memberIndices:[meta.memberIndex],field:meta.field});
   }
   function summary(){

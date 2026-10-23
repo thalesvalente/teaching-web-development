@@ -1,5 +1,5 @@
 /**
- * WEB-A05-ID-03 — 3.0.0 CANDIDATA QA, NÃO IMPLANTADA.
+ * WEB-A05-ID-03 — 3.0.1 CANDIDATA QA, NÃO IMPLANTADA.
  * SOMENTE Desenvolvimento Web. Destino fixo: NOVA CÓPIA V3 sintética.
  * SEM identificação real de estudantes, SEM servidor público habilitado.
  * Matrícula como texto; conflitos de identidade sem divulgação de terceiros.
@@ -8,7 +8,7 @@
  */
 var WEB_CFG=Object.freeze({
   spreadsheetId:'1SpL_B_fENFo0PF_-18m4wvle2p1NpbTYStFPEnM7JmE',
-  version:'web-notas-3.0.0-candidata',activity:'WEB-AULA05-2026',
+  version:'web-notas-3.0.1-candidata',activity:'WEB-AULA05-2026',
   schema:'ifma-web-aula05-lab-v4',channel:'web-entrega-aula05',
   origin:'https://thalesvalente.github.io',maxPayloadChars:44000,maxRows:10000
 });
@@ -124,7 +124,9 @@ function notasFullName(name) {
   if(typeof name!=='string'||name.length>100)return false;
   var s=name.trim();return s.length>=5 && /^[\p{L}\p{M}'’\-\s]+$/u.test(s) &&
     s.split(/\s+/).length>=2 && s.split(/\s+/).every(function(part){
-      return /^[\p{L}][\p{L}\p{M}'’\-]*$/u.test(part)&&part.split(/[-'’]/).every(function(x){return x.length>0;});
+      return /^[\p{L}][\p{L}\p{M}'’\-]*$/u.test(part) &&
+        part.split(/[-'’]/).every(function(x){return x.length>0;}) &&
+        part.split(/[-'’]/).some(function(x){return (x.match(/\p{L}/gu)||[]).length>=2;});
     });
 }
 function notasEnrollment(value, i) {
@@ -244,7 +246,7 @@ function notasCatalog(s){notasHeaders(s,ACT_HEADERS);var result=Object.create(nu
   });return result;
 }
 function notasActivity(book,n){var a=notasCatalog(book.sheets.Atividades)[n.activity];
-  notasAssert(a&&a.enabled&&a.contract===n.contract,'Atividade não habilitada ou contrato incompatível.');
+  notasCheckOpenV3(a,n.activity,n.contract);
   var s=book.sheets[a.title];notasHeaders(s,['Aluno','Matrícula','Equipe']);
   var h=s.rows[0],col=h.indexOf(a.header),mean=h.indexOf('Média /10');
   notasAssert(col>=3&&col<mean&&mean>=4&&h.lastIndexOf(a.header)===col&&h.lastIndexOf('Média /10')===mean,'Cabeçalhos bimestrais inválidos.');
@@ -304,8 +306,13 @@ function notasCheckIdentity(book,n){
   return unique;
 }
 function notasAuditSign(row){
-  return notasSign(JSON.stringify([row[0],row[1],row[2],row[3],row[4],row[5],row[6],row[7],row[8],
-    row[10],row[13],row[14],row[15],row[16],row[17],row[20],row[21],row[22],row[23],row[24],row[25],row[26]]));
+  var data=[row[0],row[1],row[2],row[3],row[4],row[5],row[6],row[7],row[8],
+    row[10],row[13],row[14],row[15],row[16],row[17],row[20],row[21],row[22],row[23],row[24],row[25],row[26]];
+  // Preserve a assinatura histórica 3.0.0; versões novas vinculam a pendência.
+  if(row[13]!=='web-notas-3.0.0-candidata'){
+    notasAssert(typeof row[27]==='boolean','Pendência assinada inválida.');data.push(row[27]);
+  }
+  return notasSign(JSON.stringify(data));
 }
 function notasVerifyAudit(sheet,i){
   var r=sheet.rows[i],ev;
@@ -327,7 +334,7 @@ function notasAuditEntry(n,nonce){
     Utilities.formatDate(date,'America/Fortaleza','yyyy-MM-dd HH:mm:ss'),time,receipt,n.originalHash,'',
     n.grade,'',NOTAS_STATUS,WEB_CFG.version,n.evidenceJson,n.identity.teamId+'|'+n.activity,n.codeHash,
     'github-pages-web','', '',names,n.storedHash,nh,n.requestHash,'NOTAS_V3_QA',
-    JSON.stringify(n.identity.members),n.contract,''];
+    JSON.stringify(n.identity.members),n.contract,false];
   row[9]=notasAuditSign(row);return row;
 }
 function notasTeamKey(n){return n.identity.teamId+'|'+n.activity;}
@@ -365,7 +372,8 @@ function notasPlan(book,n,nonce){
   notasAssert(sameNonce.length<=1,'Nonce duplicado na auditoria.');
   if(sameNonce.length){var old=notasVerifyAudit(aud,sameNonce[0]);
     if(old[23]!==n.requestHash)notasErr('DUPLICIDADE_TECNICA',null,'nonce','Este identificador foi usado para outro conteúdo.','Confira o recibo anterior; não tente reenviar às cegas.');
-    return {requests:[],entry:old,replay:true,act:act};
+    return {requests:[],entry:old,replay:true,act:act,teacherHold:
+      old[13]==='web-notas-3.0.0-candidata'?notasLegacyHoldV3(book,n):old[27]};
   }
   var row=notasAuditEntry(n,nonce),req=[],now=row[6],auditRow=notasNewRow(aud,[0,7,15]);
   req.push(notasWrite(aud,auditRow,0,row));
@@ -418,7 +426,10 @@ function notasPlan(book,n,nonce){
     else webFail('Reenvio sem resultado anterior verificável.');
     memberGrades.push({name:m.name,enrollment:m.enrollment,best:best,won:winner});holds.push(Boolean(docHold));
   });
-  return {requests:req,entry:row,replay:false,act:act,members:memberGrades,teacherHold:holds.some(Boolean),auditRow:auditRow};
+  // Finalize a auditoria depois de calcular as pendências de todos os integrantes.
+  row[27]=holds.some(Boolean);row[9]=notasAuditSign(row);
+  req[0]=notasWrite(aud,auditRow,0,row);
+  return {requests:req,entry:row,replay:false,act:act,members:memberGrades,teacherHold:row[27],auditRow:auditRow};
 }
 function notasVerifyWrites(book,plan){
   var byId=Object.create(null);Object.keys(book.sheets).forEach(function(k){byId[book.sheets[k].id]=book.sheets[k];});
@@ -447,7 +458,7 @@ function notasReceipt(n,entry,nonce,book,plan){
 function notasStore(payload,nonce,config){
   var n=notasNormalize(payload);notasIdentityAllowed(n.identity,config);notasSecret();
   var head=notasReadBook(config,['Atividades']),a=notasCatalog(head.sheets.Atividades)[n.activity];
-  notasAssert(a&&a.enabled&&a.contract===n.contract,'Atividade não habilitada.');
+  notasCheckOpenV3(a,n.activity,n.contract);
   var titles=['Atividades','Auditoria','Equipes','Alunos','Resultados',a.title],before=notasReadBook(config,titles);
   var plan=notasPlan(before,n,nonce),after;
   if(plan.requests.length){
@@ -478,6 +489,8 @@ function doPost(e){var nonce='',channel=WEB_CFG.channel,held=false,lock=null;
     var payload;try{payload=JSON.parse(raw);}catch(e){webFail('JSON inválido.');}
     if(payload.schema==='web-notas-submission-v3')channel='web-notas';
     lock=LockService.getScriptLock();lock.waitLock(20000);held=true;
+    // Releitura sob lock: um POST que esperou não pode usar a flag antiga.
+    cfg=notasConfig();notasAssert(cfg.enabled,'Recebimento QA V3 bloqueado.');
     return webReturn(notasStore(payload,nonce,cfg));
   }catch(err){return webReturn({ok:false,channel:channel,nonce:nonce,
     code:err.publicCode||'ENVIO_SEM_CONFIRMACAO',memberIndex:Number.isInteger(err.memberIndex)?err.memberIndex:null,
@@ -537,4 +550,81 @@ function cadastrarAtividadeNotasV3(spec){
     notasAssert(k&&ss.rows[0][mean]===header&&ss.rows[0][mean+1]==='Média /10','Cadastro não confirmado; não repita sem verificar.');
     return {status:'CADASTRADA',id:spec.id,bimestre:spec.bim};
   }finally{if(held)lock.releaseLock();}
+}
+
+
+/** Compatibilidade dos recibos 3.0.0 já existentes, sem reescrever assinaturas. */
+function notasLegacyHoldV3(book,n){
+  return n.identity.members.some(function(m){
+    return book.sheets.Resultados.rows.some(function(r,i){return i>0&&r&&r[0]===m.enrollment&&r[1]===n.activity&&r[6]!==NOTAS_STATUS;}) ||
+      book.sheets.Auditoria.rows.some(function(r,i){return i>0&&r&&r[3]===n.activity&&
+        (!notasBlank(r[11])||r[12]!==NOTAS_STATUS)&&JSON.parse(r[25]).some(function(x){return x.enrollment===m.enrollment;});});
+  });
+}
+function notasClosedKeyV3(id){
+  notasAssert(typeof id==='string'&&/^[A-Z0-9][A-Z0-9_-]{2,79}$/.test(id),'ID de atividade inválido.');
+  return 'WEB_NOTAS_V3_CLOSED_'+id;
+}
+function notasCheckOpenV3(activity,id,contract){
+  var closed=PropertiesService.getScriptProperties().getProperty(notasClosedKeyV3(id));
+  if(closed || (activity && !activity.enabled))
+    notasErr('ATIVIDADE_ENCERRADA',null,null,'A atividade '+id+' está fechada para envios.',
+      'O professor encerrou o recebimento. Nenhuma nova entrega foi registrada.');
+  notasAssert(activity&&activity.contract===contract,'Atividade não cadastrada ou contrato incompatível.');
+}
+/** Administração somente no editor. Aguarda o último escritor antes de liberar correção. */
+function bloquearRecebimentoNotasV3(){
+  notasConfig();var p=PropertiesService.getScriptProperties(),lock=LockService.getScriptLock(),held=false;
+  p.setProperty('WEB_NOTAS_V3_SUBMISSIONS_ENABLED','false');
+  try{lock.waitLock(20000);held=true;
+    p.setProperty('WEB_NOTAS_V3_SUBMISSIONS_ENABLED','false');
+    var result={status:'BLOQUEADO_SEM_ENVIOS_EM_ANDAMENTO',enabled:false,version:WEB_CFG.version};
+    console.log('WEB_V3_BLOQUEIO '+JSON.stringify(result));return result;
+  }finally{if(held)lock.releaseLock();}
+}
+/** Fechamento individual permanente; reativar flag global não reabre a atividade. */
+function encerrarAtividadeNotasV3(id,motivo){
+  var cfg=notasConfig(),key=notasClosedKeyV3(id),reason=webText(motivo,200,'motivo do encerramento');
+  notasAssert(reason.length>=3,'Informe o motivo do encerramento.');
+  var p=PropertiesService.getScriptProperties(),lock=LockService.getScriptLock(),held=false;
+  try{lock.waitLock(20000);held=true;
+    var book=notasReadBook(cfg,['Atividades']),sheet=book.sheets.Atividades,cat=notasCatalog(sheet);
+    notasAssert(cat[id],'Atividade não cadastrada.');
+    var rows=notasRows(sheet,0,id);notasAssert(rows.length===1,'Atividade ambígua.');
+    notasAssert(sheet.columnCount>=8,'Atividades precisa de colunas G e H livres para encerramento.');
+    var existing=p.getProperty(key),stamp=existing?JSON.parse(existing):{at:new Date().toISOString(),reason:reason};
+    // Registra bloqueio ANTES da chamada remota: falha de rede não reabre a atividade.
+    p.setProperty(key,JSON.stringify(stamp));
+    var requests=[notasWrite(sheet,0,6,['Encerrada UTC','Motivo do encerramento']),
+      notasWrite(sheet,rows[0],5,[false,stamp.at,stamp.reason])];
+    try{Sheets.Spreadsheets.batchUpdate({requests:requests},cfg.id);}
+    catch(e){p.setProperty('WEB_NOTAS_V3_SUBMISSIONS_ENABLED','false');
+      webFail('Bloqueio mantido; gravação de encerramento não confirmada. Execute o fechamento novamente antes de corrigir.');}
+    var after=notasReadBook(cfg,['Atividades']);notasVerifyWrites(after,{requests:requests});
+    var result={status:'ATIVIDADE_ENCERRADA_CONFIRMADA',activity:id,closedAt:stamp.at,enabled:false,version:WEB_CFG.version};
+    console.log('WEB_V3_ENCERRAMENTO '+JSON.stringify(result));return result;
+  }finally{if(held)lock.releaseLock();}
+}
+function encerrarAula05ParaCorrecaoV3(){
+  bloquearRecebimentoNotasV3();
+  return encerrarAtividadeNotasV3(WEB_CFG.activity,'Encerramento para correção docente');
+}
+function liberarRecebimentoQAWebV3(){
+  var cfg=notasConfig(),lock=LockService.getScriptLock(),held=false;
+  try{lock.waitLock(20000);held=true;notasSecret();
+    var b=notasReadBook(cfg,['Atividades']);
+    var catalog=notasCatalog(b.sheets.Atividades),p=PropertiesService.getScriptProperties();
+    notasAssert(Object.keys(catalog).some(function(id){return catalog[id].enabled&&!p.getProperty(notasClosedKeyV3(id));}),
+      'Nenhuma atividade aberta. Não remova bloqueios de atividades já corrigidas.');
+    p.setProperty('WEB_NOTAS_V3_SUBMISSIONS_ENABLED','true');
+    var r={status:'QA_LIBERADO',mode:'QA',enabled:true,production:false};
+    console.log('WEB_V3_LIBERACAO '+JSON.stringify(r));return r;
+  }finally{if(held)lock.releaseLock();}
+}
+function verificarStatusWebV3(){
+  var r=statusIntegracaoNotasV3(),c=notasConfig(),b=notasReadBook(c,['Atividades']),cat=notasCatalog(b.sheets.Atividades);
+  var p=PropertiesService.getScriptProperties();r.spreadsheetId=c.id;
+  r.activityStatus=Object.keys(cat).map(function(id){return {id:id,bimestre:cat[id].bim,
+    enabled:cat[id].enabled&&!p.getProperty(notasClosedKeyV3(id)),closed:!!p.getProperty(notasClosedKeyV3(id))};});
+  console.log('WEB_V3_STATUS '+JSON.stringify(r));return r;
 }

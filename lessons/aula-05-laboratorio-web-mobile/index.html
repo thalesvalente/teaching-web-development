@@ -6,12 +6,12 @@
   <meta name="description" content="Aula 05: Laboratório Vivo com tutorial guiado, código React Native comentado, regras visíveis e duas prévias interativas Web e Mobile.">
   <meta name="theme-color" content="#10472e">
   <title>Aula 05 · Laboratório Vivo · Tutorial Web ↔ Mobile | IFMA</title>
-  <link rel="stylesheet" href="./style.css?v=web-id03-qa01">
+  <link rel="stylesheet" href="./style.css?v=web-id03-qa02">
   <script defer src="./entrega-config.js"></script>
-  <script defer src="./report-print.js?v=web-id03-qa01"></script>
-  <script defer src="./equipe.js?v=web-id03-qa01"></script>
-  <script defer src="./lab.js?v=20261023-qa02"></script>
-  <script defer src="./entrega-appscript.js?v=web-id03-qa01"></script>
+  <script defer src="./report-print.js?v=web-id03-qa02"></script>
+  <script defer src="./equipe.js?v=web-id03-qa02"></script>
+  <script defer src="./lab.js?v=web-id03-qa02"></script>
+  <script defer src="./entrega-appscript.js?v=web-id03-qa02"></script>
 </head>
 <body>
   <a class="skip" href="#missao-atual">Pular para a missão atual</a>
@@ -228,8 +228,8 @@ app/lab05.tsx               ← importa o componente
         <p id="web-team-summary" class="team-summary" role="status">Nenhuma equipe identificada. Use “Equipe e integrantes” no cabeçalho.</p>
         <button type="button" id="team-open-evidence" class="btn secondary">Preencher ou revisar integrantes</button>
         <p id="web-delivery-explanation" class="web-submission-explanation">
-          A equipe envia uma única atividade com os nomes completos de todos os integrantes. A entrega registra XP <strong>formativos declarados</strong>;
-          não lança nota oficial. Os nomes informados não comprovam identidade.
+          A equipe envia uma única atividade com nome completo e matrícula de cada integrante. O servidor converte a pontuação em <strong>nota de 0 a 10</strong>,
+          preserva a maior nota por estudante e atividade e atualiza a média. A nota depende de conferência docente; informar matrícula não comprova identidade.
           Não inclua senhas, documentos pessoais ou informações sigilosas no código.
         </p>
         <button type="button" class="btn run" id="web-submit">
@@ -242,7 +242,7 @@ app/lab05.tsx               ← importa o componente
       </fieldset>
       <details><summary>Ver situação de cada exercício</summary><ul id="evidence-list" class="evidence-list"></ul></details>
       <div class="evidence-actions"><button type="button" id="export-json" class="btn secondary">Exportar evidências JSON</button><button type="button" id="export-md" class="btn secondary">Exportar Markdown</button><button type="button" id="print" class="btn secondary">Imprimir / salvar PDF A4</button></div>
-      <p class="privacy">Rascunho salvo somente neste navegador, se o armazenamento estiver disponível. Quando o envio estiver habilitado, clicar em “Gerar PDF e Enviar” transmite os nomes, o código e as evidências ao Apps Script. Os dados podem ser gravados mesmo se o recibo não chegar; somente um recibo válido confirma o recebimento nesta tela. XP já conquistados são preservados; a conferência do código atual pode ser repetida quando desejar.</p>
+      <p class="privacy">Rascunho salvo somente neste navegador, se o armazenamento estiver disponível. Quando o envio estiver habilitado, clicar em “Gerar PDF e Enviar” transmite os nomes, as matrículas, o código e as evidências ao Apps Script. Os dados podem ser gravados mesmo se o recibo não chegar; somente um recibo válido confirma o recebimento nesta tela. XP já conquistados são preservados; a conferência do código atual pode ser repetida quando desejar.</p>
       <p id="evidence-status" role="status" aria-live="polite"></p>
     </div>
   </dialog>
