@@ -1,186 +1,172 @@
 /**
- * Aula 05 • Identificação da equipe.
- * Uma atividade formativa por grupo, com nomes e matrículas dos integrantes.
- * Apenas dados locais: nenhuma requisição de rede é efetuada neste arquivo.
+ * Aula 05 · Identificação coletiva sem matrícula ou turma.
+ * Somente nome da equipe e nomes completos de 1 a 8 integrantes.
+ * O ID aleatório é técnico, criado automaticamente e salvo no checkpoint;
+ * não é um identificador pessoal nem autenticação de estudantes.
  */
 (() => {
   'use strict';
-  const byId = id => document.getElementById(id);
-  const STORAGE_KEY = 'ifma-web-aula05-equipe-v1';
-  const MAX = 8, MIN = 1;
-  const blank = () => ({name:'',enrollment:''});
-  const initial = () => ({team:'',classGroup:'',members:[blank(),blank()]});
-  let group = initial();
-  let fromEvidence = false;
-  const box = byId('web-members');
-  const modal = byId('team-dialog');
-  const message = byId('team-feedback');
-  const fullName = name => /^[\p{L}][\p{L}\p{M} .'\-]{2,99}$/u.test(name) &&
-    name.trim().split(/\s+/).filter(Boolean).length >= 2;
-  const matricula = value => /^[A-Za-z0-9][A-Za-z0-9._/-]{4,29}$/.test(value);
-  const normalized = value => String(value||'').normalize('NFD')
-    .replace(/[\u0300-\u036f]/g,'').trim().replace(/\s+/g,' ').toLowerCase();
+  const el=id=>document.getElementById(id);
+  const KEY='ifma-web-aula05-equipe-v2';
+  const MAX=8;
+  const blank=()=>({name:''});
+  function newId(){
+    if(globalThis.crypto?.randomUUID)return crypto.randomUUID();
+    const data=new Uint8Array(16);
+    crypto.getRandomValues(data);
+    data[6]=(data[6]&15)|64;
+    data[8]=(data[8]&63)|128;
+    const h=Array.from(data,n=>n.toString(16).padStart(2,'0')).join('');
+    return [h.slice(0,8),h.slice(8,12),h.slice(12,16),h.slice(16,20),h.slice(20)].join('-');
+  }
+  const fresh=()=>({teamId:newId(),team:'',members:[blank()]});
+  let group=fresh();
+  let openedFromEvidence=false;
+  const modal=el('team-dialog'),holder=el('web-members'),status=el('team-feedback');
+  const fullName=name=>/^[\p{L}][\p{L}\p{M} .'\-]{2,99}$/u.test(name) &&
+    name.trim().split(/\s+/).filter(Boolean).length>=2;
+  const normalized=value=>String(value||'').trim().normalize('NFD')
+    .replace(/[\u0300-\u036f]/g,'').replace(/\s+/g,' ').toLowerCase();
 
-  function validatePartial(data) {
-    if (!data || typeof data !== 'object' || Array.isArray(data)) throw Error('Identificação da equipe inválida.');
-    if (typeof data.team !== 'string' || data.team.length > 80 ||
-        typeof data.classGroup !== 'string' || data.classGroup.length > 60 ||
-        !Array.isArray(data.members) || data.members.length < MIN || data.members.length > MAX)
-      throw Error('Equipe, turma ou quantidade de integrantes inválidos.');
-    const members = data.members.map((m,i) => {
-      if (!m || typeof m !== 'object' || Array.isArray(m) ||
-          typeof m.name !== 'string' || m.name.length > 100 ||
-          typeof m.enrollment !== 'string' || m.enrollment.length > 30)
-        throw Error('Dados incorretos para o integrante '+(i+1)+'.');
-      return {name:m.name.trim(),enrollment:m.enrollment.trim()};
+  function validatePartial(obj){
+    if(!obj||typeof obj!=='object'||Array.isArray(obj) ||
+       typeof obj.teamId!=='string' ||
+       !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(obj.teamId) ||
+       typeof obj.team!=='string'||obj.team.length>80 ||
+       !Array.isArray(obj.members)||obj.members.length<1||obj.members.length>MAX)
+      throw Error('Identificação da equipe inválida.');
+    const members=obj.members.map((member,index)=>{
+      if(!member||typeof member!=='object'||Array.isArray(member)||
+         typeof member.name!=='string'||member.name.length>100)
+        throw Error('Nome inválido do integrante '+(index+1)+'.');
+      return {name:member.name.trim()};
     });
-    return {team:data.team.trim(),classGroup:data.classGroup.trim(),members};
+    return {teamId:obj.teamId,team:obj.team.trim(),members};
   }
-  function snapshot() {
-    return {team:group.team,classGroup:group.classGroup,
-      members:group.members.map(m=>({...m}))};
+  function snapshot(){
+    return {teamId:group.teamId,team:group.team,
+      members:group.members.map(member=>({name:member.name}))};
   }
-  function getIdentity() {
-    const data = validatePartial(snapshot());
-    if (data.team.length < 3) throw Error('Informe o nome da equipe (mínimo 3 caracteres).');
-    if (data.classGroup.length < 2) throw Error('Informe a turma da equipe.');
-    const seenNames=new Set(), seenIds=new Set();
-    data.members.forEach((member,i) => {
-      if (!fullName(member.name)) throw Error('Informe nome e sobrenome do integrante '+(i+1)+'.');
-      if (!matricula(member.enrollment)) throw Error('Informe a matrícula do integrante '+(i+1)+'.');
-      const id=member.enrollment.toLowerCase(), name=normalized(member.name);
-      if(seenIds.has(id) || seenNames.has(name))throw Error('Integrante repetido: confira nomes e matrículas.');
-      seenIds.add(id);seenNames.add(name);
+  function getIdentity(){
+    const data=validatePartial(snapshot());
+    if(data.team.length<3)throw Error('Informe o nome da equipe (mínimo 3 caracteres).');
+    const seen=new Set();
+    data.members.forEach((member,index)=>{
+      if(!fullName(member.name))
+        throw Error('Informe nome e sobrenome do integrante '+(index+1)+'.');
+      const key=normalized(member.name);
+      if(seen.has(key))throw Error('Nome repetido na equipe: '+member.name+'.');
+      seen.add(key);
     });
     return data;
   }
-  function persist() {
-    try{localStorage.setItem(STORAGE_KEY,JSON.stringify(snapshot()));}
-    catch{/* Armazenamento opcional; exportação JSON continua disponível. */}
-    updateSummary();
+  function summary(){
+    const names=group.members.map(x=>x.name.trim()).filter(Boolean);
+    el('team-count').textContent='('+names.length+' nome'+(names.length===1?'':'s')+')';
+    el('web-team-summary').textContent=group.team&&names.length
+      ? 'Equipe '+group.team+' · '+names.length+' integrante(s): '+names.join('; ')
+      : 'Equipe ainda não identificada. Use “Equipe e integrantes” no cabeçalho.';
   }
-  function updateSummary() {
-    const populated=group.members.filter(m=>m.name.trim());
-    const caption=group.team.trim() && populated.length
-      ? 'Equipe '+group.team+' · '+(group.classGroup||'turma pendente')+
-        ' · integrantes: '+populated.map(m=>m.name).join('; ')
-      : 'Equipe ainda não identificada. Clique “Equipe e integrantes” no cabeçalho.';
-    byId('web-team-summary').textContent=caption;
-    byId('team-count').textContent='('+populated.length+'/'+group.members.length+' nomes)';
+  function persist(){
+    try{localStorage.setItem(KEY,JSON.stringify(snapshot()));}catch{/* armazenamento opcional */}
+    summary();
   }
-  function field(row,index,prop,title,limit) {
+  function feedback(text,kind=''){
+    status.textContent=text;
+    status.dataset.kind=kind;
+  }
+  function memberInput(index){
+    const member=group.members[index];
+    const article=document.createElement('section');
+    article.className='member-row';
+    const heading=document.createElement('div');
+    heading.className='member-row-header';
+    const title=document.createElement('h4');
+    title.textContent='Integrante '+(index+1);
+    const remove=document.createElement('button');
+    remove.type='button';remove.className='btn secondary';
+    remove.textContent='Remover';
+    remove.dataset.remove=String(index);
+    remove.disabled=group.members.length<=1;
+    remove.setAttribute('aria-label','Remover integrante '+(index+1));
+    heading.append(title,remove);
+    const fields=document.createElement('div');
+    fields.className='member-row-fields';
     const label=document.createElement('label');
+    label.textContent='Nome completo';
     const input=document.createElement('input');
-    const id='web-member-'+index+'-'+prop;
-    label.htmlFor=id;
-    label.textContent=title;
-    input.id=id;
     input.type='text';
-    input.maxLength=limit;
-    input.autocomplete='off';
-    input.required=true;
+    input.id='web-member-'+index+'-name';
+    label.htmlFor=input.id;
     input.dataset.index=String(index);
-    input.dataset.prop=prop;
-    input.value=group.members[index][prop];
-    input.placeholder=prop==='name'?'Nome e sobrenome':'Matrícula individual';
-    row.append(label,input);
+    input.value=member.name;
+    input.placeholder='Nome e sobrenome';
+    input.autocomplete='name';
+    input.maxLength=100;
+    input.required=true;
+    fields.append(label,input);
+    article.append(heading,fields);
+    return article;
   }
-  function renderRows(focusLast=false) {
-    const previousFocus=document.activeElement?.id||'';
-    box.replaceChildren();
-    group.members.forEach((member,index) => {
-      const section=document.createElement('section');
-      section.className='member-row';
-      section.dataset.member=String(index);
-      const heading=document.createElement('div');
-      heading.className='member-row-header';
-      const h=document.createElement('h4');
-      h.textContent='Integrante '+(index+1);
-      heading.append(h);
-      const remove=document.createElement('button');
-      remove.type='button';
-      remove.className='btn secondary';
-      remove.dataset.remove=String(index);
-      remove.disabled=group.members.length<=MIN;
-      remove.textContent='Remover';
-      remove.setAttribute('aria-label','Remover integrante '+(index+1));
-      heading.append(remove);
-      section.append(heading);
-      const fields=document.createElement('div');
-      fields.className='member-row-fields';
-      field(fields,index,'name','Nome completo',100);
-      field(fields,index,'enrollment','Matrícula',30);
-      section.append(fields);
-      box.append(section);
-    });
-    byId('web-add-member').disabled=group.members.length>=MAX;
-    updateSummary();
-    if(focusLast)byId('web-member-'+(group.members.length-1)+'-name')?.focus({preventScroll:true});
-    else if(previousFocus && byId(previousFocus))byId(previousFocus).focus({preventScroll:true});
+  function render(focusLast=false){
+    holder.replaceChildren(...group.members.map((_,i)=>memberInput(i)));
+    el('web-add-member').disabled=group.members.length>=MAX;
+    el('web-team').value=group.team;
+    summary();
+    if(focusLast)el('web-member-'+(group.members.length-1)+'-name')?.focus({preventScroll:true});
   }
-  function messageText(text,ok=false) {
-    message.textContent=text;
-    message.dataset.kind=ok?'success':'error';
-  }
-  function restore(data) {
-    group=validatePartial(data);
-    byId('web-team').value=group.team;
-    byId('web-class').value=group.classGroup;
-    renderRows();
+  function restore(obj){
+    const candidate=validatePartial(obj);
+    group=candidate;
+    render();
     persist();
-    messageText('Identificação carregada. Revise os integrantes antes do envio.',true);
+    feedback('Identificação da equipe restaurada. Revise os nomes antes da entrega.','success');
   }
-  const raw=(()=>{try{return JSON.parse(localStorage.getItem(STORAGE_KEY)||'null');}catch{return null;}})();
-  try{if(raw)group=validatePartial(raw);}catch{group=initial();}
-  byId('web-team').value=group.team;
-  byId('web-class').value=group.classGroup;
-  renderRows();
-
-  function open(source) {
-    fromEvidence=source==='evidence';
-    if(fromEvidence && byId('evidence-dialog').open)byId('evidence-dialog').close();
+  let local=null;
+  try{local=JSON.parse(localStorage.getItem(KEY)||'null');}catch{/* rascunho inválido */}
+  try{if(local)group=validatePartial(local);}catch{group=fresh();}
+  render();
+  function open(source){
+    openedFromEvidence=source==='evidence';
+    if(openedFromEvidence&&el('evidence-dialog').open)el('evidence-dialog').close();
     modal.showModal();
-    byId('web-team').focus({preventScroll:true});
+    el('web-team').focus({preventScroll:true});
   }
-  byId('team-open').addEventListener('click',()=>open('header'));
-  byId('team-open-evidence').addEventListener('click',()=>open('evidence'));
-  byId('web-team').addEventListener('input',e=>{group.team=e.target.value;persist();});
-  byId('web-class').addEventListener('input',e=>{group.classGroup=e.target.value;persist();});
-  box.addEventListener('input',e=>{
-    const index=Number(e.target.dataset.index);
-    const prop=e.target.dataset.prop;
-    if(Number.isInteger(index)&&index>=0&&index<group.members.length&&['name','enrollment'].includes(prop)){
-      group.members[index][prop]=e.target.value;
-      persist();
+  el('team-open').addEventListener('click',()=>open('header'));
+  el('team-open-evidence').addEventListener('click',()=>open('evidence'));
+  el('web-team').addEventListener('input',event=>{
+    group.team=event.target.value;persist();
+  });
+  holder.addEventListener('input',event=>{
+    const i=Number(event.target.dataset.index);
+    if(Number.isInteger(i)&&i>=0&&i<group.members.length){
+      group.members[i].name=event.target.value;persist();
     }
   });
-  box.addEventListener('click',e=>{
-    const remove=e.target.closest('[data-remove]');
-    if(!remove||group.members.length<=MIN)return;
-    const index=Number(remove.dataset.remove);
-    if(!Number.isInteger(index)||index<0||index>=group.members.length)return;
-    if((group.members[index].name||group.members[index].enrollment) &&
-       !confirm('Remover integrante '+(index+1)+' da equipe?'))return;
-    group.members.splice(index,1);
-    renderRows();
+  holder.addEventListener('click',event=>{
+    const button=event.target.closest('[data-remove]');
+    if(!button||group.members.length<=1)return;
+    const i=Number(button.dataset.remove);
+    if(!Number.isInteger(i)||i<0||i>=group.members.length)return;
+    if(group.members[i].name.trim()&&!confirm('Remover este integrante da equipe?'))return;
+    group.members.splice(i,1);
+    render();
     persist();
   });
-  byId('web-add-member').addEventListener('click',()=>{
+  el('web-add-member').addEventListener('click',()=>{
     if(group.members.length>=MAX)return;
     group.members.push(blank());
-    renderRows(true);
+    render(true);
     persist();
   });
-  byId('team-done').addEventListener('click',()=>{
+  el('team-done').addEventListener('click',()=>{
     try{
       const data=getIdentity();
       persist();
-      messageText('Equipe '+data.team+' identificada com '+data.members.length+' integrante(s).',true);
+      feedback('Equipe '+data.team+' identificada com '+data.members.length+' integrante(s).','success');
       modal.close();
-      if(fromEvidence)byId('evidence-dialog').showModal();
-    }catch(error){
-      messageText(String(error.message||error));
-    }
+      if(openedFromEvidence)el('evidence-dialog').showModal();
+    }catch(e){feedback(String(e.message||e),'error');}
   });
   window.WebTeam=Object.freeze({snapshot,restore,validatePartial,getIdentity,maxMembers:MAX});
 })();
