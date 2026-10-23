@@ -231,3 +231,42 @@
 #review-status[data-kind="failed"]{color:#942921}
 #review-status[data-kind="success"]{color:#0d6440;font-weight:650}
 @media(max-width:710px){.review-controls{padding:8px;margin:9px 0}.xp-explanation{font-size:11px;padding:8px}}
+
+
+/* Aula 05: identificação coletiva conforme fichas da PPI e Móveis. */
+.team-dialog{width:min(800px,calc(100vw - 24px))}
+.team-dialog .team-lead{font-size:13px;line-height:1.5;color:#315a40}
+.team-core{display:grid;grid-template-columns:1fr 1fr;gap:9px 14px;padding:12px 0}
+.team-core label{font-size:12px;font-weight:750;align-self:end}
+.team-core input{grid-row:2;width:100%}
+.team-core label:nth-of-type(1),.team-core input:nth-of-type(1){grid-column:1}
+.team-core label:nth-of-type(2),.team-core input:nth-of-type(2){grid-column:2}
+.team-dialog input{min-height:44px;padding:9px 11px;border:1px solid #8aac97;border-radius:7px;font-size:15px;width:100%;background:white;color:#193d28}
+.team-dialog input:focus-visible{outline:3px solid #e5b850;outline-offset:2px}
+.team-members-toolbar{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin:12px 0 8px}
+.team-members-toolbar h3{margin:0!important}
+#web-add-member{min-height:44px}
+#web-members{display:grid;gap:11px;margin:8px 0}
+.member-row{border:1px solid #c6dccb;padding:11px 13px;border-radius:8px;background:#f8fbf8;min-width:0}
+.member-row-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.member-row-header h4{font-size:13px;color:#165034;margin:0}
+.member-row-header button{font-size:12px;min-height:40px}
+.member-row-fields{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr);gap:5px 11px}
+.member-row-fields label{font-weight:700;font-size:12px;color:#31543c;grid-row:1}
+.member-row-fields input{grid-row:2;min-width:0}
+.member-row-fields label:nth-of-type(1),.member-row-fields input:nth-of-type(1){grid-column:1}
+.member-row-fields label:nth-of-type(2),.member-row-fields input:nth-of-type(2){grid-column:2}
+#team-feedback{border-radius:6px;background:#eef4ee;color:#275037;padding:9px 11px;font-size:12px;line-height:1.5;white-space:pre-wrap}
+#team-feedback[data-kind="error"]{background:#fff0ec;color:#a12924}
+#team-feedback[data-kind="success"]{background:#e5f3eb;color:#0b663d}
+#team-done{width:100%;min-height:44px;margin:8px 0}
+.team-summary{border:1px solid #c6dccb;border-radius:7px;background:#f2f8f4;color:#185638;padding:9px 10px;font-size:12px;overflow-wrap:anywhere;line-height:1.55}
+#team-open-evidence{min-height:44px;width:100%}
+#team-count{font-size:11px;font-weight:600;opacity:.95}
+@media(max-width:600px){
+  .team-core,.member-row-fields{display:flex;flex-direction:column;gap:5px}
+  .team-dialog input{font-size:16px}
+  .member-row{padding:8px 10px}
+  .team-members-toolbar{align-items:stretch}
+  #web-add-member{width:100%}
+}
