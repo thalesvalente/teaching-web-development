@@ -8,8 +8,8 @@
  * Publicar com WEB_WEB_SUBMISSIONS_ENABLED=false; habilitar somente
  * após homologação e definição do procedimento de identificação.
  *
- * ATENÇÃO: nome e matrícula fornecidos por formulário público NÃO
- * autenticam uma pessoa. O recebimento é PENDENTE DE VALIDAÇÃO DOCENTE.
+ * ATENÇÃO: nomes declarados da equipe NÃO autenticam identidade nem autoria.
+ * O recebimento é PENDENTE DE VALIDAÇÃO DOCENTE.
  */
 var WEB_CFG = Object.freeze({
   spreadsheetId: '1iLx-Tm0EFCsMxqKxbkXAuevJlCzjFAJuRyknbHYlbGM',
@@ -422,6 +422,6 @@ function testarConexaoWeb() {
     observacao:'',testeNativoPendente:'',codigoFonteCompleto:'export default function App() {}'};
   if(webEvidence(sample).xp!==0)webFail('Validação formativa incompatível.');
   Logger.log('Diagnóstico Web: PASS | '+book.getName()+
-    ' | 5 abas | 14 missões | POST protegido por flag.');
+    ' | 6 abas | 14 missões | POST protegido por flag.');
   return 'Diagnóstico Web: PASS';
 }
