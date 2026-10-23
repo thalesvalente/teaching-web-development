@@ -29,19 +29,12 @@
     status.textContent = text;
     status.dataset.kind = kind;
   };
-  function safeName(name) {
-    return /^[\p{L}][\p{L}\p{M} .'\-]{2,99}$/u.test(name) &&
-      name.trim().split(/\s+/).length >= 2;
-  }
-  function studentIdentity() {
-    const name = document.getElementById('web-student-name').value.trim();
-    const enrollment = document.getElementById('web-student-id').value.trim();
-    const team = document.getElementById('web-team').value.trim();
-    if (!safeName(name)) throw Error('Informe nome e sobrenome, sem abreviações.');
-    if (!/^[A-Za-z0-9][A-Za-z0-9._/-]{4,29}$/.test(enrollment))
-      throw Error('Revise a matrícula / identificador acadêmico.');
-    if (team.length > 80) throw Error('Equipe ou turma excede 80 caracteres.');
-    return { name, enrollment, team };
+  // A equipe fornece apenas seu nome e nomes dos integrantes; não há
+  // campos de matrícula, turma ou dados extras no formulário.
+  function teamIdentity() {
+    if(!window.WebTeam?.getIdentity)
+      throw Error('Identificação da equipe indisponível. Atualize o laboratório.');
+    return window.WebTeam.getIdentity();
   }
   function bytesHash(bytes) {
     return crypto.subtle.digest('SHA-256',bytes).then(data =>
@@ -84,8 +77,9 @@
         const d=event.data;
         if(!d || d.channel!==CHANNEL || d.nonce!==nonce)return;
         if(!d.ok)return end(Error(d.error||'Servidor recusou a evidência.'));
-        if(d.activity!==ACTIVITY || d.instrument!=='laboratorio-vivo-tsx' ||
+        if(d.activity!==ACTIVITY || d.instrument!=='laboratorio-vivo-tsx-equipe' ||
            d.codeSha256!==hash || d.xpReported!==evidence.xp ||
+           d.teamId!==identity.teamId || d.memberCount!==identity.members.length ||
            d.grade!==null || d.status!=='RECEBIDO_PENDENTE_VALIDACAO' ||
            !/^WEB-[\w-]+$/.test(String(d.receiptId||'')) ||
            !/^[0-9a-f]{64}$/.test(String(d.answersSha256||'')) ||
@@ -107,7 +101,7 @@
         throw Error('Laboratório ainda não preparado. Abra a aula e execute o código.');
       if(!window.crypto?.subtle || !crypto.randomUUID)
         throw Error('Envio seguro exige HTTPS/localhost e crypto disponível.');
-      const identity=studentIdentity();
+      const identity=teamIdentity();
       const evidence=window.WebLabEvidence.snapshot();
       if(evidence.schema!=='ifma-web-aula05-lab-v4'||evidence.maximoXp!==100 ||
          !Array.isArray(evidence.exercicios) || evidence.exercicios.length!==14)
@@ -116,10 +110,12 @@
       if(!code || code.length>30000)throw Error('Código TSX inválido ou muito longo.');
       const hash=await bytesHash(new TextEncoder().encode(code));
       // O JSON local contém o exato snapshot enviado; não inventar hash de PDF.
-      saveJson({identity,evidence},'WEB_Aula05_Evidencia_Individual.json');
-      inform('Download JSON iniciado. Solicitando recibo do Apps Script...');busy=true;button.disabled=true;
+      saveJson({identity,evidence},'WEB_Aula05_Evidencia_Equipe.json');
+      inform('JSON da equipe preparado. Solicitando recibo do Apps Script...');busy=true;button.disabled=true;
       const receipt=await post(identity,evidence,hash);
       inform('EVIDÊNCIA RECEBIDA — AGUARDANDO CONFERÊNCIA DOCENTE.\n'+
+        'Equipe: '+identity.team+' ('+identity.members.length+' integrante(s))\n'+
+        'Nomes: '+identity.members.map(m=>m.name).join('; ')+'\n'+
         'Recibo: '+receipt.receiptId+'\nRecebido UTC: '+receipt.receivedAt+
         '\nXP formativos relatados: '+receipt.xpReported+'/100 (não são nota)\n'+
         'SHA-256 do código: '+receipt.codeSha256+
