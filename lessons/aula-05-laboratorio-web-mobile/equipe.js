@@ -62,6 +62,21 @@
   }
   function summary(){
     const names=group.members.map(x=>x.name.trim()).filter(Boolean);
+    const ready=names.filter(fullName).length;
+    const teamValid=group.team.trim().length>=3;
+    const pct=Math.round(((teamValid?1:0)+ready)/(group.members.length+1)*100);
+    el('team-members-count').textContent=names.length+'/'+MAX;
+    el('team-remaining').textContent=group.members.length>=MAX
+      ? 'Limite atingido' : (MAX-group.members.length)+' vagas restantes';
+    el('team-progress').setAttribute('aria-valuenow',String(pct));
+    el('team-progress-fill').style.width=pct+'%';
+    el('team-progress-label').textContent=pct===100?'Pronto para concluir':pct+'% preenchido';
+    el('team-progress-caption').textContent=pct===100
+      ? 'A equipe está identificada' : 'Complete o nome da equipe e os integrantes';
+    el('team-summary-title').textContent=pct===100?'Equipe pronta para a atividade':'Identificação em andamento';
+    el('team-summary-copy').textContent=pct===100
+      ? group.team+' · '+names.length+' integrante(s): '+names.join(', ')
+      : 'Seus nomes serão incluídos no PDF e no JSON de progresso.';
     el('team-count').textContent='('+names.length+' nome'+(names.length===1?'':'s')+')';
     el('web-team-summary').textContent=group.team&&names.length
       ? 'Equipe '+group.team+' · '+names.length+' integrante(s): '+names.join('; ')
@@ -83,17 +98,22 @@
     heading.className='member-row-header';
     const title=document.createElement('h4');
     title.textContent='Integrante '+(index+1);
+    const number=document.createElement('span');
+    number.className='team-member-number';
+    number.textContent=String(index+1).padStart(2,'0');
+    number.setAttribute('aria-hidden','true');
     const remove=document.createElement('button');
-    remove.type='button';remove.className='btn secondary';
-    remove.textContent='Remover';
+    remove.type='button';remove.className='team-remove-member';
+    remove.textContent='×';
+    remove.title='Remover integrante '+(index+1);
     remove.dataset.remove=String(index);
     remove.disabled=group.members.length<=1;
     remove.setAttribute('aria-label','Remover integrante '+(index+1));
-    heading.append(title,remove);
+    heading.append(number,title);
     const fields=document.createElement('div');
     fields.className='member-row-fields';
     const label=document.createElement('label');
-    label.textContent='Nome completo';
+    label.textContent='Nome completo · integrante '+(index+1);
     const input=document.createElement('input');
     input.type='text';
     input.id='web-member-'+index+'-name';
@@ -105,7 +125,7 @@
     input.maxLength=100;
     input.required=true;
     fields.append(label,input);
-    article.append(heading,fields);
+    article.append(heading,fields,remove);
     return article;
   }
   function render(focusLast=false){
