@@ -81,8 +81,12 @@ function webIdentity(input) {
     if(!member||typeof member!=='object'||Array.isArray(member))
       webFail('Integrante inválido '+(index+1)+'.');
     var name=webText(member.name,100,'nome do integrante');
-    if(!/^[\p{L}][\p{L}\p{M} .'\-]{2,99}$/u.test(name)||
-       name.split(/\s+/).filter(Boolean).length<2)
+    if(!/^[\p{L}\p{M}'’\-\s]{5,100}$/u.test(name)||
+       name.split(/\s+/).length<2||
+       !name.split(/\s+/).every(function(part){
+         return /^[\p{L}][\p{L}\p{M}'’\-]*$/u.test(part) &&
+           (part.match(/\p{L}/gu)||[]).length>=2;
+       }))
       webFail('Informe nome e sobrenome do integrante '+(index+1)+'.');
     var key=webNormalized(name);
     if(seen[key])webFail('Integrante repetido: '+name+'.');

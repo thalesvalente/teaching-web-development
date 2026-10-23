@@ -954,23 +954,29 @@ function registrar() {
   // texto plano, com bullets e asteriscos literais. Agora o HTML de impressão
   // segue a identidade das fichas do IFMA, mantendo resultados PARCIAIS.
   function printPartial() {
+    const identity=window.WebTeam?.requireIdentity?.();
+    if(!identity){
+      progressMessage('Para gerar o PDF, informe nome da equipe e nome e sobrenome de todos os integrantes.',true);
+      return false;
+    }
     try {
       const current=evidence();
       if (!window.WebLabReport?.prepare)
         throw Error('O gerador do relatório institucional não está disponível.');
-      const team=window.WebTeam?.snapshot()||{team:'',members:[]};
-      const summary=window.WebLabReport.prepare(byId('print-report'),current,team);
+      const summary=window.WebLabReport.prepare(byId('print-report'),current,identity);
       progressMessage('Relatório A4 preparado: '+summary.xp+'/100 XP e '+
         summary.pending+' missões pendentes. Na janela do navegador, escolha “Salvar como PDF”.');
       window.print();
+      return true;
     } catch(error) {
       progressMessage('Não foi possível preparar o PDF: '+
         String(error?.message||'verifique os dados.'),true);
+      return false;
     }
   }
-  for (const id of ['print','quick-pdf','dialog-pdf']) byId(id).addEventListener('click', printPartial);
+  for (const id of ['print','dialog-pdf']) byId(id).addEventListener('click', printPartial);
   // Integração externa só pode obter o mesmo snapshot usado nos exports.
   // O Apps Script recebe evidência relatada, não um certificado de nota.
-  window.WebLabEvidence = Object.freeze({ snapshot: evidence });
+  window.WebLabEvidence = Object.freeze({ snapshot: evidence, printPartial });
   loadSource();
 })();

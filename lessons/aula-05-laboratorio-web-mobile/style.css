@@ -413,3 +413,8 @@
 .team-dialog .team-remove-member:hover:not(:disabled){background:#ffefec;border-color:#efc8c1;filter:none}
 .team-dialog .team-remove-member:disabled{visibility:hidden}
 .team-dialog .member-row-header{flex:0 0 31px}
+
+/* CTA principal de entrega e validação acessível de identidade. */
+#quick-pdf{border-color:#146444;background:#e5f3e9;color:#10472e;font-weight:850}
+#web-delivery-status:focus-visible{outline:3px solid #d9a12a;outline-offset:3px}
+.team-dialog input[aria-invalid="true"]{outline:2px solid #b52226;outline-offset:2px;border-color:#b52226}

@@ -7,6 +7,7 @@
   'use strict';
   const config = window.WebEntregaConfig || {};
   const button = document.getElementById('web-submit');
+  const quickButton = document.getElementById('quick-pdf');
   const status = document.getElementById('web-delivery-status');
   const ENDPOINT = String(config.endpoint || '');
   const ACTIVITY = 'WEB-AULA05-2026';
@@ -15,7 +16,7 @@
   const activated = validEndpoint && config.activated === true;
   const validOrigin = origin => origin === 'https://script.google.com' ||
     /^https:\/\/(?:[a-z0-9-]+\.)?script\.googleusercontent\.com$/.test(origin);
-  if (!button || !status) throw Error('Controles de envio Web não encontrados.');
+  if (!button || !quickButton || !status) throw Error('Controles de envio Web não encontrados.');
   let busy = false;
   button.disabled = !activated;
   if (!validEndpoint) {
@@ -94,14 +95,37 @@
       try{form.submit();}catch(error){end(error);}
     });
   }
-  button.addEventListener('click',async()=>{
-    if(busy || !activated)return;
+  function showReceipt(){
+    const dialog=document.getElementById('evidence-dialog');
+    if(dialog && !dialog.open)dialog.showModal();
+    status.focus({preventScroll:true});
+  }
+  async function generatePdfAndSend(){
+    if(busy)return;
+    // Validação anterior ao PDF, ao JSON e a qualquer solicitação de rede.
+    const identity=window.WebTeam?.requireIdentity?.();
+    if(!identity){
+      inform('ENVIO NÃO REALIZADO: preencha o nome da equipe e o nome e sobrenome de todos os integrantes. Nenhum dado foi enviado.','error');
+      return;
+    }
+    if(!window.WebLabEvidence?.printPartial?.()){
+      inform('ENVIO NÃO REALIZADO: não foi possível preparar o PDF. Nenhum dado foi enviado.','error');
+      return;
+    }
+    // A geração local do PDF não representa envio nem prova que ele foi salvo.
+    if(!activated){
+      inform('PDF preparado para salvar pela janela de impressão. ENVIO NÃO REALIZADO: o Apps Script da turma ainda está em homologação. Use o PDF/JSON localmente; nenhum dado foi transmitido.','error');
+      showReceipt();
+      return;
+    }
+    busy=true;button.disabled=true;quickButton.disabled=true;
     try{
       if(!window.WebLabEvidence || typeof window.WebLabEvidence.snapshot!=='function')
         throw Error('Laboratório ainda não preparado. Abra a aula e execute o código.');
       if(!window.crypto?.subtle || !crypto.randomUUID)
         throw Error('Envio seguro exige HTTPS/localhost e crypto disponível.');
-      const identity=teamIdentity();
+      // Defesa adicional: revalidar imediatamente antes de fazer POST.
+      const checked=teamIdentity();
       const evidence=window.WebLabEvidence.snapshot();
       if(evidence.schema!=='ifma-web-aula05-lab-v4'||evidence.maximoXp!==100 ||
          !Array.isArray(evidence.exercicios) || evidence.exercicios.length!==14)
@@ -109,22 +133,28 @@
       const code=String(evidence.codigoFonteCompleto||'');
       if(!code || code.length>30000)throw Error('Código TSX inválido ou muito longo.');
       const hash=await bytesHash(new TextEncoder().encode(code));
-      // O JSON local contém o exato snapshot enviado; não inventar hash de PDF.
-      saveJson({identity,evidence},'WEB_Aula05_Evidencia_Equipe.json');
-      inform('JSON da equipe preparado. Solicitando recibo do Apps Script...');busy=true;button.disabled=true;
-      const receipt=await post(identity,evidence,hash);
-      inform('EVIDÊNCIA RECEBIDA — AGUARDANDO CONFERÊNCIA DOCENTE.\n'+
-        'Equipe: '+identity.team+' ('+identity.members.length+' integrante(s))\n'+
-        'Nomes: '+identity.members.map(m=>m.name).join('; ')+'\n'+
+      // Exportação auditável antes da tentativa de envio: não é comprovante de recepção.
+      saveJson({identity:checked,evidence},'WEB_Aula05_Evidencia_Equipe.json');
+      inform('PDF preparado. Enviando as evidências e aguardando recibo do Apps Script...');
+      showReceipt();
+      const receipt=await post(checked,evidence,hash);
+      inform('ENVIO CONFIRMADO! EVIDÊNCIA RECEBIDA — AGUARDANDO CONFERÊNCIA DOCENTE.\n'+
+        'Equipe: '+checked.team+' ('+checked.members.length+' integrante(s))\n'+
+        'Nomes: '+checked.members.map(m=>m.name).join('; ')+'\n'+
         'Recibo: '+receipt.receiptId+'\nRecebido UTC: '+receipt.receivedAt+
         '\nXP formativos relatados: '+receipt.xpReported+'/100 (não são nota)\n'+
         'SHA-256 do código: '+receipt.codeSha256+
         '\nAssinatura do recibo: '+receipt.signature+
-        '\nGuarde seu JSON e o número do recibo.', 'success');
+        '\nPDF: salve-o no dispositivo pela janela de impressão (não é enviado como arquivo).\n'+
+        'Guarde seu JSON e o número do recibo.', 'success');
+      showReceipt();
     }catch(error){
       inform('ENVIO NÃO CONFIRMADO: '+String(error?.message||'Falha de entrega.')+
-        '\nExportar JSON/Markdown/PDF continua disponível. Não há nota automática.', 'error');
-    }finally{busy=false;button.disabled=!activated;}
-  });
+        '\nConfira o recebimento antes de tentar novamente. PDF/JSON locais não comprovam entrega.','error');
+      showReceipt();
+    }finally{busy=false;button.disabled=!activated;quickButton.disabled=false;}
+  }
+  button.addEventListener('click',generatePdfAndSend);
+  quickButton.addEventListener('click',generatePdfAndSend);
   window.WebEntrega = Object.freeze({configurado:validEndpoint,ativado:activated,atividade:ACTIVITY});
 })();
