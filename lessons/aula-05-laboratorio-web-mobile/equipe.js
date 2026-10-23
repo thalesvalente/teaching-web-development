@@ -112,7 +112,12 @@
         if(!focus&&bad)focus=fieldEl;
       });
     });
-    focus?.focus({preventScroll:true});
+    if(focus){
+      focus.focus({preventScroll:true});
+      // O diálogo tem rolagem própria: foco lógico não garante campo visível.
+      // instant respeita movimento reduzido e evita anunciar um alvo fora da tela.
+      focus.scrollIntoView({block:'nearest',inline:'nearest',behavior:'instant'});
+    }
   }
   function showRemoteConflict(meta){
     if(!meta||!Number.isInteger(meta.memberIndex))return;
