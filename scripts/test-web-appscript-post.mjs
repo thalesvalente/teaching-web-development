@@ -6,6 +6,7 @@
  * Um recebimento válido não equivale à identidade ou nota certificada.
  */
 import { createHash, randomUUID } from 'node:crypto';
+import { extractReceipt } from './web-receipt-parser.mjs';
 const stages=[
   ['run',5],['map',5],['title',6],['placeholder',6],['limit',12],
   ['maximum',10],['button',7],['error',7],['success',7],['color',6],
@@ -65,29 +66,7 @@ const response=await fetch(url,{
 });
 if(!response.ok)throw Error('POST HTTP '+response.status+'. Conferir acesso do Web App.');
 const html=await response.text();
-// Resposta HtmlService: o script pode vir com espaços/escape de aspas.
-// Extrair apenas o argumento JSON de top.postMessage, sem executar HTML.
-function extractReceipt(html){
-  const marker=/top\.postMessage\s*\(/g;
-  const match=marker.exec(html);
-  if(!match)throw Error('Resposta sem top.postMessage; consulte Auditoria antes de repetir POST.');
-  let at=match.index+match[0].length,depth=0,quoted=false,escape=false;
-  for(let i=at;i<html.length;i++){
-    const ch=html[i];
-    if(quoted){if(escape)escape=false;else if(ch==='\\\\')escape=true;else if(ch==='"')quoted=false;continue;}
-    if(ch==='"'){quoted=true;continue;}
-    if(ch==='{')depth++;
-    if(ch==='}'){
-      depth--;
-      if(depth===0){
-        const raw=html.slice(at,i+1);
-        try{return JSON.parse(raw);}
-        catch{throw Error('JSON de recibo ilegível; conferir Auditoria antes de repetir POST.');}
-      }
-    }
-  }
-  throw Error('Objeto de recibo incompleto; conferir Auditoria antes de repetir POST.');
-}
+// Parser testado separadamente: exige envelope completo e respeita JSON escapado.
 const receipt=extractReceipt(html);
 if(receipt.ok===false)throw Error('Apps Script recusou QA: '+String(receipt.error||'erro sem detalhe'));
 const sha=createHash('sha256').update(evidence.codigoFonteCompleto,'utf8').digest('hex');
