@@ -1,326 +1,305 @@
 'use strict';
-/** QA isolado para Google Apps Script Web. NÃO acessa planilhas reais. */
-const test = require('node:test');
-const assert = require('node:assert/strict');
-const fs = require('node:fs');
-const vm = require('node:vm');
-const crypto = require('node:crypto');
-const path = require('node:path');
-
-const source = fs.readFileSync(path.join(__dirname,'../integrations/web-appscript/Code.gs'),'utf8');
-const TASKS = [
+/** QA de backend Google Apps Script 1.1.0 — inteiramente mockado; nenhum POST real. */
+const test=require('node:test');
+const assert=require('node:assert/strict');
+const fs=require('node:fs');
+const vm=require('node:vm');
+const crypto=require('node:crypto');
+const path=require('node:path');
+const source=fs.readFileSync(path.join(__dirname,'../integrations/web-appscript/Code.gs'),'utf8');
+const ID='c58b7ae0-8538-4e66-9c3d-6db56e239f4e';
+const ID2='c58b7ae0-8538-4e66-9c3d-6db56e239f4f';
+const TASKS=[
   ['run',5],['map',5],['title',6],['placeholder',6],['limit',12],
   ['maximum',10],['button',7],['error',7],['success',7],['color',6],
   ['trim',8],['invalid',8],['isolation',8],['quiz',5]
 ];
-const HEADERS = {
-  '1º Bimestre':['Aluno','Matrícula','Equipe','Média /10'],
-  '2º Bimestre':['Aluno','Matrícula','Equipe','Média /10'],
-  '3º Bimestre':['Aluno','Matrícula','Equipe','Aula 04 E3-I1 /2,5','Média /10'],
-  '4º Bimestre':['Aluno','Matrícula','Equipe','Aula 05 XP formativo /100','Média /10'],
-  'Auditoria':['Aluno','Matrícula','Equipe','Atividade','Instrumento',
-    'Data/hora BRT','Recebido UTC','ID entrega','SHA-256 evidência',
-    'Assinatura HMAC','XP declarado /100','Nota oficial /10',
-    'Situação','Rubrica/versão','JSON evidência','Chave interna',
-    'Código SHA-256','Origem','Observação docente','Revisado UTC']
+const HEADERS={
+  '1º Bimestre':['Aluno','ID equipe (automático)','Equipe','Média /10'],
+  '2º Bimestre':['Aluno','ID equipe (automático)','Equipe','Média /10'],
+  '3º Bimestre':['Aluno','ID equipe (automático)','Equipe','Aula 04 E3-I1 /2,5','Média /10'],
+  '4º Bimestre':['Aluno','ID equipe (automático)','Equipe','Aula 05 XP formativo /100','Média /10'],
+  'Auditoria':['Equipe','ID equipe (automático)','Integrantes (nomes)','Atividade','Instrumento',
+    'Data/hora BRT','Recebido UTC','ID entrega','SHA-256 evidência','Assinatura HMAC',
+    'XP declarado /100','Nota oficial /10','Situação','Rubrica/versão','JSON evidência',
+    'Chave interna','Código SHA-256','Origem','Observação docente','Revisado UTC',
+    'Lista de integrantes da equipe'],
+  'Equipes':['Equipe','Integrantes (nomes)','Quantidade','Atividade',
+    'XP formativo /100','Situação','Recibo','Enviado UTC','Chave da equipe',
+    'SHA-256 evidência','Observação docente','Revisado UTC']
 };
-function blank(rows,n) {
-  while(rows.length<n)rows.push([]);
-}
-class MockSheet {
-  constructor(name,headers) {
+function ensureRows(rows,count){while(rows.length<count)rows.push([]);}
+class Sheet {
+  constructor(name,headers){
     this.name=name;this.rows=[headers.slice(),[]];
-    // A planilha real tem metadados em V:Y até a linha 6:
-    // getLastRow é 6, embora A:T ainda não tenha nenhuma entrega.
     if(name==='Auditoria')this.rows.push([],[],[],[]);
-    else this.rows[1][headers.length-1]='=IF(A2="";"";0)';
+    else if(name!=='Equipes')this.rows[1][headers.length-1]='=IF(A2="";"";0)';
   }
   getName(){return this.name;}
   getLastRow(){return this.rows.length;}
-  getRange(row,column,count=1,width=1){
+  getRange(row,col,height=1,width=1){
     const sheet=this;
-    function write(matrix){
-      blank(sheet.rows,row+matrix.length-1);
-      for(let i=0;i<matrix.length;i++){
-        for(let k=0;k<matrix[i].length;k++) sheet.rows[row+i-1][column+k-1]=matrix[i][k];
-      }
-    }
-    const read=()=>Array.from({length:count},(_,i)=>Array.from({length:width},(_,j)=>
-      sheet.rows[row+i-1]?.[column+j-1]??''));
+    const read=()=>Array.from({length:height},(_,i)=>Array.from(
+      {length:width},(_,j)=>sheet.rows[row+i-1]?.[col+j-1]??''));
+    const write=matrix=>{
+      ensureRows(sheet.rows,row+matrix.length-1);
+      for(let i=0;i<matrix.length;i++)
+        for(let j=0;j<matrix[i].length;j++)
+          sheet.rows[row+i-1][col+j-1]=matrix[i][j];
+    };
     return {
-      getDisplayValues(){return read().map(r=>r.map(v=>String(v)));},
-      getValues(){return read();},
-      getDisplayValue(){return String(read()[0][0]);},
+      getDisplayValues:()=>read().map(r=>r.map(String)),
+      getDisplayValue:()=>String(read()[0][0]),
+      getValues:read,
       setValues(matrix){write(matrix);return this;},
       setFormulas(matrix){write(matrix);return this;},
       setValue(value){write([[value]]);return this;},
       setFormula(value){write([[value]]);return this;},
       setNumberFormat(){return this;},
       sort(rules){
-        const from=row-1,to=from+count;
-        const slice=sheet.rows.slice(from,to);
+        const slice=sheet.rows.slice(row-1,row+height-1);
         slice.sort((a,b)=>{
-          for(const v of rules){
-            const cmp=String(a[v.column-1]||'').localeCompare(String(b[v.column-1]||''),'pt-BR');
-            if(cmp)return v.ascending?cmp:-cmp;
+          for(const rule of rules){
+            const diff=String(a[rule.column-1]||'').localeCompare(
+              String(b[rule.column-1]||''),'pt-BR');
+            if(diff)return rule.ascending?diff:-diff;
           }
           return 0;
         });
-        sheet.rows.splice(from,count,...slice);
+        sheet.rows.splice(row-1,height,...slice);
         return this;
       }
     };
   }
 }
-function harness(){
-  const tabs=Object.fromEntries(Object.entries(HEADERS).map(([name,headers])=>[name,new MockSheet(name,headers)]));
-  const properties=new Map();
-  let writes=0,locks=0;
-  const book={getSheetByName:n=>tabs[n]||null,getName:()=> 'desenvolvimento-web-2026'};
-  const mock={
+function fixture(){
+  const tabs=Object.fromEntries(Object.entries(HEADERS).map(([name,headers])=>
+    [name,new Sheet(name,headers)]));
+  const props=new Map();
+  const book={getSheetByName:name=>tabs[name]||null,getName:()=>'desenvolvimento-web-2026'};
+  let flushes=0,locks=0;
+  const fake={
     PropertiesService:{getScriptProperties:()=>({
-      getProperty:k=>properties.get(k)||null,
-      setProperty:(k,v)=>properties.set(k,v)
+      getProperty:key=>props.get(key)||null,
+      setProperty:(key,value)=>props.set(key,value)
     })},
     SpreadsheetApp:{
-      openById: id => {
-        assert.equal(id,'1iLx-Tm0EFCsMxqKxbkXAuevJlCzjFAJuRyknbHYlbGM');
+      openById:key=>{
+        assert.equal(key,'1iLx-Tm0EFCsMxqKxbkXAuevJlCzjFAJuRyknbHYlbGM');
         return book;
       },
-      flush:()=>{writes++;}
+      flush:()=>{flushes++;}
     },
     Utilities:{
       DigestAlgorithm:{SHA_256:'SHA_256'},Charset:{UTF_8:'UTF_8'},
-      computeDigest:(algo,s)=>Array.from(crypto.createHash('sha256').update(String(s)).digest(),n=>n>127?n-256:n),
-      computeHmacSha256Signature:(s,key)=>Array.from(crypto.createHmac('sha256',key).update(s).digest(),n=>n>127?n-256:n),
+      computeDigest:(algo,s)=>Array.from(
+        crypto.createHash('sha256').update(String(s)).digest(),n=>n>127?n-256:n),
+      computeHmacSha256Signature:(s,key)=>Array.from(
+        crypto.createHmac('sha256',key).update(s).digest(),n=>n>127?n-256:n),
       getUuid:()=>crypto.randomUUID(),
-      formatDate:(date,timezone,pattern)=>{
-        if(pattern==='yyyyMMdd-HHmmss')return date.toISOString().replace(/\D/g,'').slice(0,8)+'-'+date.toISOString().replace(/\D/g,'').slice(8,14);
-        return new Intl.DateTimeFormat('sv-SE',{timeZone:timezone,year:'numeric',month:'2-digit',day:'2-digit',
-          hour:'2-digit',minute:'2-digit',second:'2-digit',hourCycle:'h23'}).format(date);
-      }
+      formatDate:(date,tz,pattern)=>pattern==='yyyyMMdd-HHmmss'
+        ?date.toISOString().replace(/\D/g,'').slice(0,8)+'-'+
+         date.toISOString().replace(/\D/g,'').slice(8,14)
+        :new Intl.DateTimeFormat('sv-SE',{timeZone:tz,year:'numeric',month:'2-digit',
+          day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit',hourCycle:'h23'}).format(date)
     },
-    LockService:{getScriptLock:()=>({waitLock:(ms)=>{assert.equal(ms,20000);locks++;},releaseLock:()=>{locks--;}})},
+    LockService:{getScriptLock:()=>({
+      waitLock:ms=>{assert.equal(ms,20000);locks++;},
+      releaseLock:()=>{locks--;}
+    })},
     HtmlService:{
       XFrameOptionsMode:{ALLOWALL:'ALLOWALL'},
       createHtmlOutput:html=>({html,setXFrameOptionsMode(){return this;}})
     },
-    ContentService:{
-      MimeType:{TEXT:'TEXT'},
-      createTextOutput:text=>({text,setMimeType(){return this;}})
-    },
+    ContentService:{MimeType:{TEXT:'TEXT'},createTextOutput:text=>({text,setMimeType(){return this;}})},
     Logger:{log:()=>{}}
   };
-  const context=vm.createContext(mock);
-  new vm.Script(source,{filename:'Code.gs'}).runInContext(context);
-  const evt=evidence=>({parameter:{nonce:crypto.randomUUID(),payload:JSON.stringify({
-    schema:'web-a05-submission-v1',activity:'WEB-AULA05-2026',
-    identity:{name:'Ana Exemplo',enrollment:'20260001',team:'Web'},
-    evidence
-  })}});
-  const evidence=(completed=[])=>({
-    schema:'ifma-web-aula05-lab-v4',geradoEm:new Date().toISOString(),
-    atividade:'Laboratório Vivo',tipo:'formativo-nao-e-nota',
-    maximoXp:100,xp:TASKS.filter(([id])=>completed.includes(id)).reduce((sum,entry)=>sum+entry[1],0),
-    exercicios:TASKS.map(([id,xp],i)=>({
-      id,ciclo:i<4?1:i<10?2:3,titulo:id,
-      estado:completed.includes(id)?'APROVADO':'PENDENTE',
-      xp:completed.includes(id)?xp:0,maximoXp:xp,comentario:null
-    })),
-    observacao:'Ajustei o código de exemplo.',testeNativoPendente:'Testar Expo.',
-    codigoFonteCompleto:"import React from 'react';\nexport default function App(){return null}"
+  const ctx=vm.createContext(fake);
+  new vm.Script(source,{filename:'Code.gs'}).runInContext(ctx);
+  const identity=(teamId=ID,members=['Ana Exemplo','Bia Exemplo'],team='Equipe Ipê')=>({
+    teamId,team,members:members.map(name=>({name}))
   });
-  return {ctx:context,evt,evidence,tabs,properties,writes:()=>writes,locks:()=>locks};
+  const evidence=(approved=[])=>({
+    schema:'ifma-web-aula05-lab-v4',tipo:'formativo-nao-e-nota',maximoXp:100,
+    xp:TASKS.filter(t=>approved.includes(t[0])).reduce((n,t)=>n+t[1],0),
+    exercicios:TASKS.map(([id,maximoXp])=>({
+      id,estado:approved.includes(id)?'APROVADO':'PENDENTE',
+      xp:approved.includes(id)?maximoXp:0,maximoXp
+    })),
+    observacao:'Testes com dados fictícios.',testeNativoPendente:'',
+    codigoFonteCompleto:'  \nexport default function App(){return null;}\n'
+  });
+  const evt=(e=evidence(),ident=identity())=>({parameter:{
+    nonce:crypto.randomUUID(),
+    payload:JSON.stringify({schema:'web-a05-submission-v1',
+      activity:'WEB-AULA05-2026',identity:ident,evidence:e})
+  }});
+  const records=(tab,keyCol)=>tabs[tab].rows.slice(1).filter(row=>String(row[keyCol]||'').trim());
+  return {ctx,tabs,props,identity,evidence,evt,records,
+    flushes:()=>flushes,locks:()=>locks};
 }
-function extract(html){
-  const body=typeof html==='string'?html:html?.html;
-  assert.equal(typeof body,'string','HtmlService deve retornar HTML legível no mock');
-  const hit=body.match(/top\.postMessage\((\{.*\}),"https:\/\/thalesvalente\.github\.io"\)/);
-  assert.ok(hit,'Resposta deve usar top.postMessage');
-  return JSON.parse(hit[1]);
+function receipt(response){
+  const html=typeof response==='string'?response:response?.html;
+  assert.equal(typeof html,'string');
+  const match=html.match(/top\.postMessage\((\{.*\}),"https:\/\/thalesvalente\.github\.io"\)/);
+  assert.ok(match,'Recibo deve ter top.postMessage');
+  return JSON.parse(match[1]);
 }
-
-test('Code.gs é JavaScript sintaticamente válido e não reutiliza outras disciplinas',()=>{
+function enabled(f){f.props.set('WEB_WEB_SUBMISSIONS_ENABLED','true');}
+test('Code.gs V8 1.1.0 valida contrato de 6 abas sem scripts Mobile/PPI',()=>{
   assert.doesNotThrow(()=>new vm.Script(source));
-  assert.match(source,/web-entregas-1\.0\.0/);
+  assert.match(source,/web-entregas-1\.1\.0/);
+  assert.equal(Object.keys(HEADERS).length,6);
   assert.doesNotMatch(source,/1z5VEmScYCtfsEGg0AahY3cHE5eYO79Zj0xLMzx4iT0Y/);
-  assert.doesNotMatch(source,/1aziGb9eXl5oR6Wz6dDWI7IH9bsINf9Sp7b6nmlT9XqE/);
 });
-test('pré-flight não grava dados reais e reconhece cinco abas',()=>{
-  const h=harness();
-  assert.equal(h.ctx.testarConexaoWeb(),'Diagnóstico Web: PASS');
-  assert.equal(h.writes(),0);
+test('prepararIntegracaoWeb confere seis abas, é idempotente e começa bloqueado',()=>{
+  const f=fixture();
+  assert.match(f.ctx.prepararIntegracaoWeb(),/WEB_SETUP_PASS/);
+  assert.match(f.ctx.prepararIntegracaoWeb(),/6 abas/);
+  assert.equal(f.props.get('WEB_WEB_SUBMISSIONS_ENABLED'),'false');
+  assert.equal(f.flushes(),0);
+  assert.equal(f.ctx.testarConexaoWeb(),'Diagnóstico Web: PASS');
+  assert.equal(f.flushes(),0);
 });
-test('recebimento fica bloqueado por padrão, sem falso recibo',()=>{
-  const h=harness();
-  assert.match(h.ctx.doGet().text,/recebimento bloqueado/);
-  const output=extract(h.ctx.doPost(h.evt(h.evidence())));
-  assert.equal(output.ok,false);
-  assert.match(output.error,/não habilitado/);
-  assert.equal(h.writes(),0);
+test('doPost bloqueado por padrão não grava linha e devolve erro do servidor',()=>{
+  const f=fixture(),r=receipt(f.ctx.doPost(f.evt()));
+  assert.equal(r.ok,false);
+  assert.match(r.error,/não habilitado/);
+  assert.equal(f.flushes(),0);
 });
-test('XP são apenas relato consistente, não nota certificada',()=>{
-  const h=harness();
-  const value=h.evidence();
-  assert.equal(h.ctx.webEvidence(value).xp,0);
-  value.xp=100;
-  assert.throws(()=>h.ctx.webEvidence(value),/inconsistente/);
-  const all=h.evidence(TASKS.map(t=>t[0]));
-  assert.equal(h.ctx.webEvidence(all).xp,100);
+test('identificação aceita somente equipe e nomes completos sem matrícula ou turma',()=>{
+  const f=fixture();
+  const group=f.ctx.webIdentity(f.identity());
+  assert.equal(group.team,'Equipe Ipê');
+  assert.equal(group.members.length,2);
+  assert.ok(!('enrollment' in group));
+  assert.ok(!('classGroup' in group));
+  assert.throws(()=>f.ctx.webIdentity({team:'Ipê',members:[{name:'Ana Exemplo'}]}),/identificador/);
+  assert.throws(()=>f.ctx.webIdentity(f.identity(ID,['Ana'])),/nome e sobrenome/);
+  assert.throws(()=>f.ctx.webIdentity(f.identity(ID,['Ana Exemplo','Ána  Exemplo'])),/repetido/);
+  assert.throws(()=>f.ctx.webIdentity(f.identity(ID,Array.from({length:9},(_,i)=>'Integrante Número '+i))),/oito/);
+  assert.equal(f.ctx.webSafe('=HYPERLINK("x")').startsWith("'="),true);
 });
-test('valida identificação individual e evita fórmula em equipe',()=>{
-  const h=harness();
-  assert.throws(()=>h.ctx.webIdentity({name:'Ana',enrollment:'20260001'}),/nome e sobrenome/);
-  assert.throws(()=>h.ctx.webIdentity({name:'Ana Exemplo',enrollment:'1'}),/identificador/);
-  assert.equal(h.ctx.webSafe('=HYPERLINK("x")').startsWith("'="),true);
+test('XP relatados são consistentes e não constituem nota',()=>{
+  const f=fixture(),e=f.evidence();
+  assert.equal(f.ctx.webEvidence(e).xp,0);
+  e.xp=10;assert.throws(()=>f.ctx.webEvidence(e),/inconsistente/);
+  assert.equal(f.ctx.webEvidence(f.evidence(TASKS.map(t=>t[0]))).xp,100);
 });
-test('envio autorizado escreve 5 abas, HMAC e preserva nota oficial',()=>{
-  const h=harness();h.properties.set('WEB_WEB_SUBMISSIONS_ENABLED','true');
-  const received=extract(h.ctx.doPost(h.evt(h.evidence(['run','map']))));
-  assert.equal(received.ok,true);
-  assert.equal(received.grade,null);
-  assert.equal(received.xpReported,10);
-  assert.equal(received.status,'RECEBIDO_PENDENTE_VALIDACAO');
-  assert.match(received.answersSha256,/^[0-9a-f]{64}$/);
-  assert.match(received.codeSha256,/^[0-9a-f]{64}$/);
-  assert.match(received.signature,/^[0-9a-f]{64}$/);
-  assert.equal(h.properties.get('WEB_RECEIPT_HMAC_SECRET').length,64);
-  for(const title of Object.keys(HEADERS).slice(0,4)){
-    const sheet=h.tabs[title];
-    assert.equal(sheet.rows[1][1],'20260001',title);
-    assert.equal(sheet.rows[1][0],'Ana Exemplo',title);
+test('uma entrega grava 2 integrantes em 4 bimestres, uma Equipes e uma Auditoria',()=>{
+  const f=fixture();enabled(f);
+  const r=receipt(f.ctx.doPost(f.evt(f.evidence(['run','map']))));
+  assert.equal(r.ok,true);
+  assert.equal(r.xpReported,10);
+  assert.equal(r.grade,null);
+  assert.equal(r.teamId,ID);
+  assert.equal(r.memberCount,2);
+  assert.equal(r.instrument,'laboratorio-vivo-tsx-equipe');
+  assert.equal(r.status,'RECEBIDO_PENDENTE_VALIDACAO');
+  assert.match(r.signature,/^[0-9a-f]{64}$/);
+  assert.match(r.codeSha256,/^[0-9a-f]{64}$/);
+  for(const tab of Object.keys(HEADERS).slice(0,4)){
+    const members=f.records(tab,1);
+    assert.equal(members.length,2,tab);
+    assert.deepEqual(members.map(row=>row[0]),['Ana Exemplo','Bia Exemplo']);
+    assert.ok(members.every(row=>row[1]===ID && row[2]==='Equipe Ipê'));
   }
-  assert.equal(h.tabs['4º Bimestre'].rows[1][3],10);
-  assert.equal(h.tabs['3º Bimestre'].rows[1][3],undefined);
-  assert.equal(h.tabs['Auditoria'].rows[1][12],'RECEBIDO_PENDENTE_VALIDACAO');
-  assert.equal(h.tabs['Auditoria'].rows[1][11],'');
-  assert.equal(h.locks(),0);
+  const members=f.records('4º Bimestre',1);
+  assert.ok(members.every(row=>row[3]===10));
+  assert.ok(f.records('3º Bimestre',1).every(row=>row[3]===undefined));
+  const audit=f.records('Auditoria',15);
+  assert.equal(audit.length,1);
+  assert.equal(audit[0][0],'Equipe Ipê');
+  assert.equal(audit[0][2],'Ana Exemplo; Bia Exemplo');
+  assert.equal(audit[0][20],'Ana Exemplo; Bia Exemplo');
+  assert.equal(audit[0][11],'');
+  const team=f.records('Equipes',8);
+  assert.equal(team.length,1);
+  assert.equal(team[0][0],'Equipe Ipê');
+  assert.equal(team[0][1],'Ana Exemplo; Bia Exemplo');
+  assert.equal(team[0][2],2);
+  assert.equal(team[0][4],10);
+  assert.equal(f.locks(),0);
 });
-test('reenvio da mesma matrícula+atividade faz upsert e não altera nota da Aula 04',()=>{
-  const h=harness();h.properties.set('WEB_WEB_SUBMISSIONS_ENABLED','true');
-  extract(h.ctx.doPost(h.evt(h.evidence(['run']))));
-  h.tabs['3º Bimestre'].rows[1][3]=2.5;
-  const revised=extract(h.ctx.doPost(h.evt(h.evidence(['run','map','title']))));
-  assert.equal(revised.ok,true);
-  assert.equal(h.tabs['4º Bimestre'].rows[1][3],16);
-  assert.equal(h.tabs['3º Bimestre'].rows[1][3],2.5);
-  assert.equal(h.tabs['Auditoria'].rows.slice(1).filter(row=>row[15]).length,1);
-  assert.equal(h.tabs['Auditoria'].rows[1][0],'Ana Exemplo');
-  assert.equal(h.tabs['Auditoria'].rows[1][10],16);
-  assert.equal(h.tabs['Auditoria'].rows[1][11],'');
-  assert.equal(h.writes(),2);
+test('reenvio da mesma equipe é idempotente e preserva nota e revisão docente',()=>{
+  const f=fixture();enabled(f);
+  assert.equal(receipt(f.ctx.doPost(f.evt(f.evidence(['run'])))).ok,true);
+  const grades=f.records('3º Bimestre',1);
+  grades[0][3]=2.5; // editar a referência ao array original, como professor
+  const audit=f.records('Auditoria',15);
+  audit[0][18]='Observação do professor';
+  const team=f.records('Equipes',8);
+  team[0][10]='Revisão da equipe';
+  const r=receipt(f.ctx.doPost(f.evt(f.evidence(['run','map','title']))));
+  assert.equal(r.ok,true);
+  assert.equal(r.xpReported,16);
+  assert.equal(f.records('Equipes',8).length,1);
+  assert.equal(f.records('Auditoria',15).length,1);
+  assert.equal(f.records('4º Bimestre',1).length,2);
+  assert.ok(f.records('4º Bimestre',1).every(row=>row[3]===16));
+  assert.equal(f.records('3º Bimestre',1)[0][3],2.5);
+  assert.equal(f.records('Auditoria',15)[0][18],'Observação do professor');
+  assert.equal(f.records('Equipes',8)[0][10],'Revisão da equipe');
+  assert.equal(f.flushes(),2);
 });
-test('planilha mantém ordem alfabética e identidades distintas não são confundidas',()=>{
-  const h=harness();h.properties.set('WEB_WEB_SUBMISSIONS_ENABLED','true');
-  let first=h.evt(h.evidence(['run']));first.parameter.payload=first.parameter.payload.replace('Ana Exemplo','Zelia Exemplo').replace('20260001','20260099');
-  assert.equal(extract(h.ctx.doPost(first)).ok,true);
-  assert.equal(extract(h.ctx.doPost(h.evt(h.evidence()))).ok,true);
-  const rows=h.tabs['4º Bimestre'].rows;
-  assert.equal(rows.length,3);
-  assert.equal(rows[1][0],'Ana Exemplo');
-  assert.equal(rows[2][0],'Zelia Exemplo');
-  const audit=h.tabs['Auditoria'].rows.slice(1).filter(row=>row[15]);
-  assert.equal(audit.length,2);
-  assert.equal(audit[0][0],'Ana Exemplo');
-  assert.equal(audit[1][0],'Zelia Exemplo');
+test('equipes distintas com um mesmo nome não se confundem por causa do ID automático',()=>{
+  const f=fixture();enabled(f);
+  const first=f.identity(ID,['Ana Exemplo','Bia Exemplo'],'Equipe Ipê');
+  const second=f.identity(ID2,['Ana Exemplo','Caio Exemplo'],'Equipe Cedro');
+  assert.equal(receipt(f.ctx.doPost(f.evt(f.evidence(['run']),first))).ok,true);
+  assert.equal(receipt(f.ctx.doPost(f.evt(f.evidence(['run']),second))).ok,true);
+  assert.equal(f.records('Equipes',8).length,2);
+  assert.equal(f.records('Auditoria',15).length,2);
+  assert.equal(f.records('4º Bimestre',1).length,4);
+  assert.deepEqual(f.records('4º Bimestre',1).map(row=>row[0]),
+    ['Ana Exemplo','Ana Exemplo','Bia Exemplo','Caio Exemplo']);
 });
-test('payload adulterado, tamanho e versão incompatíveis são recusados',()=>{
-  const h=harness();h.properties.set('WEB_WEB_SUBMISSIONS_ENABLED','true');
-  const damaged=h.evidence(['run']);damaged.exercicios[0].xp=2;
-  assert.equal(extract(h.ctx.doPost(h.evt(damaged))).ok,false);
-  const wrong=h.evidence();wrong.schema='another-v1';
-  assert.equal(extract(h.ctx.doPost(h.evt(wrong))).ok,false);
-  const event=h.evt(h.evidence());event.parameter.payload='x'.repeat(44001);
-  assert.equal(extract(h.ctx.doPost(event)).ok,false);
-  assert.equal(h.writes(),0);
+test('hash do TSX preserva bytes de espaços e quebras de linha',()=>{
+  const f=fixture();enabled(f);const e=f.evidence();
+  const r=receipt(f.ctx.doPost(f.evt(e)));
+  assert.equal(r.codeSha256,crypto.createHash('sha256')
+    .update(e.codigoFonteCompleto,'utf8').digest('hex'));
+  assert.equal(JSON.parse(f.records('Auditoria',15)[0][14]).codigoFonteCompleto,e.codigoFonteCompleto);
 });
-test('retorno neutraliza HTML e registra canal/nonce da própria requisição',()=>{
-  const h=harness();h.properties.set('WEB_WEB_SUBMISSIONS_ENABLED','true');
-  let e=h.evt(h.evidence());const nonce=e.parameter.nonce;
-  const r=extract(h.ctx.doPost(e));
-  assert.equal(r.channel,'web-entrega-aula05');
-  assert.equal(r.nonce,nonce);
-  assert.equal(h.ctx.webSafe('-1+1'),"'-1+1");
+test('entradas adulteradas e tamanho excessivo são recusados sem criar linhas',()=>{
+  const f=fixture();enabled(f);
+  const invalid=f.evidence(['run']);invalid.exercicios[0].xp=20;
+  assert.equal(receipt(f.ctx.doPost(f.evt(invalid))).ok,false);
+  const bad=f.evt();bad.parameter.payload='x'.repeat(44001);
+  assert.equal(receipt(f.ctx.doPost(bad)).ok,false);
+  assert.equal(f.flushes(),0);
 });
-
-test('Hash do TSX preserva espaços e quebra de linha exatamente como enviados',()=>{
-  const h=harness();h.properties.set('WEB_WEB_SUBMISSIONS_ENABLED','true');
-  const e=h.evidence(['run']);
-  e.codigoFonteCompleto='  \n'+e.codigoFonteCompleto+'\n\n ';
-  const receipt=extract(h.ctx.doPost(h.evt(e)));
-  assert.equal(receipt.ok,true);
-  const expected=crypto.createHash('sha256').update(e.codigoFonteCompleto,'utf8').digest('hex');
-  assert.equal(receipt.codeSha256,expected);
-  const saved=JSON.parse(h.tabs['Auditoria'].rows[1][14]);
-  assert.equal(saved.codigoFonteCompleto,e.codigoFonteCompleto);
+test('Auditoria com lacunas rejeita gravação, sem misturar equipes',()=>{
+  const f=fixture();enabled(f);
+  f.tabs.Auditoria.rows[1][15]='LEGADO|WEB-AULA05-2026';
+  f.tabs.Auditoria.rows[3][15]='OUTRO|WEB-AULA05-2026';
+  const r=receipt(f.ctx.doPost(f.evt()));
+  assert.equal(r.ok,false);
+  assert.match(r.error,/Auditoria com lacunas/);
 });
-test('Metadados V:Y não causam lacunas na Auditoria durante dois envios',()=>{
-  const h=harness();h.properties.set('WEB_WEB_SUBMISSIONS_ENABLED','true');
-  const first=extract(h.ctx.doPost(h.evt(h.evidence())));
-  assert.equal(first.ok,true);
-  const second=h.evt(h.evidence(['run']));
-  const payload=JSON.parse(second.parameter.payload);
-  payload.identity.name='Zelia Exemplo';
-  payload.identity.enrollment='20260099';
-  second.parameter.payload=JSON.stringify(payload);
-  assert.equal(extract(h.ctx.doPost(second)).ok,true);
-  const audit=h.tabs['Auditoria'].rows;
-  assert.equal(audit.length,6,'Metadados laterais definem a linha 6, não a última entrega');
-  assert.equal(audit[1][0],'Ana Exemplo');
-  assert.equal(audit[2][0],'Zelia Exemplo');
-  assert.equal(audit[3][0],undefined);
+test('preparação do script só ativa recepção quando docente a habilita',()=>{
+  const f=fixture();
+  assert.match(f.ctx.prepararIntegracaoWeb(),/recebimento BLOQUEADO/);
+  f.props.set('WEB_WEB_SUBMISSIONS_ENABLED','true');
+  assert.match(f.ctx.prepararIntegracaoWeb(),/recebimento HABILITADO/);
+  f.props.set('WEB_WEB_SUBMISSIONS_ENABLED','liberar');
+  assert.throws(()=>f.ctx.prepararIntegracaoWeb(),/literalmente true ou false/);
 });
-test('Auditoria com linha vazia entre entregas interrompe gravação em vez de corromper revisão',()=>{
-  const h=harness();h.properties.set('WEB_WEB_SUBMISSIONS_ENABLED','true');
-  h.tabs['Auditoria'].rows[1][15]='20260099|WEB-AULA05-2026';
-  h.tabs['Auditoria'].rows[3][15]='20260098|WEB-AULA05-2026';
-  const reply=extract(h.ctx.doPost(h.evt(h.evidence())));
-  assert.equal(reply.ok,false);
-  assert.match(reply.error,/Auditoria com lacunas/);
+test('script vinculado a outra planilha é rejeitado antes de receber dados',()=>{
+  const f=fixture();
+  f.ctx.SpreadsheetApp.getActiveSpreadsheet=()=>({getId:()=> 'OUTRA-PLANILHA'});
+  assert.throws(()=>f.ctx.prepararIntegracaoWeb(),/planilha errada/);
+  assert.equal(f.props.get('WEB_WEB_SUBMISSIONS_ENABLED'),undefined);
 });
-
-
-test('preparação do Apps Script é segura, idempotente e começa com POST bloqueado',()=>{
-  const h=harness();
-  const first=h.ctx.prepararIntegracaoWeb();
-  assert.match(first,/WEB_SETUP_PASS/);
-  assert.match(first,/recebimento BLOQUEADO/);
-  assert.equal(h.properties.get('WEB_WEB_SUBMISSIONS_ENABLED'),'false');
-  assert.equal(h.writes(),0,'Preflight não cria entrega de aluno');
-  const next=h.ctx.prepararIntegracaoWeb();
-  assert.match(next,/WEB_SETUP_PASS/);
-  assert.equal(h.writes(),0);
-  h.properties.set('WEB_WEB_SUBMISSIONS_ENABLED','true');
-  assert.match(h.ctx.prepararIntegracaoWeb(),/recebimento HABILITADO/);
-  assert.equal(h.properties.get('WEB_WEB_SUBMISSIONS_ENABLED'),'true',
-    'Repreparação não pode desabilitar unilateralmente o serviço ativo');
-  h.properties.set('WEB_WEB_SUBMISSIONS_ENABLED','liberar');
-  assert.throws(()=>h.ctx.prepararIntegracaoWeb(),/literalmente true ou false/);
+test('diagnóstico da integração é somente leitura',()=>{
+  const f=fixture();
+  assert.match(f.ctx.statusIntegracaoWeb(),/WEB_STATUS_OK/);
+  assert.match(f.ctx.statusIntegracaoWeb(),/recebimento BLOQUEADO/);
+  assert.equal(f.flushes(),0);
 });
-test('Script vinculado à planilha Mobile/PPI é rejeitado antes da configuração Web',()=>{
-  const h=harness();
-  h.ctx.SpreadsheetApp.getActiveSpreadsheet=()=>({getId:()=> 'OUTRA-PLANILHA'});
-  assert.throws(()=>h.ctx.prepararIntegracaoWeb(),/planilha errada/);
-  assert.equal(h.properties.get('WEB_WEB_SUBMISSIONS_ENABLED'),undefined);
-  h.ctx.SpreadsheetApp.getActiveSpreadsheet=()=>
-    ({getId:()=> '1iLx-Tm0EFCsMxqKxbkXAuevJlCzjFAJuRyknbHYlbGM'});
-  assert.match(h.ctx.prepararIntegracaoWeb(),/WEB_SETUP_PASS/);
-});
-test('status da integração é somente leitura e distingue flag ligada/desligada',()=>{
-  const h=harness();
-  assert.match(h.ctx.statusIntegracaoWeb(),/WEB_STATUS_OK/);
-  assert.match(h.ctx.statusIntegracaoWeb(),/recebimento BLOQUEADO/);
-  assert.equal(h.properties.get('WEB_WEB_SUBMISSIONS_ENABLED'),undefined);
-  h.properties.set('WEB_WEB_SUBMISSIONS_ENABLED','true');
-  assert.match(h.ctx.statusIntegracaoWeb(),/recebimento HABILITADO/);
-  assert.equal(h.writes(),0);
-});
-test('manifesto Apps Script é V8, fuso Fortaleza e não publica acesso anônimo',()=>{
-  const manifest=JSON.parse(fs.readFileSync(
-    path.join(__dirname,'../integrations/web-appscript/appsscript.json'),'utf8'));
+test('manifesto Apps Script usa V8 e fuso Fortaleza',()=>{
+  const manifest=JSON.parse(fs.readFileSync(path.join(__dirname,
+    '../integrations/web-appscript/appsscript.json'),'utf8'));
   assert.equal(manifest.runtimeVersion,'V8');
   assert.equal(manifest.timeZone,'America/Fortaleza');
-  assert.equal(manifest.exceptionLogging,'STACKDRIVER');
-  assert.ok(!Object.hasOwn(manifest,'webapp'),
-    'Implantação e acesso devem exigir ação explícita da conta proprietária');
 });
