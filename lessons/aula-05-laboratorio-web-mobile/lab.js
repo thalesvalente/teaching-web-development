@@ -396,6 +396,7 @@ function registrar() {
       localStorage.setItem(key, JSON.stringify({
         code: panels.shared, answers: readAnswers(), activeTask: activeTask().id,
         note: byId('observacao').value, nativeNote: byId('limite-real').value,
+        team: window.WebTeam?.snapshot() || null,
         completed: tasks.filter(t => passed[t.id]).map(t => t.id),
         details: Object.fromEntries(tasks.filter(t => passed[t.id]).map(t => [t.id, completedDetail[t.id] || 'Concluído em sessão anterior'])),
       }));
@@ -817,6 +818,7 @@ function registrar() {
         estado: passed[task.id] ? 'APROVADO' : 'PENDENTE', comentario: completedDetail[task.id] || null })),
       observacao: byId('observacao').value, testeNativoPendente: byId('limite-real').value,
       codigoFonteCompleto: panels.shared,
+      team: window.WebTeam?.snapshot() || null,
       ressalvas: ['Prévia móvel = React Native Web estreito, NÃO dispositivo Android/iOS.',
         'Compartilhar componente não sincroniza dados.',
         'Os XP não constituem nota oficial.', 'Não existe envio automático ao professor.'] };
@@ -846,6 +848,7 @@ function registrar() {
       note: byId('observacao').value,
       nativeNote: byId('limite-real').value,
       xp: getScore(),
+      team: window.WebTeam?.snapshot() || null,
       warning: 'XP acumulativos e formativos, não nota oficial. Alterar código não apaga conquistas; Conferir progresso testa a versão atual.'
     };
   }
@@ -883,12 +886,17 @@ function registrar() {
     if (isCheckpoint && (!Number.isSafeInteger(data.xp) ||
         data.xp !== ids.reduce((n,id)=>n+tasks.find(t=>t.id===id).xp,0)))
       throw Error('Pontuação inconsistente no arquivo.');
+    // Conferir antes de substituir a sessão: um grupo inválido não pode
+    // fazer o aluno perder o código ou os XP atuais.
+    const savedTeam = isCheckpoint ? data.team : data.team;
+    if (savedTeam != null) window.WebTeam?.validatePartial(savedTeam);
     if (!confirm('Retomar o arquivo selecionado? O código e o progresso desta sessão serão substituídos.')) {
       progressMessage('Retomada cancelada. O código, as respostas e os XP atuais foram preservados.');
       return;
     }
     panels.shared = source;
     codeEditor.value = source;
+    if (savedTeam != null) window.WebTeam?.restore(savedTeam);
     for (const task of tasks) {
       passed[task.id] = restored.includes(task.id);
       delete completedDetail[task.id];
@@ -930,6 +938,10 @@ function registrar() {
     const data = evidence();
     const lines = ['# Aula 05 — Laboratório Vivo · Tutorial Web ↔ Mobile', '', `Gerado em: ${data.geradoEm}`,
       `XP formativos: **${data.xp}/${data.maximoXp}** (NÃO são nota).`, '', '## Exercícios'];
+    if (data.team) {
+      lines.push('', '## Equipe', 'Nome: ' + (data.team.team || '(não informado)'),
+        'Integrantes:', ...data.team.members.map(m=>'- '+(m.name||'(não informado)')));
+    }
     data.exercicios.forEach(ex => lines.push(`- ${ex.estado}: ${ex.titulo} (${ex.xp}/${ex.maximoXp} XP)${ex.comentario ? ' — ' + ex.comentario : ''}`));
     lines.push('', '## O que modifiquei e observei', data.observacao || '(não respondido)',
       '', '## Teste em dispositivo nativo', data.testeNativoPendente || '(não respondido)',
