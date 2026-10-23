@@ -6,7 +6,7 @@
  * Atenção: o endpoint é público; nenhum segredo ou token deve ficar aqui.
  */
 window.WebEntregaConfig = Object.freeze({
-  endpoint: '',
+  endpoint: 'https://script.google.com/macros/s/AKfycbyDC9tGFBTOjZXau4m2vWQVPoYa3gZKMldc1NjAMZCUstHx0SICMG8Z4ekAWvLfnmlc/exec',
   // true somente após teste de POST real, conferência da Auditoria e
   // autorização docente: URL /exec isolada não significa recebimento ativo.
   activated: false,

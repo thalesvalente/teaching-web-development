@@ -65,8 +65,18 @@ jobs:
           JS
       - name: Validar fixture sem enviar POST ou criar linhas de aluno
         run: node scripts/test-web-appscript-post.mjs --dry-run
-      - name: Consultar GET do Apps Script, se URL /exec estiver cadastrada
-        run: node scripts/probe-web-appscript.mjs
+      - name: Consultar GET apenas após homologação e ativação explícita
+        run: |
+          node - <<'JS'
+          const fs=require('fs'),{spawnSync}=require('child_process');
+          const cfg=fs.readFileSync('lessons/aula-05-laboratorio-web-mobile/entrega-config.js','utf8');
+          if (!/activated:\s*true/.test(cfg)) {
+            console.log('WEB_GET_NOT_TESTED | URL cadastrada, recebimento não homologado e bloqueado.');
+            process.exit(0);
+          }
+          const result=spawnSync(process.execPath,['scripts/probe-web-appscript.mjs','--require-enabled'],{stdio:'inherit'});
+          process.exit(result.status??1);
+          JS
       - name: Relatorio de integracao
         run: |
           printf '## Integração Web · receptor Apps Script\n\n' >> "$GITHUB_STEP_SUMMARY"
