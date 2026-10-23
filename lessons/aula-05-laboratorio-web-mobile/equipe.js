@@ -1,15 +1,16 @@
 /**
- * Aula 05 · Identificação coletiva sem matrícula ou turma.
- * Somente nome da equipe e nomes completos de 1 a 8 integrantes.
+ * Aula 05 · Identificação coletiva com matrícula obrigatória para entrega online.
+ * Identidade individual: nome completo + matrícula textual; até 8 integrantes.
  * O ID aleatório é técnico, criado automaticamente e salvo no checkpoint;
  * não é um identificador pessoal nem autenticação de estudantes.
  */
 (() => {
   'use strict';
   const el=id=>document.getElementById(id);
-  const KEY='ifma-web-aula05-equipe-v2';
+  const KEY='ifma-web-aula05-equipe-v3';
+  const LEGACY_KEY='ifma-web-aula05-equipe-v2';
   const MAX=8;
-  const blank=()=>({name:''});
+  const blank=()=>({name:'',enrollment:''});
   function newId(){
     if(globalThis.crypto?.randomUUID)return crypto.randomUUID();
     const data=new Uint8Array(16);
@@ -50,46 +51,79 @@
       if(!member||typeof member!=='object'||Array.isArray(member)||
          typeof member.name!=='string'||member.name.length>100)
         throw Error('Nome inválido do integrante '+(index+1)+'.');
-      return {name:member.name.trim()};
+      return {name:member.name.trim(), enrollment:typeof member.enrollment==='string'?member.enrollment.trim():''};
     });
     return {teamId:obj.teamId,team:obj.team.trim(),members};
   }
   function snapshot(){
     return {teamId:group.teamId,team:group.team,
-      members:group.members.map(member=>({name:member.name}))};
+      members:group.members.map(member=>({name:member.name,enrollment:member.enrollment}))};
   }
-  function getIdentity(){
+  function getIdentity(options={}){
+    const requireEnrollment=options.requireEnrollment!==false;
     const data=validatePartial(snapshot());
     if(data.team.length<3)throw Error('Informe o nome da equipe (mínimo 3 caracteres).');
-    const seen=new Set();
+    const seenNames=new Map(),seenEnrollments=new Map();
     data.members.forEach((member,index)=>{
-      if(!fullName(member.name))
-        throw Error('Informe nome e sobrenome do integrante '+(index+1)+'.');
-      const key=normalized(member.name);
-      if(seen.has(key))throw Error('Nome repetido na equipe: '+member.name+'.');
-      seen.add(key);
+      if(!fullName(member.name))throw Error('Informe nome completo e sobrenome do integrante '+(index+1)+'.');
+      const nameKey=normalized(member.name);
+      if(seenNames.has(nameKey))throw Error('Nome duplicado: integrantes '+(seenNames.get(nameKey)+1)+' e '+(index+1)+'. Nome informado: '+member.name+'.');
+      seenNames.set(nameKey,index);
+      if(requireEnrollment){
+        if(!member.enrollment)throw Error('Matrícula obrigatória — integrante '+(index+1)+': '+member.name+'. Informe a matrícula.');
+        if(!/^\d{1,32}$/.test(member.enrollment))
+          throw Error('Matrícula em formato inválido — integrante '+(index+1)+': '+member.name+
+            ' · '+member.enrollment+'. Use somente algarismos, inclusive zeros iniciais.');
+        if(seenEnrollments.has(member.enrollment)){
+          const old=seenEnrollments.get(member.enrollment);
+          throw Error('Matrícula repetida nos integrantes '+(old+1)+' ('+data.members[old].name+
+            ' — '+member.enrollment+') e '+(index+1)+' ('+member.name+' — '+member.enrollment+
+            '). Cada integrante deve informar a própria matrícula.');
+        }
+        seenEnrollments.set(member.enrollment,index);
+      }
     });
     return data;
   }
-  function focusInvalid(){
+  function focusInvalid({memberIndices=null,field=null}={}){
     const teamField=el('web-team');
     const badTeam=group.team.trim().length<3;
     teamField.setAttribute('aria-invalid',String(badTeam));
-    if(badTeam){teamField.focus({preventScroll:true});return;}
-    const seen=new Set();
-    for(let i=0;i<group.members.length;i++){
-      const member=group.members[i];
-      const key=normalized(member.name);
-      const bad=!fullName(member.name)||seen.has(key);
-      const field=el('web-member-'+i+'-name');
-      field?.setAttribute('aria-invalid',String(bad));
-      if(bad){field?.focus({preventScroll:true});return;}
-      seen.add(key);
-    }
+    let focus=badTeam?teamField:null;
+    const duplicateNames=new Map(),duplicateMatriculas=new Map();
+    const problems=[];
+    group.members.forEach((member,i)=>{
+      const norm=normalized(member.name);
+      if(norm){const a=duplicateNames.get(norm);if(a!==undefined){problems.push([a,'name'],[i,'name']);}else duplicateNames.set(norm,i);}
+      const mat=(member.enrollment||'').trim();
+      if(mat){const a=duplicateMatriculas.get(mat);if(a!==undefined){problems.push([a,'enrollment'],[i,'enrollment']);}else duplicateMatriculas.set(mat,i);}
+    });
+    group.members.forEach((member,i)=>{
+      const fields=[
+        ['name',!fullName(member.name)],
+        ['enrollment',!(/^\d{1,32}$/.test(member.enrollment||''))]
+      ];
+      fields.forEach(([kind,badFormat])=>{
+        const fieldEl=el('web-member-'+i+'-'+kind);
+        const remote=Array.isArray(memberIndices)&&memberIndices.includes(i)&&(!field||field===kind);
+        const duplicated=problems.some(([pos,f])=>pos===i&&f===kind);
+        const bad=remote||duplicated||badFormat;
+        fieldEl?.setAttribute('aria-invalid',String(bad));
+        if(!focus&&bad)focus=fieldEl;
+      });
+    });
+    focus?.focus({preventScroll:true});
+  }
+  function showRemoteConflict(meta){
+    if(!meta||!Number.isInteger(meta.memberIndex))return;
+    if(!modal.open)open('header');
+    feedback('Erro na identificação — integrante '+(meta.memberIndex+1)+'. '+String(meta.message||'Confira os dados.')+
+      ' '+String(meta.action||'Procure o professor.'),'error');
+    focusInvalid({memberIndices:[meta.memberIndex],field:meta.field});
   }
   function summary(){
     const names=group.members.map(x=>x.name.trim()).filter(Boolean);
-    const ready=names.filter(fullName).length;
+    const ready=group.members.filter(m=>fullName(m.name)&&/^\d{1,32}$/.test(m.enrollment||'')).length;
     const teamValid=group.team.trim().length>=3;
     const pct=Math.round(((teamValid?1:0)+ready)/(group.members.length+1)*100);
     let complete=false;
@@ -116,7 +150,12 @@
     holder.querySelectorAll('input[aria-invalid]').forEach(input=>input.removeAttribute('aria-invalid'));
   }
   function persist(){
-    try{localStorage.setItem(KEY,JSON.stringify(snapshot()));}catch{/* armazenamento opcional */}
+    try{
+      const safe=snapshot();
+      // Nunca persistir matrículas automaticamente no armazenamento do navegador.
+      safe.members=safe.members.map(member=>({name:member.name}));
+      localStorage.setItem(KEY,JSON.stringify(safe));
+    }catch{/* armazenamento opcional */}
     summary();
   }
   function feedback(text,kind=''){
@@ -157,7 +196,20 @@
     input.autocomplete='name';
     input.maxLength=100;
     input.required=true;
-    fields.append(label,input);
+    const labelMat=document.createElement('label');
+    labelMat.textContent='Matrícula acadêmica · integrante '+(index+1);
+    const inputMat=document.createElement('input');
+    inputMat.type='text';inputMat.inputMode='numeric';inputMat.autocomplete='off';
+    inputMat.id='web-member-'+index+'-enrollment';
+    inputMat.dataset.index=String(index);inputMat.dataset.field='enrollment';
+    inputMat.maxLength=32;inputMat.required=true;
+    inputMat.value=member.enrollment||'';inputMat.placeholder='Ex.: número da matrícula';
+    labelMat.htmlFor=inputMat.id;
+    const help=document.createElement('small');
+    help.id=inputMat.id+'-help';help.textContent='Obrigatória para envio; zeros iniciais devem ser mantidos.';
+    inputMat.setAttribute('aria-describedby',help.id);
+    input.dataset.field='name';
+    fields.append(label,input,labelMat,inputMat,help);
     article.append(heading,fields,remove);
     return article;
   }
@@ -177,7 +229,7 @@
     feedback('Identificação da equipe restaurada. Revise os nomes antes da entrega.','success');
   }
   let local=null;
-  try{local=JSON.parse(localStorage.getItem(KEY)||'null');}catch{/* rascunho inválido */}
+  try{local=JSON.parse(localStorage.getItem(KEY)||localStorage.getItem(LEGACY_KEY)||'null');}catch{/* rascunho inválido */}
   try{if(local)group=validatePartial(local);}catch{group=fresh();}
   render();
   function open(source){
@@ -187,8 +239,8 @@
     modal.showModal();
     el('web-team').focus({preventScroll:true});
   }
-  function requireIdentity(){
-    try{return getIdentity();}
+  function requireIdentity(options={}){
+    try{return getIdentity(options);}
     catch(error){
       if(!modal.open)open(el('evidence-dialog').open?'evidence':'header');
       feedback('Para gerar PDF e enviar: '+String(error?.message||error),'error');
@@ -217,7 +269,8 @@
   holder.addEventListener('input',event=>{
     const i=Number(event.target.dataset.index);
     if(Number.isInteger(i)&&i>=0&&i<group.members.length){
-      group.members[i].name=event.target.value;clearValidity();persist();
+      const key=event.target.dataset.field==='enrollment'?'enrollment':'name';
+      group.members[i][key]=event.target.value;clearValidity();persist();
     }
   });
   holder.addEventListener('click',event=>{
@@ -245,5 +298,5 @@
       modal.close();
     }catch(e){feedback(String(e.message||e),'error');focusInvalid();}
   });
-  window.WebTeam=Object.freeze({snapshot,restore,validatePartial,getIdentity,requireIdentity,maxMembers:MAX});
+  window.WebTeam=Object.freeze({snapshot,restore,validatePartial,getIdentity,requireIdentity,showRemoteConflict,maxMembers:MAX});
 })();
