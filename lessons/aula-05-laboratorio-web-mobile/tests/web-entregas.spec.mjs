@@ -189,6 +189,10 @@ test('painel visual: hierarquia, contagem dinâmica, foco e CTA em desktop e mob
   for(const size of [{width:1440,height:900},{width:390,height:844},{width:320,height:650}]){
     await page.setViewportSize(size);
     await page.goto('/index.html');
+    // Cada tamanho de tela é testado com um rascunho novo, sem herdar
+    // participantes da resolução testada antes.
+    await page.evaluate(()=>localStorage.removeItem('ifma-web-aula05-equipe-v2'));
+    await page.reload();
     await page.locator('#team-open').click();
     await expect(page.locator('#team-dialog')).toBeVisible();
     await expect(page.locator('#team-title')).toHaveText('Identificação da equipe');
@@ -233,7 +237,7 @@ test('painel compacto usa lista sem matrícula ou turma e preserva remoção con
   await expect(page.locator('.team-member-number')).toHaveCount(2);
   await expect(page.locator('.team-remove-member')).toHaveCount(2);
   page.once('dialog',d=>d.accept());
-  await page.locator('.team-remove-member:not(:disabled)').click();
+  await page.locator('.team-remove-member:not(:disabled)').last().click();
   await expect(page.locator('#team-members-count')).toHaveText('1/8');
   await expect(page.locator('#team-progress')).toHaveAttribute('aria-valuenow','100');
   await expect(page.locator('#web-student-id')).toHaveCount(0);
