@@ -74,3 +74,12 @@ O tutorial v4 inicia com o código atualizado para todos verem a regra visual. S
 4. Para imprimir um comprovante de tudo que fez até agora, clique **Gerar PDF**; na janela do navegador, selecione **Salvar como PDF**. O documento A4 tem capa do IFMA e tabela das 14 missões, inclusive pendências. **Não use o PDF para tentar retomar o editor.**
 
 A exportação é local. Nenhuma nota oficial ou entrega ao professor é registrada por salvar o JSON ou PDF.
+
+
+## Identificação da equipe
+
+A atividade é feita em equipe. No cabeçalho, clique **Equipe e integrantes**, escreva o nome da equipe, preencha o nome e sobrenome de cada integrante e use **+ Adicionar integrante** quando necessário. Não informe matrícula nem turma. Se precisar corrigir a lista, use **Remover** ou edite os nomes.
+
+Clique **Concluir identificação da equipe**. Os integrantes constarão no relatório PDF A4, nas evidências e no arquivo **Salvar progresso**. Ao usar **Retomar arquivo** em outro aparelho, os nomes e o vínculo automático da mesma equipe também serão restaurados. Somente uma pessoa da equipe deve enviar as evidências ao professor, para evitar entregas duplicadas.
+
+Os XP representam a atividade da equipe e não correspondem automaticamente à nota individual. A publicação para o Google Sheets depende da liberação do professor; exportar JSON ou PDF continua sendo local.
