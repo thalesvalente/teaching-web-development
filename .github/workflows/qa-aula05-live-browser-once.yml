@@ -1,0 +1,28 @@
+name: Chromium E2E real Aula 05 - equipe ficticia unica
+on:
+  push:
+    branches: [qa/aula05-browser-real-receipt-20261023]
+    paths: ['.github/workflows/qa-aula05-live-browser-once.yml']
+permissions: {contents: read}
+jobs:
+  live:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    defaults:
+      run:
+        working-directory: lessons/aula-05-laboratorio-web-mobile
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: lessons/aula-05-laboratorio-web-mobile/package-lock.json
+      - name: GET v1.1.1 e recebimento habilitado
+        run: node ../../scripts/probe-web-appscript.mjs --require-enabled
+      - name: Instalar Playwright
+        run: |
+          npm ci --no-audit --no-fund
+          npx playwright install --with-deps chromium
+      - name: Testar fluxo PDF e recibo em navegador real, só QA ficticio
+        run: node qa-live-receipt-once.mjs
