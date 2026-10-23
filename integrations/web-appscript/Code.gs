@@ -288,6 +288,16 @@ function webTeamUpsert(book,identity,evidence,meta) {
     meta.receiptId,meta.utc,key,meta.answersHash
   ];
   sheet.getRange(row,1,1,10).setValues([values]);
+  // Read-after-write evita devolver recibo de sucesso quando G:J ficaram
+  // ausentes na aba Equipes. Em caso de falha, o cliente NÃO deve reenviar
+  // sem antes consultar Auditoria e reconciliar a linha.
+  SpreadsheetApp.flush();
+  var stored=sheet.getRange(row,1,1,10).getValues()[0];
+  if(String(stored[6])!==String(meta.receiptId) ||
+     String(stored[7])!==String(meta.utc) ||
+     String(stored[8])!==String(key) ||
+     String(stored[9])!==String(meta.answersHash))
+    webFail('Persistência da equipe incompleta: conferir Auditoria/Equipes antes de reenviar.');
   var records=occupied+(row===occupied+2?1:0);
   if(records>1)sheet.getRange(2,1,records,12)
     .sort([{column:1,ascending:true},{column:9,ascending:true}]);
