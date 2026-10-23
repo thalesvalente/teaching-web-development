@@ -7,6 +7,9 @@
  */
 window.WebEntregaConfig = Object.freeze({
   endpoint: '',
+  // true somente após teste de POST real, conferência da Auditoria e
+  // autorização docente: URL /exec isolada não significa recebimento ativo.
+  activated: false,
   activity: 'WEB-AULA05-2026',
   schema: 'web-a05-submission-v1'
 });
