@@ -402,3 +402,14 @@
   .team-dialog .member-row-header button{width:38px}
 }
 @media(prefers-reduced-motion:reduce){#team-progress-fill{transition:none}}
+
+
+/* Ações da linha: número → campo editável → remoção no final. */
+.team-dialog .team-remove-member{
+  display:grid;place-items:center;flex:none;width:40px;height:40px;min-height:40px;
+  border:1px solid transparent;border-radius:9px;background:transparent;
+  color:#80433d;font-size:23px;line-height:1;padding:0;
+}
+.team-dialog .team-remove-member:hover:not(:disabled){background:#ffefec;border-color:#efc8c1;filter:none}
+.team-dialog .team-remove-member:disabled{visibility:hidden}
+.team-dialog .member-row-header{flex:0 0 31px}
