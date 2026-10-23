@@ -219,37 +219,70 @@ function webRosterUpsert(book,identity,xp) {
     }
   });
 }
+/**
+ * Uma entrega por equipe na Auditoria. Os integrantes ficam legíveis
+ * na coluna C e U, e a versão formativa atual é registrada com recibo.
+ */
 function webAuditUpsert(book,identity,evidence,meta) {
   var sheet=book.getSheetByName('Auditoria');
-  var key=identity.enrollment+'|'+WEB_CFG.activity;
-  // getLastRow() inclui metadados permanentes nas colunas V:Y (linhas 1–6).
-  // Nunca ordenar linhas vazias A:T somente porque esses metadados existem.
+  var key=identity.teamId+'|'+WEB_CFG.activity;
+  // Metadados em V:Y usam linhas 1–6: não podem mudar o número de
+  // entregas reais contadas pela chave interna na coluna P.
   var last=sheet.getLastRow(),row=0,occupied=0;
-  if(last>=2){
+  if(last>=2) {
     var keys=sheet.getRange(2,16,last-1,1).getDisplayValues();
-    for(var i=0;i<keys.length;i++){
+    for(var i=0;i<keys.length;i++) {
       var current=String(keys[i][0]||'').trim();
-      if(!current) continue;
-      if(i!==occupied) webFail('Auditoria com lacunas: revise as linhas antes de receber novas entregas.');
+      if(!current)continue;
+      if(i!==occupied)webFail('Auditoria com lacunas: revise as linhas.');
       occupied++;
-      if(current===key) row=i+2;
+      if(current===key)row=i+2;
     }
   }
-  if(!row) row=2+occupied;
+  if(!row)row=occupied+2;
   sheet.getRange(row,2).setNumberFormat('@');
-  // Escrever até R: preservar S/T (observação e revisão DOCENTES).
+  var names=identity.members.map(function(member){return member.name;}).join('; ');
   var entry=[
-    webSafe(identity.name), identity.enrollment, webSafe(identity.team),
-    WEB_CFG.activity,'laboratorio-vivo-tsx',
+    webSafe(identity.team),identity.teamId,webSafe(names),
+    WEB_CFG.activity,'laboratorio-vivo-tsx-equipe',
     meta.localTime,meta.utc,meta.receiptId,meta.answersHash,meta.signature,
     evidence.xp,'','RECEBIDO_PENDENTE_VALIDACAO',
     WEB_CFG.version,JSON.stringify(evidence),key,meta.codeHash,'github-pages-web'
   ];
+  // Não alterar S/T (observação e revisão do docente).
   sheet.getRange(row,1,1,18).setValues([entry]);
-  // Somente linhas com chave de entrega são classificadas.
-  // S/T seguem cada estudante; metadados V:Y ficam inalterados.
+  sheet.getRange(row,21).setValue(webSafe(names));
   var records=occupied+(row===occupied+2?1:0);
-  if(records>1)sheet.getRange(2,1,records,20).sort([{column:1,ascending:true},{column:2,ascending:true}]);
+  // Ordenar A:U juntos para manter a coluna U vinculada à mesma equipe.
+  if(records>1)sheet.getRange(2,1,records,21)
+    .sort([{column:1,ascending:true},{column:2,ascending:true}]);
+}
+/** Uma linha por grupo na aba Equipes; K/L são reservadas ao docente. */
+function webTeamUpsert(book,identity,evidence,meta) {
+  var sheet=book.getSheetByName('Equipes');
+  var key=identity.teamId+'|'+WEB_CFG.activity;
+  var last=sheet.getLastRow(),row=0,occupied=0;
+  if(last>=2) {
+    var keys=sheet.getRange(2,9,last-1,1).getDisplayValues();
+    for(var i=0;i<keys.length;i++){
+      var existing=String(keys[i][0]||'').trim();
+      if(!existing)continue;
+      if(i!==occupied)webFail('Aba Equipes com lacunas: revise as linhas.');
+      occupied++;
+      if(existing===key)row=i+2;
+    }
+  }
+  if(!row)row=occupied+2;
+  var names=identity.members.map(function(member){return member.name;}).join('; ');
+  var values=[
+    webSafe(identity.team),webSafe(names),identity.members.length,
+    WEB_CFG.activity,evidence.xp,'RECEBIDO_PENDENTE_VALIDACAO',
+    meta.receiptId,meta.utc,key,meta.answersHash
+  ];
+  sheet.getRange(row,1,1,10).setValues([values]);
+  var records=occupied+(row===occupied+2?1:0);
+  if(records>1)sheet.getRange(2,1,records,12)
+    .sort([{column:1,ascending:true},{column:9,ascending:true}]);
 }
 function webStore(input, nonce) {
   var book=webSpreadsheet();
@@ -267,15 +300,17 @@ function webStore(input, nonce) {
     utc:utc,localTime:Utilities.formatDate(now,'America/Fortaleza','yyyy-MM-dd HH:mm:ss'),
     receiptId:receiptId,answersHash:answersHash,codeHash:codeHash
   };
-  meta.signature=webSign([receiptId,WEB_CFG.activity,identity.enrollment,
-    answersHash,evidence.xp,utc].join('|'));
+  meta.signature=webSign([receiptId,WEB_CFG.activity,identity.teamId,
+    webSha256(JSON.stringify(identity.members)),answersHash,evidence.xp,utc].join('|'));
   webRosterUpsert(book,identity,evidence.xp);
   webAuditUpsert(book,identity,evidence,meta);
+  webTeamUpsert(book,identity,evidence,meta);
   SpreadsheetApp.flush();
   return {
     ok:true,channel:WEB_CFG.channel,nonce:nonce,
     receiptId:receiptId,activity:WEB_CFG.activity,
-    instrument:'laboratorio-vivo-tsx',receivedAt:utc,
+    instrument:'laboratorio-vivo-tsx-equipe',receivedAt:utc,
+    teamId:identity.teamId,memberCount:identity.members.length,
     answersSha256:answersHash,codeSha256:codeHash,
     xpReported:evidence.xp,grade:null,signature:meta.signature,
     status:'RECEBIDO_PENDENTE_VALIDACAO',
