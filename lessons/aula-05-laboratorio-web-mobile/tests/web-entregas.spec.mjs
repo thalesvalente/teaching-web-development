@@ -365,3 +365,17 @@ test('ativos de validação possuem versão para evitar cache anterior no GitHub
   }
   await expect(page.locator('link[href="./style.css?v=20261023-qa02"]')).toHaveCount(1);
 });
+
+
+test('origem real do iframe HtmlService é permitida sem abrir wildcard de googleusercontent',async({page})=>{
+  await page.goto('/index.html');
+  const verdict=await page.evaluate(()=>{
+    const permit=window.WebEntrega?.origemReciboPermitida;
+    return ['https://script.google.com',
+      'https://script.googleusercontent.com',
+      'https://n-opgh3dctzfsahigmepgnbilm6pnxp4akr5ejfpy-0lu-script.googleusercontent.com',
+      'https://evil.googleusercontent.com','https://fake-script.googleusercontent.com.evil.org',
+      'https://example.org','null'].map(origin=>permit(origin));
+  });
+  expect(verdict).toEqual([true,true,true,false,false,false,false]);
+});

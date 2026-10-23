@@ -14,8 +14,12 @@
   const CHANNEL = 'web-entrega-aula05';
   const validEndpoint = /^https:\/\/script\.google\.com\/macros\/s\/[\w-]+\/exec$/.test(ENDPOINT);
   const activated = validEndpoint && config.activated === true;
+  // HtmlService cria sandbox em hosts no formato n-...-script.googleusercontent.com.
+  // Não aceitar *.googleusercontent.com genericamente. O nonce/contrato é
+  // validado adicionalmente em receive(), nunca pela origem isolada.
   const validOrigin = origin => origin === 'https://script.google.com' ||
-    /^https:\/\/(?:[a-z0-9-]+\.)?script\.googleusercontent\.com$/.test(origin);
+    /^https:\/\/(?:[a-z0-9-]+\.)?script\.googleusercontent\.com$/.test(origin) ||
+    /^https:\/\/[a-z0-9-]+-script\.googleusercontent\.com$/.test(origin);
   if (!button || !quickButton || !status) throw Error('Controles de envio Web não encontrados.');
   let busy = false;
   // A geração do PDF continua acessível mesmo com o POST bloqueado.
@@ -157,5 +161,5 @@
   }
   button.addEventListener('click',generatePdfAndSend);
   quickButton.addEventListener('click',generatePdfAndSend);
-  window.WebEntrega = Object.freeze({configurado:validEndpoint,ativado:activated,atividade:ACTIVITY});
+  window.WebEntrega = Object.freeze({configurado:validEndpoint,ativado:activated,atividade:ACTIVITY,origemReciboPermitida:validOrigin});
 })();
