@@ -65,13 +65,30 @@ const response=await fetch(url,{
 });
 if(!response.ok)throw Error('POST HTTP '+response.status+'. Conferir acesso do Web App.');
 const html=await response.text();
-const startMarker='top.postMessage(';
-const endMarker=',"https://thalesvalente.github.io")';
-const i=html.indexOf(startMarker),j=i>=0?html.indexOf(endMarker,i+startMarker.length):-1;
-if(i<0||j<0)throw Error('Sem recibo legível na resposta HTML. NÃO presuma sucesso; consulte a aba Auditoria antes de repetir.');
-let receipt;
-try { receipt=JSON.parse(html.slice(i+startMarker.length,j)); }
-catch { throw Error('Resposta POST sem JSON de recibo válido; consulte a Auditoria antes de repetir.'); }
+// Resposta HtmlService: o script pode vir com espaços/escape de aspas.
+// Extrair apenas o argumento JSON de top.postMessage, sem executar HTML.
+function extractReceipt(html){
+  const marker=/top\.postMessage\s*\(/g;
+  const match=marker.exec(html);
+  if(!match)throw Error('Resposta sem top.postMessage; consulte Auditoria antes de repetir POST.');
+  let at=match.index+match[0].length,depth=0,quoted=false,escape=false;
+  for(let i=at;i<html.length;i++){
+    const ch=html[i];
+    if(quoted){if(escape)escape=false;else if(ch==='\\\\')escape=true;else if(ch==='"')quoted=false;continue;}
+    if(ch==='"'){quoted=true;continue;}
+    if(ch==='{')depth++;
+    if(ch==='}'){
+      depth--;
+      if(depth===0){
+        const raw=html.slice(at,i+1);
+        try{return JSON.parse(raw);}
+        catch{throw Error('JSON de recibo ilegível; conferir Auditoria antes de repetir POST.');}
+      }
+    }
+  }
+  throw Error('Objeto de recibo incompleto; conferir Auditoria antes de repetir POST.');
+}
+const receipt=extractReceipt(html);
 if(receipt.ok===false)throw Error('Apps Script recusou QA: '+String(receipt.error||'erro sem detalhe'));
 const sha=createHash('sha256').update(evidence.codigoFonteCompleto,'utf8').digest('hex');
 if(receipt.ok!==true||receipt.channel!=='web-entrega-aula05'||
