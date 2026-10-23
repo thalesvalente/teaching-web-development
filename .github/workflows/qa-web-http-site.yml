@@ -28,12 +28,18 @@ jobs:
       - name: Backend e gates HTTP sem rede
         run: node --test ../../tests/web-a05-id03/*.test.cjs
       - run: npm run check:logic
-      - run: npm run test:e2e
+      - run: npx playwright test --reporter=list,json
+        env:
+          PLAYWRIGHT_JSON_OUTPUT_NAME: test-artifacts/chromium-results.json
       - name: Identidade em três navegadores (mock, nunca HTTP Google)
-        run: npx playwright test -c playwright.cross.config.mjs
+        run: npx playwright test -c playwright.cross.config.mjs --reporter=list,json
+        env:
+          PLAYWRIGHT_JSON_OUTPUT_NAME: test-artifacts/cross-results.json
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: web-http-site-browser-evidence
-          path: lessons/aula-05-laboratorio-web-mobile/test-results
+          path: |
+            lessons/aula-05-laboratorio-web-mobile/test-results
+            lessons/aula-05-laboratorio-web-mobile/test-artifacts
           retention-days: 7

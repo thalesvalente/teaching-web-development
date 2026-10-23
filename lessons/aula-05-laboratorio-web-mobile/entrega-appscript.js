@@ -93,6 +93,7 @@
         if(d.ok!==true || d.activity!==ACTIVITY || d.instrument!=='laboratorio-vivo-tsx-equipe' ||
            d.codeSha256!==hash ||
            !Number.isFinite(d.gradeReceived) || d.gradeReceived<0 || d.gradeReceived>10 ||
+           d.gradeReceived!==evidence.xp/10 ||
            !Array.isArray(d.bestGrades) || d.bestGrades.length!==identity.members.length ||
            d.bestGrades.some(v=>!Number.isFinite(v)||v<0||v>10) ||
            d.teamId!==identity.teamId || d.memberCount!==identity.members.length ||

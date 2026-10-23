@@ -78,7 +78,7 @@ test('UI-07 PDF rejeita matrícula diferente da identidade validada',async({page
     try{window.WebLabReport.prepare(document.getElementById('print-report'),window.WebLabEvidence.snapshot(),identity);return false;}catch{return true;}
   })).toBe(true);
 });
-for(const [label,mutation] of [['NaN','d.gradeReceived=NaN'],['infinito','d.bestGrades[0]=Infinity'],['ok não booleano','d.ok="true"'],['data inválida','d.receivedAt="data-invalida"']]){
+for(const [label,mutation] of [['NaN','d.gradeReceived=NaN'],['infinito','d.bestGrades[0]=Infinity'],['nota divergente','d.gradeReceived=9.5'],['ok não booleano','d.ok="true"'],['data inválida','d.receivedAt="data-invalida"']]){
   test('UI-09 recusa recibo com '+label,async({page})=>{
     await open(page);await receiptRoute(page,mutation);await fill(page);await submit(page);
     await expect(page.locator('#web-delivery-status')).toContainText('Recibo de recebimento incompatível');
@@ -101,7 +101,9 @@ for(const width of [320,360,390,768,1024,1440]){
     expect(dimensions.scroll).toBeLessThanOrEqual(dimensions.client+1);
     if(width===320)await page.screenshot({path:testInfo.outputPath('matricula-320.png')});
     for(const id of ['web-member-0-enrollment','web-member-1-enrollment']){
-      const r=await page.locator('#'+id).boundingBox();expect(r.width).toBeGreaterThan(80);expect(r.height).toBeGreaterThanOrEqual(44);
+      const r=await page.locator('#'+id).boundingBox();expect(r.width).toBeGreaterThan(80);
+      // O DOMRect usa ponto flutuante; o alvo CSS continua sendo 44 px.
+      expect(r.height).toBeGreaterThanOrEqual(43.99);
     }
   });
 }
