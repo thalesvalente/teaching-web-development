@@ -8,6 +8,7 @@ on:
       - 'integrations/web-appscript/**'
       - 'tests/web-entregas.test.cjs'
       - '.github/workflows/qa-web-sheets.yml'
+      - 'scripts/probe-web-appscript.mjs'
   pull_request:
     paths:
       - 'integrations/web-appscript/**'
@@ -37,6 +38,7 @@ jobs:
           node --check tests/web-entregas.test.cjs
           node --check lessons/aula-05-laboratorio-web-mobile/entrega-appscript.js
           node --check lessons/aula-05-laboratorio-web-mobile/entrega-config.js
+          node --check scripts/probe-web-appscript.mjs
       - name: Testes de recepcao mockada e integridade
         run: node --test tests/web-entregas.test.cjs
       - name: Validar endpoint Web (vazio ou /exec) e ativacao explicita
@@ -59,8 +61,10 @@ jobs:
             ' | frontend '+(flag==='true'?'ativado':'bloqueado')+
             ' | backend protegido por ScriptProperties');
           JS
+      - name: Consultar GET do Apps Script, se URL /exec estiver cadastrada
+        run: node scripts/probe-web-appscript.mjs
       - name: Relatorio de integracao
         run: |
           printf '## Integração Web · receptor Apps Script\n\n' >> "$GITHUB_STEP_SUMMARY"
           printf 'Testes Node simulados passaram.\n\n' >> "$GITHUB_STEP_SUMMARY"
-          printf 'NÃO houve escrita real no Sheets nem implantação do Web App.\n' >> "$GITHUB_STEP_SUMMARY"
+          printf 'QA mockado não escreve na planilha. GET /exec só é consultado quando existe URL configurada.\n' >> "$GITHUB_STEP_SUMMARY"
