@@ -180,24 +180,42 @@ function webAverageFormula(title, row) {
     return '=IF(A'+row+'="";"";ROUND(N(D'+row+')*4;2))';
   return '=IF(A'+row+'="";"";0)';
 }
-function webRosterUpsert(book, identity, xp) {
+/**
+ * Uma linha por integrante nas abas bimestrais, identificada pelo nome
+ * normalizado + ID automático da equipe. Nenhuma matrícula é coletada.
+ * O identificador é de equipe (não pessoal) e viaja no checkpoint JSON.
+ */
+function webMemberRow(sheet,teamId,name) {
+  var last=sheet.getLastRow();
+  if(last<2)return 0;
+  var rows=sheet.getRange(2,1,last-1,3).getDisplayValues();
+  var normalized=webNormalized(name);
+  for(var i=0;i<rows.length;i++) {
+    if(String(rows[i][1]||'').trim()===teamId &&
+       webNormalized(rows[i][0])===normalized)return i+2;
+  }
+  return 0;
+}
+function webRosterUpsert(book,identity,xp) {
   WEB_TABS.slice(0,4).forEach(function(tab){
     var sheet=book.getSheetByName(tab[0]);
-    var row=webFindRow(sheet,identity.enrollment,2)||webNextRow(sheet);
-    sheet.getRange(row,2).setNumberFormat('@');
-    sheet.getRange(row,1,1,3).setValues([[webSafe(identity.name),identity.enrollment,webSafe(identity.team)]]);
-    if(tab[0]==='4º Bimestre')sheet.getRange(row,4).setValue(xp);
-    // A coluna Aula 04 é exclusivamente docente; não é sobrescrita.
-    sheet.getRange(row,tab[1].length).setFormula(webAverageFormula(tab[0],row));
+    identity.members.forEach(function(member){
+      var row=webMemberRow(sheet,identity.teamId,member.name)||webNextRow(sheet);
+      sheet.getRange(row,2).setNumberFormat('@');
+      sheet.getRange(row,1,1,3).setValues([
+        [webSafe(member.name),identity.teamId,webSafe(identity.team)]
+      ]);
+      if(tab[0]==='4º Bimestre')sheet.getRange(row,4).setValue(xp);
+      // A nota E3-I1 da Aula 04 é exclusivamente docente.
+      sheet.getRange(row,tab[1].length).setFormula(webAverageFormula(tab[0],row));
+    });
     var last=sheet.getLastRow();
-    if(last>2)sheet.getRange(2,1,last-1,tab[1].length).sort([{column:1,ascending:true},{column:2,ascending:true}]);
-    // Corrigir referências relativas após ordenação das linhas.
-    last=sheet.getLastRow();
-    if(last>2){
-      var formulaRange=sheet.getRange(2,tab[1].length,last-1,1);
+    if(last>2) {
+      sheet.getRange(2,1,last-1,tab[1].length)
+        .sort([{column:1,ascending:true},{column:2,ascending:true}]);
       var formulas=[];
       for(var r=2;r<=last;r++)formulas.push([webAverageFormula(tab[0],r)]);
-      formulaRange.setFormulas(formulas);
+      sheet.getRange(2,tab[1].length,last-1,1).setFormulas(formulas);
     }
   });
 }
