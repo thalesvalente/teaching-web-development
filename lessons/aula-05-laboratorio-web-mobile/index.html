@@ -108,19 +108,45 @@
     </main>
   </div>
 
-  <dialog class="resource-dialog team-dialog" id="team-dialog" aria-labelledby="team-title">
-    <div class="dialog-header"><h2 id="team-title">Identificação da equipe — Aula 05</h2><button type="button" class="close-dialog" data-close-dialog="team-dialog" aria-label="Fechar identificação da equipe">×</button></div>
-    <div class="dialog-body">
-      <p class="team-lead">Atividade em <strong>equipe</strong>: informe apenas o nome da equipe e os <strong>nomes completos dos integrantes</strong>. Você pode adicionar ou remover integrantes (até 8), como na ficha de Móveis. Não é necessário informar matrícula ou turma. Os XP são formativos e ficam associados à equipe, sujeitos à conferência docente.</p>
-      <div class="team-core">
-        <label for="web-team">Nome da equipe</label>
-        <input id="web-team" type="text" maxlength="80" autocomplete="off" placeholder="Ex.: Equipe Ipê" aria-required="true">
+  <dialog class="resource-dialog team-dialog" id="team-dialog" aria-labelledby="team-title" aria-describedby="team-intro">
+    <div class="team-panel">
+      <header class="team-panel-head">
+        <div class="team-head-brand"><span class="team-logo" aria-hidden="true">IF</span><span class="team-head-eyebrow">IFMA · LABORATÓRIO VIVO · AULA 05</span></div>
+        <button type="button" class="close-dialog team-close" data-close-dialog="team-dialog" aria-label="Fechar identificação da equipe">×</button>
+        <div class="team-head-content">
+          <div class="team-head-icon" aria-hidden="true"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+          <div><p class="team-kicker">Seu grupo, sua entrega</p><h2 id="team-title">Identificação da equipe</h2><p id="team-intro">Uma atividade, todos os integrantes. Preencha somente os nomes, sem matrícula ou turma.</p></div>
+        </div>
+        <div class="team-head-progress" aria-label="Progresso de identificação da equipe">
+          <span id="team-progress-caption">Preencha o nome da equipe e dos integrantes</span>
+          <strong id="team-progress-label">Em preparação</strong>
+        </div>
+        <div class="team-progress-track" role="progressbar" id="team-progress" aria-label="Identificação preenchida" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span id="team-progress-fill"></span></div>
+      </header>
+      <div class="team-panel-body">
+        <section class="team-section team-identity" aria-labelledby="team-identity-label">
+          <div class="team-section-heading"><span class="team-step" aria-hidden="true">01</span><div><h3 id="team-identity-label">Nome da equipe</h3><p>Como sua equipe será identificada na atividade e no relatório.</p></div></div>
+          <div class="team-core">
+            <label for="web-team" class="sr-only">Nome da equipe</label>
+            <input id="web-team" type="text" maxlength="80" autocomplete="off" placeholder="Ex.: Equipe Horizonte" aria-describedby="team-name-hint" aria-required="true">
+            <p id="team-name-hint" class="team-field-hint"><span aria-hidden="true">✦</span> Escolham um nome fácil de reconhecer.</p>
+          </div>
+        </section>
+        <section class="team-section team-members-section" aria-labelledby="team-members-heading">
+          <div class="team-section-heading team-section-heading-members"><span class="team-step" aria-hidden="true">02</span><div><h3 id="team-members-heading">Integrantes <span id="team-members-count" class="team-members-pill">0/8</span></h3><p>Incluam o nome e sobrenome de cada pessoa que participou.</p></div></div>
+          <div id="web-members" class="team-roster" aria-labelledby="team-members-heading"></div>
+          <button type="button" id="web-add-member" class="team-add-member"><span class="team-add-icon" aria-hidden="true">+</span><span>Adicionar integrante</span><span id="team-remaining" class="team-add-remaining"></span></button>
+        </section>
+        <div class="team-summary-card" aria-live="polite" aria-atomic="true">
+          <div class="team-summary-symbol" aria-hidden="true">✓</div><div><strong id="team-summary-title">Identificação em andamento</strong><p id="team-summary-copy">Seus nomes serão incluídos no PDF e no JSON de progresso.</p></div>
+        </div>
+        <p id="team-feedback" class="team-feedback" role="status" aria-live="polite">Preencha os dados para concluir a identificação. Você pode salvar o progresso parcial.</p>
+        <p class="team-privacy"><span aria-hidden="true">●</span> Salvo neste navegador e no JSON. Envio ao professor somente quando autorizado.</p>
       </div>
-      <div class="team-members-toolbar"><h3 id="team-members-heading">Integrantes</h3><button type="button" id="web-add-member" class="btn secondary">+ Adicionar integrante</button></div>
-      <div id="web-members" aria-labelledby="team-members-heading"></div>
-      <p id="team-feedback" role="status" aria-live="polite">Informe os nomes completos. É possível salvar o progresso em JSON antes de terminar.</p>
-      <button type="button" id="team-done" class="btn run">Concluir identificação da equipe</button>
-      <p class="privacy">Os nomes são salvos localmente neste navegador e no JSON de progresso, quando exportado. Só serão enviados à planilha após acionar a entrega online autorizada. Os nomes declarados não constituem comprovação de identidade.</p>
+      <footer class="team-panel-footer">
+        <span class="team-footer-label">Sem matrícula · Sem turma · 1 a 8 integrantes</span>
+        <button type="button" id="team-done" class="btn run team-submit">Concluir identificação <span aria-hidden="true">→</span></button>
+      </footer>
     </div>
   </dialog>
 
