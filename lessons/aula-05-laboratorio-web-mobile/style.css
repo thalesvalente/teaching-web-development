@@ -270,3 +270,10 @@
   .team-members-toolbar{align-items:stretch}
   #web-add-member{width:100%}
 }
+
+
+/* Identificação simplificada: só equipe e nomes completos. */
+.team-core{display:flex;flex-direction:column;gap:6px;padding:12px 0}
+.team-core label,.team-core input{grid-column:auto;grid-row:auto}
+.member-row-fields{display:flex;flex-direction:column;gap:6px}
+.member-row-fields label,.member-row-fields input{grid-column:auto;grid-row:auto}
