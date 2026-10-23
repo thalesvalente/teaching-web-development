@@ -22,11 +22,22 @@
   const fresh=()=>({teamId:newId(),team:'',members:[blank()]});
   let group=fresh();
   let openedFromEvidence=false;
+  let returnFocus=null;
   const modal=el('team-dialog'),holder=el('web-members'),status=el('team-feedback');
-  const fullName=name=>/^[\p{L}][\p{L}\p{M} .'\-]{2,99}$/u.test(name) &&
-    name.trim().split(/\s+/).filter(Boolean).length>=2;
+  const fullName=name=>{
+    const value=String(name||'').trim();
+    if(value.length<5||value.length>100||!/^[\p{L}\p{M}'’\-\s]+$/u.test(value))return false;
+    const parts=value.split(/\s+/);
+    return parts.length>=2 && parts.every(part=>{
+      if(!/^[\p{L}][\p{L}\p{M}'’\-]*$/u.test(part))return false;
+      const segments=part.split(/[-'’]/);
+      // D'Ávila e O'Connor são sobrenomes completos legítimos; B-C não é.
+      return segments.every(segment=>segment.length>0) &&
+        segments.some(segment=>(segment.match(/\p{L}/gu)||[]).length>=2);
+    });
+  };
   const normalized=value=>String(value||'').trim().normalize('NFD')
-    .replace(/[\u0300-\u036f]/g,'').replace(/\s+/g,' ').toLowerCase();
+    .replace(/[\u0300-\u036f]/g,'').replace(/[’‘]/g,"'").replace(/\s+/g,' ').toLowerCase();
 
   function validatePartial(obj){
     if(!obj||typeof obj!=='object'||Array.isArray(obj) ||
@@ -60,27 +71,49 @@
     });
     return data;
   }
+  function focusInvalid(){
+    const teamField=el('web-team');
+    const badTeam=group.team.trim().length<3;
+    teamField.setAttribute('aria-invalid',String(badTeam));
+    if(badTeam){teamField.focus({preventScroll:true});return;}
+    const seen=new Set();
+    for(let i=0;i<group.members.length;i++){
+      const member=group.members[i];
+      const key=normalized(member.name);
+      const bad=!fullName(member.name)||seen.has(key);
+      const field=el('web-member-'+i+'-name');
+      field?.setAttribute('aria-invalid',String(bad));
+      if(bad){field?.focus({preventScroll:true});return;}
+      seen.add(key);
+    }
+  }
   function summary(){
     const names=group.members.map(x=>x.name.trim()).filter(Boolean);
     const ready=names.filter(fullName).length;
     const teamValid=group.team.trim().length>=3;
     const pct=Math.round(((teamValid?1:0)+ready)/(group.members.length+1)*100);
+    let complete=false;
+    try{getIdentity();complete=true;}catch{/* validação completa exibida ao concluir */}
     el('team-members-count').textContent=names.length+'/'+MAX;
     el('team-remaining').textContent=group.members.length>=MAX
       ? 'Limite atingido' : (MAX-group.members.length)+' vagas restantes';
     el('team-progress').setAttribute('aria-valuenow',String(pct));
     el('team-progress-fill').style.width=pct+'%';
-    el('team-progress-label').textContent=pct===100?'Pronto para concluir':pct+'% preenchido';
-    el('team-progress-caption').textContent=pct===100
+    el('team-progress-label').textContent=complete?'Pronto para concluir':pct===100?'Revise os integrantes':pct+'% preenchido';
+    el('team-progress-caption').textContent=complete
       ? 'A equipe está identificada' : 'Complete o nome da equipe e os integrantes';
-    el('team-summary-title').textContent=pct===100?'Equipe pronta para a atividade':'Identificação em andamento';
-    el('team-summary-copy').textContent=pct===100
+    el('team-summary-title').textContent=complete?'Equipe pronta para a atividade':'Identificação em andamento';
+    el('team-summary-copy').textContent=complete
       ? group.team+' · '+names.length+' integrante(s): '+names.join(', ')
       : 'Seus nomes serão incluídos no PDF e no JSON de progresso.';
     el('team-count').textContent='('+names.length+' nome'+(names.length===1?'':'s')+')';
     el('web-team-summary').textContent=group.team&&names.length
       ? 'Equipe '+group.team+' · '+names.length+' integrante(s): '+names.join('; ')
       : 'Equipe ainda não identificada. Use “Equipe e integrantes” no cabeçalho.';
+  }
+  function clearValidity(){
+    el('web-team').removeAttribute('aria-invalid');
+    holder.querySelectorAll('input[aria-invalid]').forEach(input=>input.removeAttribute('aria-invalid'));
   }
   function persist(){
     try{localStorage.setItem(KEY,JSON.stringify(snapshot()));}catch{/* armazenamento opcional */}
@@ -132,6 +165,7 @@
     holder.replaceChildren(...group.members.map((_,i)=>memberInput(i)));
     el('web-add-member').disabled=group.members.length>=MAX;
     el('web-team').value=group.team;
+    clearValidity();
     summary();
     if(focusLast)el('web-member-'+(group.members.length-1)+'-name')?.focus({preventScroll:true});
   }
@@ -148,19 +182,42 @@
   render();
   function open(source){
     openedFromEvidence=source==='evidence';
+    returnFocus=openedFromEvidence?document.activeElement:null;
     if(openedFromEvidence&&el('evidence-dialog').open)el('evidence-dialog').close();
     modal.showModal();
     el('web-team').focus({preventScroll:true});
   }
+  function requireIdentity(){
+    try{return getIdentity();}
+    catch(error){
+      if(!modal.open)open(el('evidence-dialog').open?'evidence':'header');
+      feedback('Para gerar PDF e enviar: '+String(error?.message||error),'error');
+      focusInvalid();
+      return null;
+    }
+  }
+  modal.addEventListener('close',()=>{
+    // Escape, fechar ×, backdrop e conclusão devolvem o foco à ação de origem
+    // quando a identificação começou no diálogo de evidências.
+    const restore=openedFromEvidence;
+    openedFromEvidence=false;
+    if(!restore)return;
+    const evidence=el('evidence-dialog');
+    if(!evidence.open)evidence.showModal();
+    const target=returnFocus?.isConnected&&evidence.contains(returnFocus)
+      ?returnFocus:el('team-open-evidence');
+    returnFocus=null;
+    target?.focus({preventScroll:true});
+  });
   el('team-open').addEventListener('click',()=>open('header'));
   el('team-open-evidence').addEventListener('click',()=>open('evidence'));
   el('web-team').addEventListener('input',event=>{
-    group.team=event.target.value;persist();
+    group.team=event.target.value;clearValidity();persist();
   });
   holder.addEventListener('input',event=>{
     const i=Number(event.target.dataset.index);
     if(Number.isInteger(i)&&i>=0&&i<group.members.length){
-      group.members[i].name=event.target.value;persist();
+      group.members[i].name=event.target.value;clearValidity();persist();
     }
   });
   holder.addEventListener('click',event=>{
@@ -183,10 +240,10 @@
     try{
       const data=getIdentity();
       persist();
+      clearValidity();
       feedback('Equipe '+data.team+' identificada com '+data.members.length+' integrante(s).','success');
       modal.close();
-      if(openedFromEvidence)el('evidence-dialog').showModal();
-    }catch(e){feedback(String(e.message||e),'error');}
+    }catch(e){feedback(String(e.message||e),'error');focusInvalid();}
   });
-  window.WebTeam=Object.freeze({snapshot,restore,validatePartial,getIdentity,maxMembers:MAX});
+  window.WebTeam=Object.freeze({snapshot,restore,validatePartial,getIdentity,requireIdentity,maxMembers:MAX});
 })();

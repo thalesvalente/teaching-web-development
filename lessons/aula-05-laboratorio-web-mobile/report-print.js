@@ -39,6 +39,14 @@
        !Number.isInteger(snapshot.xp)||snapshot.maximoXp!==100||
        snapshot.xp<0||snapshot.xp>100)
       throw Error('Pontuação ou estrutura do relatório incompatível.');
+    // Invariante do documento: jamais produzir um relatório sem identificação
+    // completa. Não basta que a interface tenha sido preenchida visualmente.
+    const validated=window.WebTeam?.getIdentity?.();
+    if(!validated || !identity || validated.team!==identity.team ||
+       !Array.isArray(identity.members) ||
+       validated.members.length!==identity.members.length ||
+       validated.members.some((m,i)=>m.name!==identity.members[i]?.name))
+      throw Error('PDF requer nome da equipe e nome e sobrenome de todos os integrantes.');
     const total=snapshot.exercicios.length;
     const done=snapshot.exercicios.filter(item=>item.estado==='APROVADO').length;
     const pending=total-done;

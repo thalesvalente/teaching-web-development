@@ -7,7 +7,14 @@ async function open(page){
   await page.goto('/index.html');
   await expect(page.locator('#compiler-status')).toContainText('Executado',{timeout:30000});
 }
+async function fillRequiredTeam(page){
+  await page.locator('#team-open').click();
+  await page.locator('#web-team').fill('Equipe Bacuri');
+  await page.locator('#web-member-0-name').fill('Marina Sousa');
+  await page.locator('#team-done').click();
+}
 async function printNoModal(page,button){
+  await page.evaluate(()=>{const d=document.getElementById('evidence-dialog');if(d.open)d.close();});
   await page.evaluate(()=>{
     window.print=()=>{window.__printCount=(window.__printCount||0)+1;};
   });
@@ -59,6 +66,7 @@ test('Chromium imprime PDF A4 real com texto legível, cores e paginação',asyn
   await page.locator('#mission-select').selectOption('run');
   await page.locator('#guide-check').click();
   await expect(page.locator('#xp-top')).toHaveText('5');
+  await fillRequiredTeam(page);
   await printNoModal(page,'#quick-pdf');
   await page.emulateMedia({media:'print'});
   const pdf=await page.pdf({preferCSSPageSize:true,printBackground:true});
@@ -78,6 +86,8 @@ test('Chromium imprime PDF A4 real com texto legível, cores e paginação',asyn
   expect(pages).toBeLessThanOrEqual(5);
   expect(content).toContain('INSTITUTO FEDERAL DO MARANHÃO');
   expect(content).toContain('Relatório de aprendizagem');
+  expect(content).toContain('Equipe Bacuri');
+  expect(content).toContain('Marina Sousa');
   expect(content).toMatch(/5\s*\/\s*100\s*XP/);
   expect(content).toContain('Primeiro contato: execute o projeto');
   expect(content).toContain('Explique a ponte Web');
@@ -89,17 +99,19 @@ test('Chromium imprime PDF A4 real com texto legível, cores e paginação',asyn
 });
 test('impressão deixa observações vazias, sem pontuação artificial nem envio ao Google',async({page})=>{
   await open(page);
+  await fillRequiredTeam(page);
   await printNoModal(page,'#quick-pdf');
   await expect(page.locator('#print-report')).toHaveAttribute('data-report-xp','0');
   await expect(page.locator('#print-report .doc-ok')).toHaveCount(0);
   await expect(page.locator('#print-report .doc-pending')).toHaveCount(14);
   await expect(page.locator('#print-report .doc-unanswered')).toHaveCount(2);
   await expect(page.locator('#xp-top')).toHaveText('0');
-  await expect(page.locator('#web-submit')).toBeDisabled();
+  await expect(page.locator('#web-submit')).toBeEnabled();
   await expect(page.locator('#print-report')).toContainText('não comprova entrega no Google Sheets');
 });
 test('texto informado aparece literalmente no PDF, sem interpretar HTML ou executar scripts',async({page})=>{
   await open(page);
+  await fillRequiredTeam(page);
   await page.locator('#evidence-open').click();
   const raw='<img src=x onerror="alert(1)"> Resultado fictício: á, ã, ç, 🙂.';
   await page.locator('#observacao').fill(raw);
@@ -112,4 +124,26 @@ test('texto informado aparece literalmente no PDF, sem interpretar HTML ou execu
   await printNoModal(page,'#quick-pdf');
   await expect(area.locator('.doc-report')).toHaveCount(1);
   await expect(page.locator('#xp-top')).toHaveText(before);
+});
+
+test('não imprime PDF sem equipe e sem sobrenome: mostra alerta e foca primeiro campo inválido',async({page})=>{
+  await open(page);
+  await page.evaluate(()=>{window.__printCount=0;window.print=()=>window.__printCount++;});
+  await page.locator('#quick-pdf').click();
+  await expect(page.locator('#team-dialog')).toBeVisible();
+  await expect(page.locator('#team-feedback')).toContainText('nome da equipe');
+  await expect(page.locator('#web-team')).toBeFocused();
+  expect(await page.evaluate(()=>window.__printCount)).toBe(0);
+  await page.locator('#web-team').fill('Equipe Ipê');
+  await page.locator('#web-member-0-name').fill('Ana');
+  await page.locator('#team-done').click();
+  await expect(page.locator('#team-feedback')).toContainText('nome e sobrenome');
+  await expect(page.locator('#web-member-0-name')).toBeFocused();
+  expect(await page.evaluate(()=>window.__printCount)).toBe(0);
+  await page.locator('#web-member-0-name').fill('Ana Ferreira');
+  await page.locator('#team-done').click();
+  await expect(page.locator('#team-dialog')).toBeHidden();
+  await printNoModal(page,'#quick-pdf');
+  await expect(page.locator('#print-report')).toContainText('Ana Ferreira');
+  expect(await page.evaluate(()=>window.__printCount)).toBe(1);
 });

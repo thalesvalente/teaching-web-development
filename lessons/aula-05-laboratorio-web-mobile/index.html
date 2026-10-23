@@ -29,7 +29,7 @@
         <button type="button" id="save-progress" class="header-action emphasis">Salvar progresso</button>
         <button type="button" id="review-xp" class="header-action" title="Rever as missões técnicas no código atual sem apagar XP conquistados">Conferir progresso</button>
         <button type="button" id="load-progress" class="header-action">Retomar arquivo</button>
-        <button type="button" id="quick-pdf" class="header-action">Gerar PDF</button>
+        <button type="button" id="quick-pdf" class="header-action">Gerar PDF e Enviar</button>
         <button type="button" id="evidence-open" class="header-action">Evidências <span aria-hidden="true">↗</span></button>
         <input type="file" id="progress-file" accept=".json,application/json" hidden aria-label="Selecionar arquivo JSON de progresso">
       </nav>
@@ -129,18 +129,18 @@
           <div class="team-core">
             <label for="web-team" class="sr-only">Nome da equipe</label>
             <input id="web-team" type="text" maxlength="80" autocomplete="off" placeholder="Ex.: Equipe Horizonte" aria-describedby="team-name-hint" aria-required="true">
-            <p id="team-name-hint" class="team-field-hint"><span aria-hidden="true">✦</span> Escolham um nome fácil de reconhecer.</p>
+            <p id="team-name-hint" class="team-field-hint"><span aria-hidden="true">✦</span> Obrigatório: pelo menos 3 caracteres.</p>
           </div>
         </section>
         <section class="team-section team-members-section" aria-labelledby="team-members-heading">
-          <div class="team-section-heading team-section-heading-members"><span class="team-step" aria-hidden="true">02</span><div><h3 id="team-members-heading">Integrantes <span id="team-members-count" class="team-members-pill">0/8</span></h3><p>Incluam o nome e sobrenome de cada pessoa que participou.</p></div></div>
+          <div class="team-section-heading team-section-heading-members"><span class="team-step" aria-hidden="true">02</span><div><h3 id="team-members-heading">Integrantes <span id="team-members-count" class="team-members-pill">0/8</span></h3><p>Incluam nome e sobrenome de cada pessoa. Todos os campos devem ser preenchidos antes do PDF e envio.</p></div></div>
           <div id="web-members" class="team-roster" aria-labelledby="team-members-heading"></div>
           <button type="button" id="web-add-member" class="team-add-member"><span class="team-add-icon" aria-hidden="true">+</span><span>Adicionar integrante</span><span id="team-remaining" class="team-add-remaining"></span></button>
         </section>
         <div class="team-summary-card" aria-live="polite" aria-atomic="true">
           <div class="team-summary-symbol" aria-hidden="true">✓</div><div><strong id="team-summary-title">Identificação em andamento</strong><p id="team-summary-copy">Seus nomes serão incluídos no PDF e no JSON de progresso.</p></div>
         </div>
-        <p id="team-feedback" class="team-feedback" role="status" aria-live="polite">Preencha os dados para concluir a identificação. Você pode salvar o progresso parcial.</p>
+        <p id="team-feedback" class="team-feedback" role="alert" aria-live="assertive">Preencha os dados para concluir a identificação. Você pode salvar o progresso parcial.</p>
         <p class="team-privacy"><span aria-hidden="true">●</span> Salvo neste navegador e no JSON. Envio ao professor somente quando autorizado.</p>
       </div>
       <footer class="team-panel-footer">
@@ -208,8 +208,8 @@ app/lab05.tsx               ← importa o componente
   <dialog class="resource-dialog evidence-dialog" id="evidence-dialog" aria-labelledby="evidence-title">
     <div class="dialog-header"><h2 id="evidence-title">Evidências do laboratório</h2><button type="button" class="close-dialog" data-close-dialog="evidence-dialog" aria-label="Fechar evidências">×</button></div>
     <div class="dialog-body">
-      <p><strong>Continue de onde parou:</strong> use <strong>Salvar progresso</strong> para baixar um JSON que guarda código, respostas, missão atual e XP formativos. Em outro momento ou dispositivo, clique em <strong>Retomar arquivo</strong>. O PDF segue o modelo institucional A4 do IFMA e pode conter missões pendentes. O botão Gerar PDF abre o diálogo de impressão: selecione Salvar como PDF. Para continuar editando, use o JSON.</p>
-      <p>Pode exportar <strong>agora</strong>, mesmo com exercícios pendentes. XP são formativos, não nota oficial.</p>
+      <p><strong>Continue de onde parou:</strong> use <strong>Salvar progresso</strong> para baixar um JSON que guarda código, respostas, missão atual e XP formativos. Em outro momento ou dispositivo, clique em <strong>Retomar arquivo</strong>. O PDF segue o modelo institucional A4 do IFMA e pode conter missões pendentes. O botão <strong>Gerar PDF e Enviar</strong> abre a impressão (escolha Salvar como PDF) e tenta enviar <strong>as evidências JSON</strong> se o recebimento estiver habilitado. O PDF não é anexado. Somente o recibo confirma entrega. Para continuar editando, use o JSON.</p>
+      <p>Pode manter exercícios e reflexões <strong>pendentes</strong>, sem perder XP; para gerar o PDF ou enviar, é obrigatório identificar a equipe e informar nome e sobrenome de todos os integrantes.</p>
       <p id="progress-status" class="progress-status" role="status" aria-live="polite">Rascunho salvo automaticamente neste navegador quando disponível. Salve um JSON para levar a outro dispositivo.</p>
       <div class="evidence-actions priority-actions"><button type="button" id="dialog-save-progress" class="btn run">Salvar progresso (.json)</button><button type="button" id="dialog-load-progress" class="btn secondary">Retomar (.json)</button><button type="button" id="dialog-pdf" class="btn secondary">Gerar PDF parcial (A4)</button></div>
       <div class="evidence-score"><strong><span id="xp-evidence">0</span>/100 XP</strong><span id="evidence-count">0 concluídos · 14 pendentes</span></div>
@@ -229,20 +229,20 @@ app/lab05.tsx               ← importa o componente
         <button type="button" id="team-open-evidence" class="btn secondary">Preencher ou revisar integrantes</button>
         <p id="web-delivery-explanation" class="web-submission-explanation">
           A equipe envia uma única atividade com os nomes completos de todos os integrantes. A entrega registra XP <strong>formativos declarados</strong>;
-          não lança nota oficial. Nome e matrícula digitados não comprovam identidade.
+          não lança nota oficial. Os nomes informados não comprovam identidade.
           Não inclua senhas, documentos pessoais ou informações sigilosas no código.
         </p>
-        <button type="button" class="btn run" id="web-submit" disabled>
-          Enviar evidência da equipe (com recibo)
+        <button type="button" class="btn run" id="web-submit">
+          Gerar PDF e Enviar
         </button>
-        <p id="web-delivery-status" role="status" aria-live="polite">
+        <p id="web-delivery-status" role="status" aria-live="polite" tabindex="-1">
           Recebimento online aguardando configuração do Apps Script.
           Exportação local continua disponível.
         </p>
       </fieldset>
       <details><summary>Ver situação de cada exercício</summary><ul id="evidence-list" class="evidence-list"></ul></details>
       <div class="evidence-actions"><button type="button" id="export-json" class="btn secondary">Exportar evidências JSON</button><button type="button" id="export-md" class="btn secondary">Exportar Markdown</button><button type="button" id="print" class="btn secondary">Imprimir / salvar PDF A4</button></div>
-      <p class="privacy">Rascunho salvo somente neste navegador, se o armazenamento estiver disponível. Código e evidências não são enviados automaticamente. XP já conquistados são preservados; a conferência do código atual pode ser repetida quando desejar.</p>
+      <p class="privacy">Rascunho salvo somente neste navegador, se o armazenamento estiver disponível. Quando o envio estiver habilitado, clicar em “Gerar PDF e Enviar” transmite os nomes, o código e as evidências ao Apps Script. Os dados podem ser gravados mesmo se o recibo não chegar; somente um recibo válido confirma o recebimento nesta tela. XP já conquistados são preservados; a conferência do código atual pode ser repetida quando desejar.</p>
       <p id="evidence-status" role="status" aria-live="polite"></p>
     </div>
   </dialog>

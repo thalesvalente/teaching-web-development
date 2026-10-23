@@ -198,9 +198,15 @@
     'run','title','placeholder','limit','maximum','button',
     'error','success','color','trim','invalid','isolation'
   ]);
+  let readyConfirmed=false;
   window.addEventListener('message', async (event) => {
     if (event.source !== sender) return;
     const msg = event.data;
+    if(msg?.from==='ifma-aula05-host' && msg.type==='READY_ACK' &&
+       typeof msg.token==='string' && msg.token.length<=100){
+      readyConfirmed=true;
+      return;
+    }
     if (!msg || msg.from !== 'ifma-aula05-host' || typeof msg.token !== 'string' || msg.token.length > 100 ||
         !Number.isSafeInteger(msg.revision) || msg.revision < 0 ||
         !Number.isSafeInteger(msg.runId) || msg.runId < 1) return;
@@ -243,5 +249,12 @@
         detail: String(error?.message || error).slice(0,450) });
     }
   });
-  post('READY');
+  // O iframe pode terminar de carregar antes do JS principal instalar o
+  // listener de mensagens. Repetições limitadas cessam ao receber READY_ACK.
+  function announceReady(attempt=0){
+    if(readyConfirmed||attempt>=20)return;
+    post('READY');
+    setTimeout(()=>announceReady(attempt+1),300);
+  }
+  announceReady();
 })();

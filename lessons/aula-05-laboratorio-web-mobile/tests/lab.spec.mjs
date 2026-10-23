@@ -347,7 +347,7 @@ test('atalhos de PDF e salvar/retomar aparecem no cabeçalho e no diálogo',asyn
   for(const id of ['save-progress','load-progress','quick-pdf']) await expect(page.locator('#'+id)).toBeVisible();
   await page.locator('#evidence-open').click();
   for(const id of ['dialog-save-progress','dialog-load-progress','dialog-pdf']) await expect(page.locator('#'+id)).toBeVisible();
-  await expect(page.locator('#evidence-dialog')).toContainText('mesmo com exercícios pendentes');
+  await expect(page.locator('#evidence-dialog')).toContainText('Pode manter exercícios e reflexões');
 });
 test('recarregar mantém código, missão, quiz e XP formativos da sessão',async({page})=>{
   await open(page);
@@ -392,9 +392,15 @@ test('PDF parcial usa pontuação corrente e preserva perguntas não respondidas
   await page.addInitScript(()=>{window.print=()=>{window.__printed= document.getElementById('print-report').textContent;}});
   await open(page);
   await checkCode(page,'run');
+  await page.locator('#team-open').click();
+  await page.locator('#web-team').fill('Equipe Sabiá');
+  await page.locator('#web-member-0-name').fill('Lia Martins');
+  await page.locator('#team-done').click();
   await page.locator('#quick-pdf').click();
   const report=await page.evaluate(()=>window.__printed);
   expect(report).toContain('5 / 100 XP');
+  expect(report).toContain('Equipe Sabiá');
+  expect(report).toContain('Lia Martins');
   expect(report).toContain('13 pendentes');
   expect(report).toContain('Pendente');
 });

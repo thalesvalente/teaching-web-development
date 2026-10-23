@@ -141,6 +141,13 @@ test('Aula 05 registra equipe e nomes sem exigir matrícula ou turma',()=>{
   assert.doesNotMatch(delivery,/studentIdentity\(|web-student-id/);
   assert.match(delivery,/teamIdentity\(\)/);
   assert.match(delivery,/laboratorio-vivo-tsx-equipe/);
+  assert.match(html,/id="quick-pdf"[^>]*>Gerar PDF e Enviar/);
+  assert.match(html,/id="web-submit"[^>]*>\s*Gerar PDF e Enviar/);
+  assert.match(ui,/requireIdentity/);
+  assert.match(ui,/READY_ACK/);
+  assert.match(read('preview.js'),/announceReady/);
+  assert.match(teamJs,/requireIdentity/);
+  assert.match(delivery,/ENVIO CONFIRMADO/);
   assert.match(ui,/team: window\.WebTeam\?\.snapshot\(\)/);
   assert.match(ui,/WebTeam\?\.restore\(savedTeam\)/);
   assert.match(pdf,/Integrantes \(nomes\)/);

@@ -60,7 +60,7 @@ function webSafe(value) {
 }
 function webNormalized(value) {
   return String(value || '').trim().normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '').replace(/\s+/g,' ').toLowerCase();
+    .replace(/[\u0300-\u036f]/g, '').replace(/[’‘]/g,"'").replace(/\s+/g,' ').toLowerCase();
 }
 /**
  * Identificação coletiva: só nome da equipe e nomes dos integrantes.
@@ -81,8 +81,16 @@ function webIdentity(input) {
     if(!member||typeof member!=='object'||Array.isArray(member))
       webFail('Integrante inválido '+(index+1)+'.');
     var name=webText(member.name,100,'nome do integrante');
-    if(!/^[\p{L}][\p{L}\p{M} .'\-]{2,99}$/u.test(name)||
-       name.split(/\s+/).filter(Boolean).length<2)
+    if(!/^[\p{L}\p{M}'’\-\s]{5,100}$/u.test(name)||
+       name.split(/\s+/).length<2||
+       !name.split(/\s+/).every(function(part){
+         if(!/^[\p{L}][\p{L}\p{M}'’\-]*$/u.test(part))return false;
+         var segments=part.split(/[-'’]/);
+         return segments.every(function(segment){return segment.length>0;}) &&
+           segments.some(function(segment){
+             return (segment.match(/\p{L}/gu)||[]).length>=2;
+           });
+       }))
       webFail('Informe nome e sobrenome do integrante '+(index+1)+'.');
     var key=webNormalized(name);
     if(seen[key])webFail('Integrante repetido: '+name+'.');
