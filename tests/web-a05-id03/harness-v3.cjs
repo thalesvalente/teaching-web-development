@@ -1,7 +1,7 @@
 'use strict';
 // Double de serviço local. NÃO conecta ao Google e NÃO é prova remota do Apps Script.
 const fs=require('node:fs'),vm=require('node:vm'),crypto=require('node:crypto');
-const source=fs.readFileSync(require('node:path').join(__dirname,'../backend/Code.gs'),'utf8');
+const source=fs.readFileSync(require('node:path').join(__dirname,'../../integrations/web-appscript-v3-qa/Code.gs'),'utf8');
 const SOURCE_ID='1SpL_B_fENFo0PF_-18m4wvle2p1NpbTYStFPEnM7JmE';
 const TEAM_ID='a54a0500-2026-4000-8000-000000000001';
 const TASKS=[['run',5],['map',5],['title',6],['placeholder',6],['limit',12],['maximum',10],['button',7],['error',7],['success',7],['color',6],['trim',8],['invalid',8],['isolation',8],['quiz',5]];
