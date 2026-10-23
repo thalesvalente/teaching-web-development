@@ -138,7 +138,10 @@ test('Aula 05 exige matrícula no envio e preserva PDF local com nomes',()=>{
   assert.match(teamJs,/function getIdentity\(options=/);
   assert.match(teamJs,/teamId:newId\(\)/);
   assert.match(teamJs,/MAX=8/);
-  assert.match(delivery,/web-a05-submission-v2/);\n  assert.match(teamJs,/member\.enrollment/);\n  assert.match(teamJs,/web-member-.*-enrollment/);\n  assert.match(html,/Matrícula|matrícula/);
+  assert.match(delivery,/web-a05-submission-v2/);
+  assert.match(teamJs,/member\.enrollment/);
+  assert.match(teamJs,/web-member-.*-enrollment/);
+  assert.match(html,/Matrícula|matrícula/);
   assert.match(delivery,/teamIdentity\(\)/);
   assert.match(delivery,/laboratorio-vivo-tsx-equipe/);
   assert.match(html,/id="quick-pdf"[^>]*>Gerar PDF e Enviar/);
