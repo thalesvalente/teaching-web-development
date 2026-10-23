@@ -278,3 +278,49 @@ test('Auditoria com linha vazia entre entregas interrompe gravação em vez de c
   assert.equal(reply.ok,false);
   assert.match(reply.error,/Auditoria com lacunas/);
 });
+
+
+test('preparação do Apps Script é segura, idempotente e começa com POST bloqueado',()=>{
+  const h=harness();
+  const first=h.ctx.prepararIntegracaoWeb();
+  assert.match(first,/WEB_SETUP_PASS/);
+  assert.match(first,/recebimento BLOQUEADO/);
+  assert.equal(h.properties.get('WEB_WEB_SUBMISSIONS_ENABLED'),'false');
+  assert.equal(h.writes(),0,'Preflight não cria entrega de aluno');
+  const next=h.ctx.prepararIntegracaoWeb();
+  assert.match(next,/WEB_SETUP_PASS/);
+  assert.equal(h.writes(),0);
+  h.properties.set('WEB_WEB_SUBMISSIONS_ENABLED','true');
+  assert.match(h.ctx.prepararIntegracaoWeb(),/recebimento HABILITADO/);
+  assert.equal(h.properties.get('WEB_WEB_SUBMISSIONS_ENABLED'),'true',
+    'Repreparação não pode desabilitar unilateralmente o serviço ativo');
+  h.properties.set('WEB_WEB_SUBMISSIONS_ENABLED','liberar');
+  assert.throws(()=>h.ctx.prepararIntegracaoWeb(),/literalmente true ou false/);
+});
+test('Script vinculado à planilha Mobile/PPI é rejeitado antes da configuração Web',()=>{
+  const h=harness();
+  h.ctx.SpreadsheetApp.getActiveSpreadsheet=()=>({getId:()=> 'OUTRA-PLANILHA'});
+  assert.throws(()=>h.ctx.prepararIntegracaoWeb(),/planilha errada/);
+  assert.equal(h.properties.get('WEB_WEB_SUBMISSIONS_ENABLED'),undefined);
+  h.ctx.SpreadsheetApp.getActiveSpreadsheet=()=>
+    ({getId:()=> '1iLx-Tm0EFCsMxqKxbkXAuevJlCzjFAJuRyknbHYlbGM'});
+  assert.match(h.ctx.prepararIntegracaoWeb(),/WEB_SETUP_PASS/);
+});
+test('status da integração é somente leitura e distingue flag ligada/desligada',()=>{
+  const h=harness();
+  assert.match(h.ctx.statusIntegracaoWeb(),/WEB_STATUS_OK/);
+  assert.match(h.ctx.statusIntegracaoWeb(),/recebimento BLOQUEADO/);
+  assert.equal(h.properties.get('WEB_WEB_SUBMISSIONS_ENABLED'),undefined);
+  h.properties.set('WEB_WEB_SUBMISSIONS_ENABLED','true');
+  assert.match(h.ctx.statusIntegracaoWeb(),/recebimento HABILITADO/);
+  assert.equal(h.writes(),0);
+});
+test('manifesto Apps Script é V8, fuso Fortaleza e não publica acesso anônimo',()=>{
+  const manifest=JSON.parse(fs.readFileSync(
+    path.join(__dirname,'../integrations/web-appscript/appsscript.json'),'utf8'));
+  assert.equal(manifest.runtimeVersion,'V8');
+  assert.equal(manifest.timeZone,'America/Fortaleza');
+  assert.equal(manifest.exceptionLogging,'STACKDRIVER');
+  assert.ok(!Object.hasOwn(manifest,'webapp'),
+    'Implantação e acesso devem exigir ação explícita da conta proprietária');
+});
