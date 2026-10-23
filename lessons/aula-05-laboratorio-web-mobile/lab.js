@@ -888,7 +888,7 @@ function registrar() {
       throw Error('Pontuação inconsistente no arquivo.');
     // Conferir antes de substituir a sessão: um grupo inválido não pode
     // fazer o aluno perder o código ou os XP atuais.
-    const savedTeam = isCheckpoint ? data.team : data.team;
+    const savedTeam = data.team;
     if (savedTeam != null) window.WebTeam?.validatePartial(savedTeam);
     if (!confirm('Retomar o arquivo selecionado? O código e o progresso desta sessão serão substituídos.')) {
       progressMessage('Retomada cancelada. O código, as respostas e os XP atuais foram preservados.');
@@ -958,12 +958,8 @@ function registrar() {
       const current=evidence();
       if (!window.WebLabReport?.prepare)
         throw Error('O gerador do relatório institucional não está disponível.');
-      const student={
-        name:byId('web-student-name')?.value || '',
-        enrollment:byId('web-student-id')?.value || '',
-        team:byId('web-team')?.value || ''
-      };
-      const summary=window.WebLabReport.prepare(byId('print-report'),current,student);
+      const team=window.WebTeam?.snapshot()||{team:'',members:[]};
+      const summary=window.WebLabReport.prepare(byId('print-report'),current,team);
       progressMessage('Relatório A4 preparado: '+summary.xp+'/100 XP e '+
         summary.pending+' missões pendentes. Na janela do navegador, escolha “Salvar como PDF”.');
       window.print();
