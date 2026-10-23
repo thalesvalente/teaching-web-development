@@ -119,33 +119,39 @@ test('endpoint cadastrado mas não homologado bloqueia POST e preserva exportaç
   await enter(page);
   await expect(page.locator('#web-submit')).toBeDisabled();
   await expect(page.locator('#web-delivery-status')).toContainText('homologação');
+  await expect(page.locator('#quick-pdf')).toHaveText('Gerar PDF e Enviar');
+  await expect(page.locator('#web-submit')).toHaveText('Gerar PDF e Enviar');
   expect(calls).toBe(0);
   const [download]=await Promise.all([page.waitForEvent('download'),page.locator('#export-json').click()]);
   const data=JSON.parse(await readFile(await download.path(),'utf8'));
   expect(data.exercicios).toHaveLength(14);
   expect(data.maximoXp).toBe(100);
 });
-test('POST ativado rejeita nomes incompletos e duplicados antes de enviar',async({page})=>{
+test('POST ativado rejeita nomes incompletos e duplicados antes de gerar PDF ou enviar',async({page})=>{
   await enabled(page);
   let calls=0;await page.route(fake,route=>{calls++;return route.abort();});
   await enter(page);
-  await page.locator('#team-open-evidence').click();
+  await page.evaluate(()=>{window.__prints=0;window.print=()=>window.__prints++;});
+  await page.locator('#web-submit').click();
+  await expect(page.locator('#team-dialog')).toBeVisible();
+  await expect(page.locator('#team-feedback')).toContainText('nome da equipe');
+  expect(calls).toBe(0);
+  expect(await page.evaluate(()=>window.__prints)).toBe(0);
   await page.locator('#web-team').fill('Equipe Ipê');
   await page.locator('#web-member-0-name').fill('Ana');
-  await page.locator('[data-close-dialog="team-dialog"]').click();
-  await page.locator('#evidence-open').click();
-  await page.locator('#web-submit').click();
-  await expect(page.locator('#web-delivery-status')).toContainText('ENVIO NÃO CONFIRMADO');
-  expect(calls).toBe(0);
-  await page.locator('#team-open-evidence').click();
+  await page.locator('#team-done').click();
+  await expect(page.locator('#team-feedback')).toContainText('nome e sobrenome');
   await page.locator('#web-member-0-name').fill('Ana Exemplo');
   await page.locator('#web-add-member').click();
   await page.locator('#web-member-1-name').fill('Ána Exemplo');
   await page.locator('[data-close-dialog="team-dialog"]').click();
   await page.locator('#evidence-open').click();
   await page.locator('#web-submit').click();
-  await expect(page.locator('#web-delivery-status')).toContainText('Nome repetido na equipe');
+  await expect(page.locator('#team-dialog')).toBeVisible();
+  await expect(page.locator('#team-feedback')).toContainText('Nome repetido na equipe');
+  await expect(page.locator('#web-delivery-status')).toContainText('ENVIO NÃO REALIZADO');
   expect(calls).toBe(0);
+  expect(await page.evaluate(()=>window.__prints)).toBe(0);
 });
 test('recibo coletivo emulado: JSON da equipe e estado pendente, nunca nota oficial',async({page})=>{
   await enabled(page);
@@ -158,9 +164,13 @@ test('recibo coletivo emulado: JSON da equipe e estado pendente, nunca nota ofic
   });
   await enter(page);
   await fillTeam(page,['Ana Exemplo','Bia Exemplo']);
+  await page.evaluate(()=>{window.__prints=0;window.print=()=>window.__prints++;});
   const [download]=await Promise.all([page.waitForEvent('download'),page.locator('#web-submit').click()]);
   expect(download.suggestedFilename()).toBe('WEB_Aula05_Evidencia_Equipe.json');
-  await expect(page.locator('#web-delivery-status')).toContainText('EVIDÊNCIA RECEBIDA',{timeout:10000});
+  await expect(page.locator('#web-delivery-status')).toContainText('ENVIO CONFIRMADO! EVIDÊNCIA RECEBIDA',{timeout:10000});
+  await expect(page.locator('#web-delivery-status')).toBeVisible();
+  await expect(page.locator('#web-delivery-status')).toContainText('Recibo: WEB-QA-20261023-aabbccdd');
+  expect(await page.evaluate(()=>window.__prints)).toBe(1);
   await expect(page.locator('#web-delivery-status')).toContainText('Ana Exemplo; Bia Exemplo');
   await expect(page.locator('#web-delivery-status')).toContainText('não são nota');
   expect(received.identity).toEqual(await page.evaluate(()=>window.WebTeam.getIdentity()));
@@ -242,4 +252,50 @@ test('painel compacto usa lista sem matrícula ou turma e preserva remoção con
   await expect(page.locator('#team-progress')).toHaveAttribute('aria-valuenow','100');
   await expect(page.locator('#web-student-id')).toHaveCount(0);
   await expect(page.locator('#web-class')).toHaveCount(0);
+});
+
+test('CTA superior gera PDF parcial mas avisa quando endpoint não permite envio',async({page})=>{
+  await enabled(page,false);
+  let calls=0;await page.route(fake,route=>{calls++;return route.abort();});
+  await enter(page);
+  await fillTeam(page,['Ana Exemplo','Bia Exemplo']);
+  await page.locator('[data-close-dialog="evidence-dialog"]').click();
+  await page.evaluate(()=>{window.__prints=0;window.print=()=>window.__prints++;});
+  await page.locator('#quick-pdf').click();
+  await expect(page.locator('#web-delivery-status')).toBeVisible();
+  await expect(page.locator('#web-delivery-status')).toContainText('ENVIO NÃO REALIZADO');
+  await expect(page.locator('#print-report')).toContainText('Ana Exemplo; Bia Exemplo');
+  expect(await page.evaluate(()=>window.__prints)).toBe(1);
+  expect(calls).toBe(0);
+});
+
+test('integrante adicional vazio bloqueia exportação+POST e foca o nome ausente',async({page})=>{
+  await enabled(page);
+  let calls=0;await page.route(fake,route=>{calls++;return route.abort();});
+  await enter(page);
+  await fillTeam(page,['Ana Exemplo','Bia Exemplo']);
+  await page.locator('#team-open-evidence').click();
+  await page.locator('#web-add-member').click();
+  await page.locator('[data-close-dialog="team-dialog"]').click();
+  await page.locator('#evidence-open').click();
+  await page.evaluate(()=>{window.__prints=0;window.print=()=>window.__prints++;});
+  await page.locator('#web-submit').click();
+  await expect(page.locator('#team-dialog')).toBeVisible();
+  await expect(page.locator('#web-member-2-name')).toBeFocused();
+  await expect(page.locator('#team-feedback')).toContainText('nome e sobrenome do integrante 3');
+  expect(calls).toBe(0);
+  expect(await page.evaluate(()=>window.__prints)).toBe(0);
+});
+
+test('sobrenome abreviado não é nome completo; aceita sobrenome composto',async({page})=>{
+  await enter(page);
+  await page.locator('#team-open-evidence').click();
+  await page.locator('#web-team').fill('Equipe Lagoa');
+  await page.locator('#web-member-0-name').fill('Ana B');
+  await page.locator('#team-done').click();
+  await expect(page.locator('#team-feedback')).toContainText('nome e sobrenome');
+  await page.locator('#web-member-0-name').fill('Ana de Souza');
+  await page.locator('#team-done').click();
+  await expect(page.locator('#team-dialog')).toBeHidden();
+  expect((await page.evaluate(()=>window.WebTeam.getIdentity())).members[0].name).toBe('Ana de Souza');
 });

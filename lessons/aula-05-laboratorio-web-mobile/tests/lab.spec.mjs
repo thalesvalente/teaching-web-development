@@ -392,9 +392,15 @@ test('PDF parcial usa pontuação corrente e preserva perguntas não respondidas
   await page.addInitScript(()=>{window.print=()=>{window.__printed= document.getElementById('print-report').textContent;}});
   await open(page);
   await checkCode(page,'run');
+  await page.locator('#team-open').click();
+  await page.locator('#web-team').fill('Equipe Sabiá');
+  await page.locator('#web-member-0-name').fill('Lia Martins');
+  await page.locator('#team-done').click();
   await page.locator('#quick-pdf').click();
   const report=await page.evaluate(()=>window.__printed);
   expect(report).toContain('5 / 100 XP');
+  expect(report).toContain('Equipe Sabiá');
+  expect(report).toContain('Lia Martins');
   expect(report).toContain('13 pendentes');
   expect(report).toContain('Pendente');
 });
