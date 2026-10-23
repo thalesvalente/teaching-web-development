@@ -288,6 +288,57 @@ function doPost(event) {
       error:String(error&&error.message||'Falha ao receber evidências.').slice(0,240)});
   }
 }
+/**
+ * Executar UMA VEZ no editor Apps Script aberto por Extensões → Apps Script
+ * da planilha de Desenvolvimento Web. Não escreve dados de alunos.
+ * Cria somente a flag deny-by-default quando ainda não existir.
+ * Não publica o Web App, não ativa recebimento e não divulga credenciais.
+ */
+function prepararIntegracaoWeb() {
+  var book=webSpreadsheet();
+  webCheckSchema(book);
+  // Evita colar o Code.gs por engano na planilha Mobile/PPI.
+  var active=typeof SpreadsheetApp.getActiveSpreadsheet==='function'
+    ? SpreadsheetApp.getActiveSpreadsheet() : null;
+  if(active && typeof active.getId==='function' &&
+     active.getId()!==WEB_CFG.spreadsheetId)
+    webFail('Script vinculado à planilha errada. Abra Extensões → Apps Script na planilha de Web.');
+
+  var props=PropertiesService.getScriptProperties();
+  var flag=props.getProperty('WEB_WEB_SUBMISSIONS_ENABLED');
+  if(flag===null || flag==='') {
+    props.setProperty('WEB_WEB_SUBMISSIONS_ENABLED','false');
+    flag='false';
+  } else if(flag!=='false' && flag!=='true') {
+    webFail('WEB_WEB_SUBMISSIONS_ENABLED deve ser literalmente true ou false.');
+  }
+  var sum=WEB_TASKS.reduce(function(total,t){return total+t[1];},0);
+  if(sum!==100)webFail('Catálogo de XP Web não soma 100.');
+  var result='WEB_SETUP_PASS | planilha '+book.getName()+
+    ' | '+WEB_TABS.length+' abas | '+WEB_TASKS.length+' missões | '+sum+
+    ' XP formativos | recebimento '+(flag==='true'?'HABILITADO':'BLOQUEADO')+
+    ' | publicação /exec ainda exige implantação explícita';
+  Logger.log(result);
+  return result;
+}
+
+/**
+ * Diagnóstico de leitura: não habilita POST e não grava entregas.
+ * Pode ser executado a qualquer momento pelo docente no Apps Script.
+ */
+function statusIntegracaoWeb() {
+  var book=webSpreadsheet();
+  webCheckSchema(book);
+  var active=PropertiesService.getScriptProperties()
+    .getProperty('WEB_WEB_SUBMISSIONS_ENABLED')==='true';
+  var result='WEB_STATUS_OK | versão '+WEB_CFG.version+
+    ' | planilha '+book.getName()+
+    ' | recebimento '+(active?'HABILITADO':'BLOQUEADO')+
+    ' | atividade '+WEB_CFG.activity+' | XP não são nota';
+  Logger.log(result);
+  return result;
+}
+
 function testarConexaoWeb() {
   var book=webSpreadsheet();
   webCheckSchema(book);
