@@ -43,6 +43,8 @@ jobs:
         run: npm ci
       - name: Instalar Chromium para QA visual
         run: npx playwright install --with-deps chromium
+      - name: Instalar verificação de PDF A4
+        run: sudo apt-get update -qq && sudo apt-get install -y poppler-utils
       - name: Testes do laboratório
         run: npm run check:logic
       - name: E2E responsivo e regressão
