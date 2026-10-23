@@ -88,10 +88,25 @@ for(const [label,mutation] of [['NaN','d.gradeReceived=NaN'],['infinito','d.best
 test('UI-09 mensagem de nonce errado não encerra envio pendente nem duplica POST',async({page})=>{
   await open(page);let requests=0;
   await page.route(ENDPOINT,route=>{requests++;return route.fulfill({status:200,contentType:'text/html',body:'<script>top.postMessage({ok:true,channel:"web-entrega-aula05",nonce:"ERRADO"},"*")</script>'});});
+  // O botão é desabilitado antes do hash assíncrono e do POST. No WebKit,
+  // verificar apenas disabled não garante que a resposta inválida já chegou.
+  await page.evaluate(()=>{
+    window.__qaWrongNonceObserved=0;
+    window.addEventListener('message',event=>{
+      if(event.origin==='https://script.google.com' &&
+         event.data?.channel==='web-entrega-aula05' && event.data.nonce==='ERRADO')
+        window.__qaWrongNonceObserved++;
+    });
+  });
   await fill(page);await submit(page);
+  await expect.poll(()=>requests,{message:'O POST deve alcançar a rota uma única vez'}).toBe(1);
+  await expect.poll(()=>page.evaluate(()=>window.__qaWrongNonceObserved),
+    {message:'A mensagem de nonce inválido deve ser recebida antes de testar a rejeição'}).toBe(1);
   await expect(page.locator('#web-submit')).toBeDisabled();
   await page.evaluate(()=>document.getElementById('web-submit').dispatchEvent(new Event('click')));
-  expect(requests).toBe(1);await expect(page.locator('#web-delivery-status')).not.toContainText('ENVIO CONFIRMADO');
+  expect(requests).toBe(1);
+  await expect(page.locator('#web-submit')).toBeDisabled();
+  await expect(page.locator('#web-delivery-status')).not.toContainText('ENVIO CONFIRMADO');
 });
 for(const width of [320,360,390,768,1024,1440]){
   test('UI-08 campos e controles sem overflow horizontal em '+width+'px',async({page},testInfo)=>{
