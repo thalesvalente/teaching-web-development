@@ -1,0 +1,19 @@
+name: Homologacao autorizada | Web Aula 05 POST ficticio
+on:
+  push:
+    branches: [qa/web-aula05-real-post-homologation-20261023]
+permissions:
+  contents: read
+jobs:
+  smoke-post-ficticio:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Confirmar fixture inerte e contrato
+        run: node scripts/test-web-appscript-post.mjs --dry-run
+      - name: Enviar SOMENTE equipe QA ficticia autorizada para receptor Web
+        run: node scripts/test-web-appscript-post.mjs --confirm-write --url "https://script.google.com/macros/s/AKfycbyDC9tGFBTOjZXau4m2vWQVPoYa3gZKMldc1NjAMZCUstHx0SICMG8Z4ekAWvLfnmlc/exec"
