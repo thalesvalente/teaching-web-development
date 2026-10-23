@@ -1,6 +1,6 @@
 # Google Sheets + Apps Script — Desenvolvimento Web 2026.2
 
-## Modelo de entrega em equipe (v1.1.0)
+## Modelo de entrega em equipe (v1.1.1)
 
 A Aula 05 é realizada **por equipe**. O aluno informa somente o **nome da equipe** (mínimo de 3 caracteres) e os **nomes completos, com nome e sobrenome, de todos os integrantes** (1 a 8; nenhum campo vazio, nomes duplicados ou apenas iniciais). O laboratório **não solicita matrícula nem turma**.
 
@@ -20,7 +20,7 @@ A [planilha de Desenvolvimento Web](https://docs.google.com/spreadsheets/d/1iLx-
 
 ## Arquivos
 
-- [Receptor Apps Script Code.gs](Code.gs) — versão **web-entregas-1.1.0**
+- [Receptor Apps Script Code.gs](Code.gs) — versão **web-entregas-1.1.1**
 - [Manifesto V8](appsscript.json)
 - [Formulário de equipe](../../lessons/aula-05-laboratorio-web-mobile/equipe.js)
 - [Cliente de entrega](../../lessons/aula-05-laboratorio-web-mobile/entrega-appscript.js)
@@ -30,13 +30,13 @@ A [planilha de Desenvolvimento Web](https://docs.google.com/spreadsheets/d/1iLx-
 
 ## Atualizar o projeto Google Apps Script já implantado
 
-**Atenção:** a implantação externa anterior contém o contrato de uma pessoa por entrega (v1.0.0). O código desta versão de equipe (v1.1.0) só estará operacional depois da publicação de uma **nova versão da implantação** no editor Google. O envio online da Aula 05 permanece desativado até a homologação. O botão do formulário permanece clicável para PDF local e para informar a indisponibilidade do envio sem transmitir dados. O atalho **Gerar PDF e Enviar** exige identificação válida antes de abrir a impressão; quando a integração estiver habilitada, ele enviará **o JSON das evidências** e mostrará a confirmação somente após um recibo real. O PDF é salvo localmente pelo estudante, **não é anexado ao Google Sheets**. Quando o servidor estiver bloqueado, o atalho permite imprimir o PDF e informa claramente que o envio não ocorreu.
+**Atenção:** a implantação externa anterior contém o contrato de uma pessoa por entrega (v1.0.0). O código desta versão de equipe (v1.1.1) só estará operacional depois da publicação de uma **nova versão da implantação** no editor Google. O envio online da Aula 05 permanece desativado até a homologação. O botão do formulário permanece clicável para PDF local e para informar a indisponibilidade do envio sem transmitir dados. O atalho **Gerar PDF e Enviar** exige identificação válida antes de abrir a impressão; quando a integração estiver habilitada, ele enviará **o JSON das evidências** e mostrará a confirmação somente após um recibo real. O PDF é salvo localmente pelo estudante, **não é anexado ao Google Sheets**. Quando o servidor estiver bloqueado, o atalho permite imprimir o PDF e informa claramente que o envio não ocorreu.
 
 1. Na planilha Web, abra **Extensões → Apps Script** e configure temporariamente a propriedade de script **WEB_WEB_SUBMISSIONS_ENABLED = false**.
-2. Substitua **todo o conteúdo** do arquivo Code.gs pelo receptor v1.1.0 linkado acima. Não acrescente fragmentos ao fim da versão antiga.
+2. Substitua **todo o conteúdo** do arquivo Code.gs pelo receptor v1.1.1 linkado acima. Não acrescente fragmentos ao fim da versão antiga.
 3. Salve e execute **prepararIntegracaoWeb**. Confira **WEB_SETUP_PASS**, **6 abas**, **14 missões**, **100 XP** e **recebimento BLOQUEADO**.
 4. Clique **Deploy → Manage deployments → Edit → New version → Deploy**. Apenas salvar o arquivo não atualiza a implantação versionada.
-5. Confira que a mesma URL /exec responde **web-entregas-1.1.0 — recebimento bloqueado**. O script de leitura é **scripts/probe-web-appscript.mjs**.
+5. Confira que a mesma URL /exec responde **web-entregas-1.1.1 — recebimento bloqueado**. O script de leitura é **scripts/probe-web-appscript.mjs**.
 
 ## Teste real após atualização — só com autorização
 
