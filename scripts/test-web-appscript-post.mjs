@@ -6,6 +6,7 @@
  * Um recebimento válido não equivale à identidade ou nota certificada.
  */
 import { createHash, randomUUID } from 'node:crypto';
+import { extractReceipt } from './web-receipt-parser.mjs';
 const stages=[
   ['run',5],['map',5],['title',6],['placeholder',6],['limit',12],
   ['maximum',10],['button',7],['error',7],['success',7],['color',6],
@@ -65,13 +66,8 @@ const response=await fetch(url,{
 });
 if(!response.ok)throw Error('POST HTTP '+response.status+'. Conferir acesso do Web App.');
 const html=await response.text();
-const startMarker='top.postMessage(';
-const endMarker=',"https://thalesvalente.github.io")';
-const i=html.indexOf(startMarker),j=i>=0?html.indexOf(endMarker,i+startMarker.length):-1;
-if(i<0||j<0)throw Error('Sem recibo legível na resposta HTML. NÃO presuma sucesso; consulte a aba Auditoria antes de repetir.');
-let receipt;
-try { receipt=JSON.parse(html.slice(i+startMarker.length,j)); }
-catch { throw Error('Resposta POST sem JSON de recibo válido; consulte a Auditoria antes de repetir.'); }
+// Parser testado separadamente: exige envelope completo e respeita JSON escapado.
+const receipt=extractReceipt(html);
 if(receipt.ok===false)throw Error('Apps Script recusou QA: '+String(receipt.error||'erro sem detalhe'));
 const sha=createHash('sha256').update(evidence.codigoFonteCompleto,'utf8').digest('hex');
 if(receipt.ok!==true||receipt.channel!=='web-entrega-aula05'||
