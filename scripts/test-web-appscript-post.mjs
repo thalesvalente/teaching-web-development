@@ -23,9 +23,9 @@ const url=value('--url');
 const dryRun=args.includes('--dry-run');
 const authorized=args.includes('--confirm-write');
 const identity=Object.freeze({
-  name:'Teste Integracao Web',
-  enrollment:'QA20261022WEB05',
-  team:'QA FICTICIO - REMOVER APOS TESTE'
+  teamId:'fa4e2212-5141-4f1e-9b45-35e772dcc2c0',
+  team:'Equipe QA FICTICIA',
+  members:[{name:'Ana Teste Ficticio'},{name:'Bruno Teste Ficticio'}]
 });
 const evidence={
   schema:'ifma-web-aula05-lab-v4',
@@ -76,15 +76,16 @@ if(receipt.ok===false)throw Error('Apps Script recusou QA: '+String(receipt.erro
 const sha=createHash('sha256').update(evidence.codigoFonteCompleto,'utf8').digest('hex');
 if(receipt.ok!==true||receipt.channel!=='web-entrega-aula05'||
   receipt.nonce!==nonce||receipt.activity!==activity||
-  receipt.instrument!=='laboratorio-vivo-tsx'||receipt.codeSha256!==sha||
+  receipt.instrument!=='laboratorio-vivo-tsx-equipe'||receipt.codeSha256!==sha||
   receipt.xpReported!==0||receipt.grade!==null||
+  receipt.teamId!==identity.teamId||receipt.memberCount!==identity.members.length||
   receipt.status!=='RECEBIDO_PENDENTE_VALIDACAO'||
   !/^[0-9a-f]{64}$/.test(String(receipt.answersSha256||''))||
   !/^[0-9a-f]{64}$/.test(String(receipt.signature||''))||
   !/^WEB-[\w-]+$/.test(String(receipt.receiptId||'')))
   throw Error('Resposta sem contrato íntegro de recibo. Verifique a planilha; não presuma recebimento.');
 console.log('WEB_QA_POST_PASS | id='+receipt.receiptId+
-  ' | matricula ficticia='+identity.enrollment+
+  ' | equipe ficticia='+identity.team+' | membros='+identity.members.length+
   ' | recebido='+receipt.receivedAt+
   ' | 0/100 XP | SEM NOTA | SHA-256 do código='+sha);
-console.log('CONFERIR: abas 1º–4º Bimestres e Auditoria; depois REMOVER SOMENTE linhas da matrícula QA fictícia. NÃO apagar dados reais.');
+console.log('CONFERIR: aba Equipes, quatro bimestres (dois integrantes) e Auditoria; depois retirar SOMENTE registros da equipe QA fictícia. NÃO apagar dados reais.');

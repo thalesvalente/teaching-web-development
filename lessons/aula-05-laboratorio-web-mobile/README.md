@@ -53,3 +53,12 @@ A atualização é apenas didática; XP não é nota, nenhuma API sincroniza os 
 - **Salvar progresso** baixa `Aula05_Continuar_Depois.json` com TSX, respostas, missão atual, observações, exercícios verificados e XP. **Retomar arquivo** importa esse JSON, inclusive em outro navegador/dispositivo, mediante confirmação do usuário.
 - O navegador também salva um rascunho local, quando permitido. **O PDF é evidência estática**, não substitui o JSON para continuar editando. Nenhum desses botões envia dados ao Google Sheets.
 - A CI executa Playwright com exportação/importação real do arquivo, sessão independente, erros/cancelamento e um PDF real extraído por Poppler (`pdfinfo`, `pdftotext`, `pdftoppm`). Dados usados no teste são fictícios.
+
+
+## Trabalhos em equipe — identificação simplificada
+
+A Aula 05 admite **um trabalho por equipe**. Antes de exportar ou enviar evidências, abra **Equipe e integrantes** no cabeçalho e informe somente o **nome da equipe** e os **nomes completos dos integrantes**. Os botões **Adicionar integrante** e **Remover** permitem de 1 a 8 pessoas. **Não são exigidos matrícula, turma ou informações pessoais adicionais.**
+
+Os nomes aparecem no **PDF A4**, no **JSON de progresso**, na **evidência** e no recibo da entrega coletiva. O navegador cria e conserva um ID técnico de equipe apenas para evitar duplicar a mesma entrega; ele não é mostrado nem solicitado ao aluno. Para continuar em outro aparelho sem criar outra equipe, compartilhe o **JSON de continuidade** e use **Retomar arquivo**. Uma pessoa da equipe deve efetuar a entrega final.
+
+Na planilha privada, cada integrante aparece em sua própria linha nos bimestres e a atividade coletiva aparece uma vez nas abas **Equipes** e **Auditoria**. XP não são nota oficial e identificação declarada exige validação docente. O envio público continua bloqueado até a implantação do receptor Google Apps Script 1.1.0 e homologação real.

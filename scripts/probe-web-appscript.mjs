@@ -39,12 +39,12 @@ const response=await fetch(target,{
 if(!response.ok)throw Error('Web App GET HTTP '+response.status+
   '. Verifique autorização e acesso público da implantação.');
 const body=(await response.text()).trim();
-if(!/^Web — receptor web-entregas-1\.0\.0 — recebimento (bloqueado|habilitado \(sujeito a validação docente\))$/.test(body)){
-  throw Error('Resposta GET não corresponde ao Code.gs de Web 1.0.0. Pode ser versão antiga, login ou aplicação errada.');
+if(!/^Web — receptor web-entregas-1\.1\.0 — recebimento (bloqueado|habilitado \(sujeito a validação docente\))$/.test(body)){
+  throw Error('Resposta GET não corresponde ao Code.gs de Web 1.1.0. Pode ser versão antiga, login ou aplicação errada.');
 }
 const enabled=body.includes('habilitado');
 if(requireEnabled&&!enabled)throw Error('Web App responde, mas recebimento está BLOQUEADO; não publique o botão ativo.');
 console.log('WEB_GET_PASS | servidor='+new URL(response.url).hostname+
-  ' | versão=web-entregas-1.0.0 | recebimento='+
+  ' | versão=web-entregas-1.1.0 | recebimento='+
   (enabled?'HABILITADO, somente pendente de validação docente':'BLOQUEADO')+
   ' | POST não executado | planilha não modificada');

@@ -125,3 +125,24 @@ test('XP acumulativos sobrevivem à edição, ao rerun e à reprovação posteri
     assert.ok(html.includes('id="' + id + '"'), 'Controle de progresso ausente: ' + id);
   }
 });
+
+
+test('Aula 05 registra equipe e nomes sem exigir matrícula ou turma',()=>{
+  const teamJs=read('equipe.js');
+  const delivery=read('entrega-appscript.js');
+  const pdf=read('report-print.js');
+  for(const id of ['web-team','web-members','web-add-member','team-open','team-dialog']) {
+    assert.ok(html.includes('id="'+id+'"'), 'Campo coletivo ausente: '+id);
+  }
+  assert.doesNotMatch(html,/id="web-student-id"|id="web-class"/);
+  assert.match(teamJs,/function getIdentity\(\)/);
+  assert.match(teamJs,/teamId:newId\(\)/);
+  assert.match(teamJs,/MAX=8/);
+  assert.doesNotMatch(delivery,/studentIdentity\(|web-student-id/);
+  assert.match(delivery,/teamIdentity\(\)/);
+  assert.match(delivery,/laboratorio-vivo-tsx-equipe/);
+  assert.match(ui,/team: window\.WebTeam\?\.snapshot\(\)/);
+  assert.match(ui,/WebTeam\?\.restore\(savedTeam\)/);
+  assert.match(pdf,/Integrantes \(nomes\)/);
+  assert.doesNotMatch(pdf,/infoRow\(metadata,'Matrícula'/);
+});

@@ -9,6 +9,7 @@
   <link rel="stylesheet" href="./style.css">
   <script defer src="./entrega-config.js"></script>
   <script defer src="./report-print.js"></script>
+  <script defer src="./equipe.js"></script>
   <script defer src="./lab.js"></script>
   <script defer src="./entrega-appscript.js"></script>
 </head>
@@ -22,6 +23,7 @@
         <div class="progress" id="progress" role="progressbar" aria-label="XP formativos" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div id="progress-fill"></div></div>
       </div>
       <nav class="header-tools" aria-label="Recursos do laboratório">
+        <button type="button" id="team-open" class="header-action emphasis">Equipe e integrantes <span id="team-count">(preencher)</span></button>
         <button type="button" id="component-open" class="header-action">Componentes básicos</button>
         <button type="button" id="help-open" class="header-action"><span aria-hidden="true">?</span> Como funciona</button>
         <button type="button" id="save-progress" class="header-action emphasis">Salvar progresso</button>
@@ -106,6 +108,22 @@
     </main>
   </div>
 
+  <dialog class="resource-dialog team-dialog" id="team-dialog" aria-labelledby="team-title">
+    <div class="dialog-header"><h2 id="team-title">Identificação da equipe — Aula 05</h2><button type="button" class="close-dialog" data-close-dialog="team-dialog" aria-label="Fechar identificação da equipe">×</button></div>
+    <div class="dialog-body">
+      <p class="team-lead">Atividade em <strong>equipe</strong>: informe apenas o nome da equipe e os <strong>nomes completos dos integrantes</strong>. Você pode adicionar ou remover integrantes (até 8), como na ficha de Móveis. Não é necessário informar matrícula ou turma. Os XP são formativos e ficam associados à equipe, sujeitos à conferência docente.</p>
+      <div class="team-core">
+        <label for="web-team">Nome da equipe</label>
+        <input id="web-team" type="text" maxlength="80" autocomplete="off" placeholder="Ex.: Equipe Ipê" aria-required="true">
+      </div>
+      <div class="team-members-toolbar"><h3 id="team-members-heading">Integrantes</h3><button type="button" id="web-add-member" class="btn secondary">+ Adicionar integrante</button></div>
+      <div id="web-members" aria-labelledby="team-members-heading"></div>
+      <p id="team-feedback" role="status" aria-live="polite">Informe os nomes completos. É possível salvar o progresso em JSON antes de terminar.</p>
+      <button type="button" id="team-done" class="btn run">Concluir identificação da equipe</button>
+      <p class="privacy">Os nomes são salvos localmente neste navegador e no JSON de progresso, quando exportado. Só serão enviados à planilha após acionar a entrega online autorizada. Os nomes declarados não constituem comprovação de identidade.</p>
+    </div>
+  </dialog>
+
   <dialog class="resource-dialog component-dialog" id="component-dialog" aria-labelledby="component-title">
     <div class="dialog-header"><h2 id="component-title">Componentes básicos — veja no código e nas duas telas</h2><button type="button" class="close-dialog" data-close-dialog="component-dialog" aria-label="Fechar componentes">×</button></div>
     <div class="dialog-body">
@@ -179,20 +197,17 @@ app/lab05.tsx               ← importa o componente
       <label for="limite-real">O que ainda deve ser testado em um celular real?</label>
       <textarea id="limite-real" rows="3" placeholder="Ex.: teclado e acessibilidade no Expo Go."></textarea>
       <fieldset class="web-submission-fields" id="web-submission-fields" aria-describedby="web-delivery-explanation">
-        <legend>Identificação para entrega individual (Google Sheets)</legend>
-        <label for="web-student-name">Nome completo do estudante</label>
-        <input id="web-student-name" type="text" autocomplete="name" maxlength="100" placeholder="Nome e sobrenome">
-        <label for="web-student-id">Matrícula / identificador acadêmico</label>
-        <input id="web-student-id" type="text" autocomplete="off" maxlength="30" placeholder="Identificador individual">
-        <label for="web-team">Equipe ou turma (opcional)</label>
-        <input id="web-team" type="text" autocomplete="off" maxlength="80" placeholder="Ex.: Informática 3º ano">
+        <legend>Entrega da equipe (Google Sheets)</legend>
+        <p><strong>Identificação da equipe e de todos os integrantes:</strong></p>
+        <p id="web-team-summary" class="team-summary" role="status">Nenhuma equipe identificada. Use “Equipe e integrantes” no cabeçalho.</p>
+        <button type="button" id="team-open-evidence" class="btn secondary">Preencher ou revisar integrantes</button>
         <p id="web-delivery-explanation" class="web-submission-explanation">
-          A entrega registra somente evidências e XP <strong>formativos declarados</strong>;
+          A equipe envia uma única atividade com os nomes completos de todos os integrantes. A entrega registra XP <strong>formativos declarados</strong>;
           não lança nota oficial. Nome e matrícula digitados não comprovam identidade.
           Não inclua senhas, documentos pessoais ou informações sigilosas no código.
         </p>
         <button type="button" class="btn run" id="web-submit" disabled>
-          Salvar evidência JSON e solicitar envio
+          Enviar evidência da equipe (com recibo)
         </button>
         <p id="web-delivery-status" role="status" aria-live="polite">
           Recebimento online aguardando configuração do Apps Script.

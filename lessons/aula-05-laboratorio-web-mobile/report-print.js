@@ -50,7 +50,7 @@
     }).format(localeDate);
     const article=root.ownerDocument.createElement('article');
     article.className='doc-report';
-    article.setAttribute('aria-label','Relatório de aprendizagem da Aula 05');
+    article.setAttribute('aria-label','Relatório de aprendizagem da equipe — Aula 05');
     // Capa institucional — mesma identidade das fichas existentes.
     const cover=add(article,'header','doc-cover');
     add(cover,'div','doc-top-rule');
@@ -69,15 +69,18 @@
     add(cover,'p','doc-subtitle','Laboratório Vivo — Tutorial Web e Mobile');
     add(cover,'p','doc-status',pending?'RELATÓRIO PARCIAL':'RELATÓRIO CONCLUÍDO');
     const metadata=add(cover,'dl','doc-metadata');
-    infoRow(metadata,'Estudante',safeText(identity.name,'Não informado'));
-    infoRow(metadata,'Matrícula',safeText(identity.enrollment,'Não informada'));
-    infoRow(metadata,'Turma / equipe',safeText(identity.team,'Não informada'));
+    const members=Array.isArray(identity.members)
+      ? identity.members.map(m=>typeof m==='string'?m:m?.name).filter(v=>typeof v==='string'&&v.trim())
+      : [];
+    infoRow(metadata,'Equipe',safeText(identity.team,'Não informada'));
+    infoRow(metadata,'Integrantes (nomes)',members.length?members.join('; '):'Não informados');
+    infoRow(metadata,'Quantidade de integrantes',members.length||'Não informada');
     infoRow(metadata,'Docente','Prof. Dr. Thales Levi Azevedo Valente');
     infoRow(metadata,'Emissão (BRT)',when);
     const control=add(cover,'div','doc-control');
     add(control,'p',null,'Controle documental: WEB-A05-LV-2026');
     add(control,'p',null,'Versão do relatório: 1.0.0');
-    add(control,'p',null,'Natureza: registro individual de evidências; progresso formativo autodeclarado e testado localmente.');
+    add(control,'p',null,'Natureza: registro de equipe; progresso formativo declarado e testado localmente.');
     // Progresso formativo — não é nota acadêmica.
     const score=add(article,'section','doc-score');
     add(score,'p','doc-score-label','RESULTADO FORMATIVO DO LABORATÓRIO');

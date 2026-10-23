@@ -1,19 +1,19 @@
 /**
  * IFMA · Desenvolvimento de Sistemas Web · 2026.2
  * Receptor de evidências do Laboratório Vivo — Aula 05.
- * V1.0.0: registro FORMATIVO; não lança nota oficial.
+ * V1.1.0: identificação da equipe por nomes, sem matrícula ou turma; registro FORMATIVO.
  *
  * Implantar em um projeto Apps Script NOVO, associado à planilha WEB.
  * O script da disciplina Mobile/PPI não deve ser alterado.
  * Publicar com WEB_WEB_SUBMISSIONS_ENABLED=false; habilitar somente
  * após homologação e definição do procedimento de identificação.
  *
- * ATENÇÃO: nome e matrícula fornecidos por formulário público NÃO
- * autenticam uma pessoa. O recebimento é PENDENTE DE VALIDAÇÃO DOCENTE.
+ * ATENÇÃO: nomes declarados da equipe NÃO autenticam identidade nem autoria.
+ * O recebimento é PENDENTE DE VALIDAÇÃO DOCENTE.
  */
 var WEB_CFG = Object.freeze({
   spreadsheetId: '1iLx-Tm0EFCsMxqKxbkXAuevJlCzjFAJuRyknbHYlbGM',
-  version: 'web-entregas-1.0.0',
+  version: 'web-entregas-1.1.0',
   activity: 'WEB-AULA05-2026',
   schema: 'ifma-web-aula05-lab-v4',
   maxPayloadChars: 44000,
@@ -25,15 +25,19 @@ var WEB_TASKS = Object.freeze([
   ['trim',8],['invalid',8],['isolation',8],['quiz',5]
 ]);
 var WEB_TABS = Object.freeze([
-  ['1º Bimestre',['Aluno','Matrícula','Equipe','Média /10']],
-  ['2º Bimestre',['Aluno','Matrícula','Equipe','Média /10']],
-  ['3º Bimestre',['Aluno','Matrícula','Equipe','Aula 04 E3-I1 /2,5','Média /10']],
-  ['4º Bimestre',['Aluno','Matrícula','Equipe','Aula 05 XP formativo /100','Média /10']],
-  ['Auditoria',['Aluno','Matrícula','Equipe','Atividade','Instrumento',
+  ['1º Bimestre',['Aluno','ID equipe (automático)','Equipe','Média /10']],
+  ['2º Bimestre',['Aluno','ID equipe (automático)','Equipe','Média /10']],
+  ['3º Bimestre',['Aluno','ID equipe (automático)','Equipe','Aula 04 E3-I1 /2,5','Média /10']],
+  ['4º Bimestre',['Aluno','ID equipe (automático)','Equipe','Aula 05 XP formativo /100','Média /10']],
+  ['Auditoria',['Equipe','ID equipe (automático)','Integrantes (nomes)','Atividade','Instrumento',
     'Data/hora BRT','Recebido UTC','ID entrega','SHA-256 evidência',
     'Assinatura HMAC','XP declarado /100','Nota oficial /10',
     'Situação','Rubrica/versão','JSON evidência','Chave interna',
-    'Código SHA-256','Origem','Observação docente','Revisado UTC']]
+    'Código SHA-256','Origem','Observação docente','Revisado UTC',
+    'Lista de integrantes da equipe']],
+  ['Equipes',['Equipe','Integrantes (nomes)','Quantidade','Atividade',
+    'XP formativo /100','Situação','Recibo','Enviado UTC',
+    'Chave da equipe','SHA-256 evidência','Observação docente','Revisado UTC']]
 ]);
 function webFail(message) { throw new Error(message); }
 function webText(value, max, label) {
@@ -58,18 +62,34 @@ function webNormalized(value) {
   return String(value || '').trim().normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '').replace(/\s+/g,' ').toLowerCase();
 }
+/**
+ * Identificação coletiva: só nome da equipe e nomes dos integrantes.
+ * teamId é gerado no browser e preservado no JSON de continuidade.
+ * É uma chave de upsert, NÃO prova de identidade ou autoria.
+ */
 function webIdentity(input) {
-  if (!input || typeof input !== 'object' || Array.isArray(input))
-    webFail('Identificação ausente.');
-  var name = webText(input.name, 100, 'nome completo');
-  if (!/^[\p{L}][\p{L}\p{M} .'\-]{2,99}$/u.test(name) ||
-      name.split(/\s+/).filter(Boolean).length < 2)
-    webFail('Informe nome e sobrenome.');
-  var enrollment = webText(input.enrollment, 30, 'matrícula');
-  if (!/^[A-Za-z0-9][A-Za-z0-9._/-]{4,29}$/.test(enrollment))
-    webFail('Informe matrícula/identificador acadêmico válido.');
-  var team = webText(input.team || '', 80, 'equipe');
-  return {name:name,enrollment:enrollment,team:team};
+  if(!input||typeof input!=='object'||Array.isArray(input))
+    webFail('Identificação da equipe ausente.');
+  var team=webText(input.team,80,'nome da equipe');
+  if(team.length<3)webFail('Informe nome da equipe com pelo menos três caracteres.');
+  var teamId=webText(input.teamId,36,'identificador da equipe');
+  if(!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(teamId))
+    webFail('Código automático da equipe inválido. Salve e recarregue o progresso.');
+  if(!Array.isArray(input.members)||input.members.length<1||input.members.length>8)
+    webFail('Informe de um a oito integrantes da equipe.');
+  var seen={},members=input.members.map(function(member,index){
+    if(!member||typeof member!=='object'||Array.isArray(member))
+      webFail('Integrante inválido '+(index+1)+'.');
+    var name=webText(member.name,100,'nome do integrante');
+    if(!/^[\p{L}][\p{L}\p{M} .'\-]{2,99}$/u.test(name)||
+       name.split(/\s+/).filter(Boolean).length<2)
+      webFail('Informe nome e sobrenome do integrante '+(index+1)+'.');
+    var key=webNormalized(name);
+    if(seen[key])webFail('Integrante repetido: '+name+'.');
+    seen[key]=true;
+    return {name:name};
+  });
+  return {team:team,teamId:teamId,members:members};
 }
 function webEvidence(value) {
   if (!value || typeof value !== 'object' || Array.isArray(value))
@@ -160,58 +180,109 @@ function webAverageFormula(title, row) {
     return '=IF(A'+row+'="";"";ROUND(N(D'+row+')*4;2))';
   return '=IF(A'+row+'="";"";0)';
 }
-function webRosterUpsert(book, identity, xp) {
+/**
+ * Uma linha por integrante nas abas bimestrais, identificada pelo nome
+ * normalizado + ID automático da equipe. Nenhuma matrícula é coletada.
+ * O identificador é de equipe (não pessoal) e viaja no checkpoint JSON.
+ */
+function webMemberRow(sheet,teamId,name) {
+  var last=sheet.getLastRow();
+  if(last<2)return 0;
+  var rows=sheet.getRange(2,1,last-1,3).getDisplayValues();
+  var normalized=webNormalized(name);
+  for(var i=0;i<rows.length;i++) {
+    if(String(rows[i][1]||'').trim()===teamId &&
+       webNormalized(rows[i][0])===normalized)return i+2;
+  }
+  return 0;
+}
+function webRosterUpsert(book,identity,xp) {
   WEB_TABS.slice(0,4).forEach(function(tab){
     var sheet=book.getSheetByName(tab[0]);
-    var row=webFindRow(sheet,identity.enrollment,2)||webNextRow(sheet);
-    sheet.getRange(row,2).setNumberFormat('@');
-    sheet.getRange(row,1,1,3).setValues([[webSafe(identity.name),identity.enrollment,webSafe(identity.team)]]);
-    if(tab[0]==='4º Bimestre')sheet.getRange(row,4).setValue(xp);
-    // A coluna Aula 04 é exclusivamente docente; não é sobrescrita.
-    sheet.getRange(row,tab[1].length).setFormula(webAverageFormula(tab[0],row));
+    identity.members.forEach(function(member){
+      var row=webMemberRow(sheet,identity.teamId,member.name)||webNextRow(sheet);
+      sheet.getRange(row,2).setNumberFormat('@');
+      sheet.getRange(row,1,1,3).setValues([
+        [webSafe(member.name),identity.teamId,webSafe(identity.team)]
+      ]);
+      if(tab[0]==='4º Bimestre')sheet.getRange(row,4).setValue(xp);
+      // A nota E3-I1 da Aula 04 é exclusivamente docente.
+      sheet.getRange(row,tab[1].length).setFormula(webAverageFormula(tab[0],row));
+    });
     var last=sheet.getLastRow();
-    if(last>2)sheet.getRange(2,1,last-1,tab[1].length).sort([{column:1,ascending:true},{column:2,ascending:true}]);
-    // Corrigir referências relativas após ordenação das linhas.
-    last=sheet.getLastRow();
-    if(last>2){
-      var formulaRange=sheet.getRange(2,tab[1].length,last-1,1);
+    if(last>2) {
+      sheet.getRange(2,1,last-1,tab[1].length)
+        .sort([{column:1,ascending:true},{column:2,ascending:true}]);
       var formulas=[];
       for(var r=2;r<=last;r++)formulas.push([webAverageFormula(tab[0],r)]);
-      formulaRange.setFormulas(formulas);
+      sheet.getRange(2,tab[1].length,last-1,1).setFormulas(formulas);
     }
   });
 }
+/**
+ * Uma entrega por equipe na Auditoria. Os integrantes ficam legíveis
+ * na coluna C e U, e a versão formativa atual é registrada com recibo.
+ */
 function webAuditUpsert(book,identity,evidence,meta) {
   var sheet=book.getSheetByName('Auditoria');
-  var key=identity.enrollment+'|'+WEB_CFG.activity;
-  // getLastRow() inclui metadados permanentes nas colunas V:Y (linhas 1–6).
-  // Nunca ordenar linhas vazias A:T somente porque esses metadados existem.
+  var key=identity.teamId+'|'+WEB_CFG.activity;
+  // Metadados em V:Y usam linhas 1–6: não podem mudar o número de
+  // entregas reais contadas pela chave interna na coluna P.
   var last=sheet.getLastRow(),row=0,occupied=0;
-  if(last>=2){
+  if(last>=2) {
     var keys=sheet.getRange(2,16,last-1,1).getDisplayValues();
-    for(var i=0;i<keys.length;i++){
+    for(var i=0;i<keys.length;i++) {
       var current=String(keys[i][0]||'').trim();
-      if(!current) continue;
-      if(i!==occupied) webFail('Auditoria com lacunas: revise as linhas antes de receber novas entregas.');
+      if(!current)continue;
+      if(i!==occupied)webFail('Auditoria com lacunas: revise as linhas.');
       occupied++;
-      if(current===key) row=i+2;
+      if(current===key)row=i+2;
     }
   }
-  if(!row) row=2+occupied;
+  if(!row)row=occupied+2;
   sheet.getRange(row,2).setNumberFormat('@');
-  // Escrever até R: preservar S/T (observação e revisão DOCENTES).
+  var names=identity.members.map(function(member){return member.name;}).join('; ');
   var entry=[
-    webSafe(identity.name), identity.enrollment, webSafe(identity.team),
-    WEB_CFG.activity,'laboratorio-vivo-tsx',
+    webSafe(identity.team),identity.teamId,webSafe(names),
+    WEB_CFG.activity,'laboratorio-vivo-tsx-equipe',
     meta.localTime,meta.utc,meta.receiptId,meta.answersHash,meta.signature,
     evidence.xp,'','RECEBIDO_PENDENTE_VALIDACAO',
     WEB_CFG.version,JSON.stringify(evidence),key,meta.codeHash,'github-pages-web'
   ];
+  // Não alterar S/T (observação e revisão do docente).
   sheet.getRange(row,1,1,18).setValues([entry]);
-  // Somente linhas com chave de entrega são classificadas.
-  // S/T seguem cada estudante; metadados V:Y ficam inalterados.
+  sheet.getRange(row,21).setValue(webSafe(names));
   var records=occupied+(row===occupied+2?1:0);
-  if(records>1)sheet.getRange(2,1,records,20).sort([{column:1,ascending:true},{column:2,ascending:true}]);
+  // Ordenar A:U juntos para manter a coluna U vinculada à mesma equipe.
+  if(records>1)sheet.getRange(2,1,records,21)
+    .sort([{column:1,ascending:true},{column:2,ascending:true}]);
+}
+/** Uma linha por grupo na aba Equipes; K/L são reservadas ao docente. */
+function webTeamUpsert(book,identity,evidence,meta) {
+  var sheet=book.getSheetByName('Equipes');
+  var key=identity.teamId+'|'+WEB_CFG.activity;
+  var last=sheet.getLastRow(),row=0,occupied=0;
+  if(last>=2) {
+    var keys=sheet.getRange(2,9,last-1,1).getDisplayValues();
+    for(var i=0;i<keys.length;i++){
+      var existing=String(keys[i][0]||'').trim();
+      if(!existing)continue;
+      if(i!==occupied)webFail('Aba Equipes com lacunas: revise as linhas.');
+      occupied++;
+      if(existing===key)row=i+2;
+    }
+  }
+  if(!row)row=occupied+2;
+  var names=identity.members.map(function(member){return member.name;}).join('; ');
+  var values=[
+    webSafe(identity.team),webSafe(names),identity.members.length,
+    WEB_CFG.activity,evidence.xp,'RECEBIDO_PENDENTE_VALIDACAO',
+    meta.receiptId,meta.utc,key,meta.answersHash
+  ];
+  sheet.getRange(row,1,1,10).setValues([values]);
+  var records=occupied+(row===occupied+2?1:0);
+  if(records>1)sheet.getRange(2,1,records,12)
+    .sort([{column:1,ascending:true},{column:9,ascending:true}]);
 }
 function webStore(input, nonce) {
   var book=webSpreadsheet();
@@ -229,15 +300,17 @@ function webStore(input, nonce) {
     utc:utc,localTime:Utilities.formatDate(now,'America/Fortaleza','yyyy-MM-dd HH:mm:ss'),
     receiptId:receiptId,answersHash:answersHash,codeHash:codeHash
   };
-  meta.signature=webSign([receiptId,WEB_CFG.activity,identity.enrollment,
-    answersHash,evidence.xp,utc].join('|'));
+  meta.signature=webSign([receiptId,WEB_CFG.activity,identity.teamId,
+    webSha256(JSON.stringify(identity.members)),answersHash,evidence.xp,utc].join('|'));
   webRosterUpsert(book,identity,evidence.xp);
   webAuditUpsert(book,identity,evidence,meta);
+  webTeamUpsert(book,identity,evidence,meta);
   SpreadsheetApp.flush();
   return {
     ok:true,channel:WEB_CFG.channel,nonce:nonce,
     receiptId:receiptId,activity:WEB_CFG.activity,
-    instrument:'laboratorio-vivo-tsx',receivedAt:utc,
+    instrument:'laboratorio-vivo-tsx-equipe',receivedAt:utc,
+    teamId:identity.teamId,memberCount:identity.members.length,
     answersSha256:answersHash,codeSha256:codeHash,
     xpReported:evidence.xp,grade:null,signature:meta.signature,
     status:'RECEBIDO_PENDENTE_VALIDACAO',
@@ -349,6 +422,6 @@ function testarConexaoWeb() {
     observacao:'',testeNativoPendente:'',codigoFonteCompleto:'export default function App() {}'};
   if(webEvidence(sample).xp!==0)webFail('Validação formativa incompatível.');
   Logger.log('Diagnóstico Web: PASS | '+book.getName()+
-    ' | 5 abas | 14 missões | POST protegido por flag.');
+    ' | 6 abas | 14 missões | POST protegido por flag.');
   return 'Diagnóstico Web: PASS';
 }
