@@ -1,7 +1,7 @@
 /**
  * IFMA · Desenvolvimento de Sistemas Web · 2026.2
  * Receptor de evidências do Laboratório Vivo — Aula 05.
- * V1.0.0: registro FORMATIVO; não lança nota oficial.
+ * V1.1.0: identificação da equipe por nomes, sem matrícula ou turma; registro FORMATIVO.
  *
  * Implantar em um projeto Apps Script NOVO, associado à planilha WEB.
  * O script da disciplina Mobile/PPI não deve ser alterado.
@@ -13,7 +13,7 @@
  */
 var WEB_CFG = Object.freeze({
   spreadsheetId: '1iLx-Tm0EFCsMxqKxbkXAuevJlCzjFAJuRyknbHYlbGM',
-  version: 'web-entregas-1.0.0',
+  version: 'web-entregas-1.1.0',
   activity: 'WEB-AULA05-2026',
   schema: 'ifma-web-aula05-lab-v4',
   maxPayloadChars: 44000,
@@ -25,15 +25,19 @@ var WEB_TASKS = Object.freeze([
   ['trim',8],['invalid',8],['isolation',8],['quiz',5]
 ]);
 var WEB_TABS = Object.freeze([
-  ['1º Bimestre',['Aluno','Matrícula','Equipe','Média /10']],
-  ['2º Bimestre',['Aluno','Matrícula','Equipe','Média /10']],
-  ['3º Bimestre',['Aluno','Matrícula','Equipe','Aula 04 E3-I1 /2,5','Média /10']],
-  ['4º Bimestre',['Aluno','Matrícula','Equipe','Aula 05 XP formativo /100','Média /10']],
-  ['Auditoria',['Aluno','Matrícula','Equipe','Atividade','Instrumento',
+  ['1º Bimestre',['Aluno','ID equipe (automático)','Equipe','Média /10']],
+  ['2º Bimestre',['Aluno','ID equipe (automático)','Equipe','Média /10']],
+  ['3º Bimestre',['Aluno','ID equipe (automático)','Equipe','Aula 04 E3-I1 /2,5','Média /10']],
+  ['4º Bimestre',['Aluno','ID equipe (automático)','Equipe','Aula 05 XP formativo /100','Média /10']],
+  ['Auditoria',['Equipe','ID equipe (automático)','Integrantes (nomes)','Atividade','Instrumento',
     'Data/hora BRT','Recebido UTC','ID entrega','SHA-256 evidência',
     'Assinatura HMAC','XP declarado /100','Nota oficial /10',
     'Situação','Rubrica/versão','JSON evidência','Chave interna',
-    'Código SHA-256','Origem','Observação docente','Revisado UTC']]
+    'Código SHA-256','Origem','Observação docente','Revisado UTC',
+    'Lista de integrantes da equipe']],
+  ['Equipes',['Equipe','Integrantes (nomes)','Quantidade','Atividade',
+    'XP formativo /100','Situação','Recibo','Enviado UTC',
+    'Chave da equipe','SHA-256 evidência','Observação docente','Revisado UTC']]
 ]);
 function webFail(message) { throw new Error(message); }
 function webText(value, max, label) {
@@ -58,18 +62,34 @@ function webNormalized(value) {
   return String(value || '').trim().normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '').replace(/\s+/g,' ').toLowerCase();
 }
+/**
+ * Identificação coletiva: só nome da equipe e nomes dos integrantes.
+ * teamId é gerado no browser e preservado no JSON de continuidade.
+ * É uma chave de upsert, NÃO prova de identidade ou autoria.
+ */
 function webIdentity(input) {
-  if (!input || typeof input !== 'object' || Array.isArray(input))
-    webFail('Identificação ausente.');
-  var name = webText(input.name, 100, 'nome completo');
-  if (!/^[\p{L}][\p{L}\p{M} .'\-]{2,99}$/u.test(name) ||
-      name.split(/\s+/).filter(Boolean).length < 2)
-    webFail('Informe nome e sobrenome.');
-  var enrollment = webText(input.enrollment, 30, 'matrícula');
-  if (!/^[A-Za-z0-9][A-Za-z0-9._/-]{4,29}$/.test(enrollment))
-    webFail('Informe matrícula/identificador acadêmico válido.');
-  var team = webText(input.team || '', 80, 'equipe');
-  return {name:name,enrollment:enrollment,team:team};
+  if(!input||typeof input!=='object'||Array.isArray(input))
+    webFail('Identificação da equipe ausente.');
+  var team=webText(input.team,80,'nome da equipe');
+  if(team.length<3)webFail('Informe nome da equipe com pelo menos três caracteres.');
+  var teamId=webText(input.teamId,36,'identificador da equipe');
+  if(!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(teamId))
+    webFail('Código automático da equipe inválido. Salve e recarregue o progresso.');
+  if(!Array.isArray(input.members)||input.members.length<1||input.members.length>8)
+    webFail('Informe de um a oito integrantes da equipe.');
+  var seen={},members=input.members.map(function(member,index){
+    if(!member||typeof member!=='object'||Array.isArray(member))
+      webFail('Integrante inválido '+(index+1)+'.');
+    var name=webText(member.name,100,'nome do integrante');
+    if(!/^[\\p{L}][\\p{L}\\p{M} .'\\-]{2,99}$/u.test(name)||
+       name.split(/\\s+/).filter(Boolean).length<2)
+      webFail('Informe nome e sobrenome do integrante '+(index+1)+'.');
+    var key=webNormalized(name);
+    if(seen[key])webFail('Integrante repetido: '+name+'.');
+    seen[key]=true;
+    return {name:name};
+  });
+  return {team:team,teamId:teamId,members:members};
 }
 function webEvidence(value) {
   if (!value || typeof value !== 'object' || Array.isArray(value))
