@@ -1,0 +1,28 @@
+name: Diagnostico | Apps Script Web GET (sem escrita)
+on:
+  push:
+    branches: [fix/aula05-cache-and-delivery-state-20261023]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Verificar versao publica do Apps Script sem POST
+        shell: bash
+        run: |
+          set +e
+          node scripts/probe-web-appscript.mjs --url "https://script.google.com/macros/s/AKfycbyDC9tGFBTOjZXau4m2vWQVPoYa3gZKMldc1NjAMZCUstHx0SICMG8Z4ekAWvLfnmlc/exec"
+          code=$?
+          if [ "$code" -eq 0 ]; then
+            echo 'WEB_GET_VERIFIED=true' >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo 'WEB_GET_VERIFIED=false. A implantação externa não está comprovada e o envio segue bloqueado.' >> "$GITHUB_STEP_SUMMARY"
+          fi
+          exit 0
