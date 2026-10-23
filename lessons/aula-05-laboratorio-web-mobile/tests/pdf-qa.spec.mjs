@@ -143,7 +143,7 @@ test('não imprime PDF sem equipe e sem sobrenome: mostra alerta e foca primeiro
   await page.locator('#web-member-0-name').fill('Ana Ferreira');
   await page.locator('#team-done').click();
   await expect(page.locator('#team-dialog')).toBeHidden();
-  await printNoModal(page,'#dialog-pdf');
+  await printNoModal(page,'#quick-pdf');
   await expect(page.locator('#print-report')).toContainText('Ana Ferreira');
   expect(await page.evaluate(()=>window.__printCount)).toBe(1);
 });
