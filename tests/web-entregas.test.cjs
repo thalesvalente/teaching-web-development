@@ -183,6 +183,7 @@ test('identificação aceita somente equipe e nomes completos sem matrícula ou 
   assert.equal(f.ctx.webIdentity(f.identity(ID,["João D'Ávila"])).members[0].name,"João D'Ávila");
   assert.equal(f.ctx.webIdentity(f.identity(ID,["Ana O'Connor"])).members[0].name,"Ana O'Connor");
   assert.throws(()=>f.ctx.webIdentity(f.identity(ID,['Ana C-D'])),/nome e sobrenome/);
+  assert.throws(()=>f.ctx.webIdentity(f.identity(ID,["Ana O'Connor","Ana O’Connor"])),/repetido/);
   assert.throws(()=>f.ctx.webIdentity(f.identity(ID,['Ana Exemplo','Ána  Exemplo'])),/repetido/);
   assert.throws(()=>f.ctx.webIdentity(f.identity(ID,Array.from({length:9},(_,i)=>'Integrante Número '+i))),/oito/);
   assert.equal(f.ctx.webSafe('=HYPERLINK("x")').startsWith("'="),true);

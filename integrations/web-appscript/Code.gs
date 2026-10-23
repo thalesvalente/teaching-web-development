@@ -60,7 +60,7 @@ function webSafe(value) {
 }
 function webNormalized(value) {
   return String(value || '').trim().normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '').replace(/\s+/g,' ').toLowerCase();
+    .replace(/[\u0300-\u036f]/g, '').replace(/[’‘]/g,"'").replace(/\s+/g,' ').toLowerCase();
 }
 /**
  * Identificação coletiva: só nome da equipe e nomes dos integrantes.

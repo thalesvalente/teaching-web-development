@@ -37,7 +37,7 @@
     });
   };
   const normalized=value=>String(value||'').trim().normalize('NFD')
-    .replace(/[\u0300-\u036f]/g,'').replace(/\s+/g,' ').toLowerCase();
+    .replace(/[\u0300-\u036f]/g,'').replace(/[’‘]/g,"'").replace(/\s+/g,' ').toLowerCase();
 
   function validatePartial(obj){
     if(!obj||typeof obj!=='object'||Array.isArray(obj) ||

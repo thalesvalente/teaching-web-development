@@ -343,3 +343,16 @@ test('botão do formulário gera PDF mesmo offline, mas não envia registros',as
   expect(await page.evaluate(()=>window.__printedCount)).toBe(1);
   expect(posts).toBe(0);
 });
+
+
+test('duplicidade com apostrofos tipograficos distintos bloqueia a equipe',async({page})=>{
+  await enter(page);
+  await page.locator('#team-open-evidence').click();
+  await page.locator('#web-team').fill('Equipe Cedro');
+  await page.locator('#web-member-0-name').fill("Ana O'Connor");
+  await page.locator('#web-add-member').click();
+  await page.locator('#web-member-1-name').fill("Ana O’Connor");
+  await page.locator('#team-done').click();
+  await expect(page.locator('#team-feedback')).toContainText('Nome repetido');
+  await expect(page.locator('#web-member-1-name')).toHaveAttribute('aria-invalid','true');
+});
