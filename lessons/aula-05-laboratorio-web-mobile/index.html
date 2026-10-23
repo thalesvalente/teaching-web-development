@@ -6,12 +6,12 @@
   <meta name="description" content="Aula 05: Laboratório Vivo com tutorial guiado, código React Native comentado, regras visíveis e duas prévias interativas Web e Mobile.">
   <meta name="theme-color" content="#10472e">
   <title>Aula 05 · Laboratório Vivo · Tutorial Web ↔ Mobile | IFMA</title>
-  <link rel="stylesheet" href="./style.css?v=20261023-qa02">
+  <link rel="stylesheet" href="./style.css?v=web-id03-qa01">
   <script defer src="./entrega-config.js"></script>
-  <script defer src="./report-print.js?v=20261023-qa02"></script>
-  <script defer src="./equipe.js?v=20261023-qa02"></script>
+  <script defer src="./report-print.js?v=web-id03-qa01"></script>
+  <script defer src="./equipe.js?v=web-id03-qa01"></script>
   <script defer src="./lab.js?v=20261023-qa02"></script>
-  <script defer src="./entrega-appscript.js?v=20261023-qa03"></script>
+  <script defer src="./entrega-appscript.js?v=web-id03-qa01"></script>
 </head>
 <body>
   <a class="skip" href="#missao-atual">Pular para a missão atual</a>
@@ -29,7 +29,7 @@
         <button type="button" id="save-progress" class="header-action emphasis">Salvar progresso</button>
         <button type="button" id="review-xp" class="header-action" title="Rever as missões técnicas no código atual sem apagar XP conquistados">Conferir progresso</button>
         <button type="button" id="load-progress" class="header-action">Retomar arquivo</button>
-        <button type="button" id="quick-pdf" class="header-action" title="É obrigatório informar equipe e nomes completos. O envio depende da homologação do Apps Script.">Gerar PDF e Enviar</button>
+        <button type="button" id="quick-pdf" class="header-action" title="É obrigatório informar nome completo e matrícula para enviar online. O envio depende de homologação.">Gerar PDF e Enviar</button>
         <button type="button" id="evidence-open" class="header-action">Evidências <span aria-hidden="true">↗</span></button>
         <input type="file" id="progress-file" accept=".json,application/json" hidden aria-label="Selecionar arquivo JSON de progresso">
       </nav>
@@ -115,7 +115,7 @@
         <button type="button" class="close-dialog team-close" data-close-dialog="team-dialog" aria-label="Fechar identificação da equipe">×</button>
         <div class="team-head-content">
           <div class="team-head-icon" aria-hidden="true"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
-          <div><p class="team-kicker">Seu grupo, sua entrega</p><h2 id="team-title">Identificação da equipe</h2><p id="team-intro">Uma atividade, todos os integrantes. Preencha somente os nomes, sem matrícula ou turma.</p></div>
+          <div><p class="team-kicker">Seu grupo, sua entrega</p><h2 id="team-title">Identificação da equipe</h2><p id="team-intro">Uma atividade, todos os integrantes. Informe nome completo e matrícula de cada integrante para envio online. O PDF local permanece possível sem matrícula.</p></div>
         </div>
         <div class="team-head-progress" aria-label="Progresso de identificação da equipe">
           <span id="team-progress-caption">Preencha o nome da equipe e dos integrantes</span>
@@ -133,7 +133,7 @@
           </div>
         </section>
         <section class="team-section team-members-section" aria-labelledby="team-members-heading">
-          <div class="team-section-heading team-section-heading-members"><span class="team-step" aria-hidden="true">02</span><div><h3 id="team-members-heading">Integrantes <span id="team-members-count" class="team-members-pill">0/8</span></h3><p>Incluam nome e sobrenome de cada pessoa. Todos os campos devem ser preenchidos antes do PDF e envio.</p></div></div>
+          <div class="team-section-heading team-section-heading-members"><span class="team-step" aria-hidden="true">02</span><div><h3 id="team-members-heading">Integrantes <span id="team-members-count" class="team-members-pill">0/8</span></h3><p>Informe nome completo e matrícula para cada pessoa. A matrícula é obrigatória apenas para envio online e deve manter zeros iniciais.</p></div></div>
           <div id="web-members" class="team-roster" aria-labelledby="team-members-heading"></div>
           <button type="button" id="web-add-member" class="team-add-member"><span class="team-add-icon" aria-hidden="true">+</span><span>Adicionar integrante</span><span id="team-remaining" class="team-add-remaining"></span></button>
         </section>
@@ -141,10 +141,10 @@
           <div class="team-summary-symbol" aria-hidden="true">✓</div><div><strong id="team-summary-title">Identificação em andamento</strong><p id="team-summary-copy">Seus nomes serão incluídos no PDF e no JSON de progresso.</p></div>
         </div>
         <p id="team-feedback" class="team-feedback" role="alert" aria-live="assertive">Preencha os dados para concluir a identificação. Você pode salvar o progresso parcial.</p>
-        <p class="team-privacy"><span aria-hidden="true">●</span> Salvo neste navegador e no JSON. Envio ao professor somente quando autorizado.</p>
+        <p class="team-privacy"><span aria-hidden="true">●</span> Matrículas não são salvas automaticamente neste navegador; só no JSON exportado voluntariamente. Não publique arquivos identificados.</p>
       </div>
       <footer class="team-panel-footer">
-        <span class="team-footer-label">Sem matrícula · Sem turma · 1 a 8 integrantes</span>
+        <span class="team-footer-label">Nome completo + matrícula para enviar · 1 a 8 integrantes</span>
         <button type="button" id="team-done" class="btn run team-submit">Concluir identificação <span aria-hidden="true">→</span></button>
       </footer>
     </div>
@@ -209,7 +209,7 @@ app/lab05.tsx               ← importa o componente
     <div class="dialog-header"><h2 id="evidence-title">Evidências do laboratório</h2><button type="button" class="close-dialog" data-close-dialog="evidence-dialog" aria-label="Fechar evidências">×</button></div>
     <div class="dialog-body">
       <p><strong>Continue de onde parou:</strong> use <strong>Salvar progresso</strong> para baixar um JSON que guarda código, respostas, missão atual e XP formativos. Em outro momento ou dispositivo, clique em <strong>Retomar arquivo</strong>. O PDF segue o modelo institucional A4 do IFMA e pode conter missões pendentes. O botão <strong>Gerar PDF e Enviar</strong> abre a impressão (escolha Salvar como PDF) e tenta enviar <strong>as evidências JSON</strong> se o recebimento estiver habilitado. O PDF não é anexado. Somente o recibo confirma entrega. Para continuar editando, use o JSON.</p>
-      <p>Pode manter exercícios e reflexões <strong>pendentes</strong>, sem perder XP; para gerar o PDF ou enviar, é obrigatório identificar a equipe e informar nome e sobrenome de todos os integrantes.</p>
+      <p>Pode manter exercícios e reflexões <strong>pendentes</strong>, sem perder XP; para o PDF local, informe equipe e nomes completos; para envio online também são exigidas as matrículas dos integrantes.</p>
       <p id="progress-status" class="progress-status" role="status" aria-live="polite">Rascunho salvo automaticamente neste navegador quando disponível. Salve um JSON para levar a outro dispositivo.</p>
       <div class="evidence-actions priority-actions"><button type="button" id="dialog-save-progress" class="btn run">Salvar progresso (.json)</button><button type="button" id="dialog-load-progress" class="btn secondary">Retomar (.json)</button><button type="button" id="dialog-pdf" class="btn secondary">Gerar PDF parcial (A4)</button></div>
       <div class="evidence-score"><strong><span id="xp-evidence">0</span>/100 XP</strong><span id="evidence-count">0 concluídos · 14 pendentes</span></div>
