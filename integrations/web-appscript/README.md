@@ -7,6 +7,14 @@
 - Frontend: [entrega-config.js](../../lessons/aula-05-laboratorio-web-mobile/entrega-config.js) + [entrega-appscript.js](../../lessons/aula-05-laboratorio-web-mobile/entrega-appscript.js).
 - **Sem implantação /exec confirmada:** o frontend permanece com `endpoint:''` e `activated:false`; preencher somente a URL não habilita os envios. JSON, Markdown, impressão/PDF e XP continuam funcionando offline.
 
+## Endpoint de Web informado — etapa de homologação
+
+- URL `/exec` recebida do responsável pela planilha e cadastrada em `entrega-config.js`.
+- `WEB_SETUP_PASS` informado após execução de `prepararIntegracaoWeb`: 5 abas, 14 missões e 100 XP; recebimento **BLOQUEADO**.
+- O frontend mantém `activated:false`. O recebimento real ainda **não foi testado** e não deve ser anunciado como funcionando.
+- O Web App pode estar restrito a `Only myself`; por isso a CI não exige GET anônimo até a homologação da permissão de acesso e autorização para recebimento.
+- Próximo gate: verificar o GET do `/exec` na conta autorizada e validar um POST fictício com leitura da aba Auditoria antes de habilitar entregas de alunos.
+
 ## Implantação assistida da versão Web
 
 **Situação verificada em 22/10/2026:** a planilha nativa existe, tem as cinco abas corretas e **nenhuma entrega real registrada**. Não foi encontrado projeto Apps Script de Web na conta Google conectada; não existe URL `/exec` confirmada. A configuração pública do laboratório continua `endpoint:''` e `activated:false`, ou seja, **nenhum envio está habilitado**.
