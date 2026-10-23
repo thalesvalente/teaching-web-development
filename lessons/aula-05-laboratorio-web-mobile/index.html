@@ -6,12 +6,12 @@
   <meta name="description" content="Aula 05: Laboratório Vivo com tutorial guiado, código React Native comentado, regras visíveis e duas prévias interativas Web e Mobile.">
   <meta name="theme-color" content="#10472e">
   <title>Aula 05 · Laboratório Vivo · Tutorial Web ↔ Mobile | IFMA</title>
-  <link rel="stylesheet" href="./style.css">
+  <link rel="stylesheet" href="./style.css?v=20261023-qa02">
   <script defer src="./entrega-config.js"></script>
-  <script defer src="./report-print.js"></script>
-  <script defer src="./equipe.js"></script>
-  <script defer src="./lab.js"></script>
-  <script defer src="./entrega-appscript.js"></script>
+  <script defer src="./report-print.js?v=20261023-qa02"></script>
+  <script defer src="./equipe.js?v=20261023-qa02"></script>
+  <script defer src="./lab.js?v=20261023-qa02"></script>
+  <script defer src="./entrega-appscript.js?v=20261023-qa02"></script>
 </head>
 <body>
   <a class="skip" href="#missao-atual">Pular para a missão atual</a>
@@ -29,7 +29,7 @@
         <button type="button" id="save-progress" class="header-action emphasis">Salvar progresso</button>
         <button type="button" id="review-xp" class="header-action" title="Rever as missões técnicas no código atual sem apagar XP conquistados">Conferir progresso</button>
         <button type="button" id="load-progress" class="header-action">Retomar arquivo</button>
-        <button type="button" id="quick-pdf" class="header-action">Gerar PDF e Enviar</button>
+        <button type="button" id="quick-pdf" class="header-action" title="É obrigatório informar equipe e nomes completos. O envio depende da homologação do Apps Script.">Gerar PDF e Enviar</button>
         <button type="button" id="evidence-open" class="header-action">Evidências <span aria-hidden="true">↗</span></button>
         <input type="file" id="progress-file" accept=".json,application/json" hidden aria-label="Selecionar arquivo JSON de progresso">
       </nav>
@@ -236,7 +236,7 @@ app/lab05.tsx               ← importa o componente
           Gerar PDF e Enviar
         </button>
         <p id="web-delivery-status" role="status" aria-live="polite" tabindex="-1">
-          Recebimento online aguardando configuração do Apps Script.
+          Recebimento online ainda não homologado. O PDF pode ser salvo localmente após identificar a equipe.
           Exportação local continua disponível.
         </p>
       </fieldset>
