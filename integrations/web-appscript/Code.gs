@@ -13,7 +13,7 @@
  */
 var WEB_CFG = Object.freeze({
   spreadsheetId: '1iLx-Tm0EFCsMxqKxbkXAuevJlCzjFAJuRyknbHYlbGM',
-  version: 'web-entregas-1.1.0',
+  version: 'web-entregas-1.1.1',
   activity: 'WEB-AULA05-2026',
   schema: 'ifma-web-aula05-lab-v4',
   maxPayloadChars: 44000,

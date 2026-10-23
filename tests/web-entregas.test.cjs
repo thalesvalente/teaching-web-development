@@ -148,7 +148,7 @@ function receipt(response){
 function enabled(f){f.props.set('WEB_WEB_SUBMISSIONS_ENABLED','true');}
 test('Code.gs V8 1.1.0 valida contrato de 6 abas sem scripts Mobile/PPI',()=>{
   assert.doesNotThrow(()=>new vm.Script(source));
-  assert.match(source,/web-entregas-1\.1\.0/);
+  assert.match(source,/web-entregas-1\.1\.1/);
   assert.equal(Object.keys(HEADERS).length,6);
   assert.doesNotMatch(source,/1z5VEmScYCtfsEGg0AahY3cHE5eYO79Zj0xLMzx4iT0Y/);
 });
@@ -310,4 +310,27 @@ test('manifesto Apps Script usa V8 e fuso Fortaleza',()=>{
     '../integrations/web-appscript/appsscript.json'),'utf8'));
   assert.equal(manifest.runtimeVersion,'V8');
   assert.equal(manifest.timeZone,'America/Fortaleza');
+});
+
+test('sem metadados persistidos em Equipes, doPost retorna erro e não inventa recibo',()=>{
+  const f=fixture();enabled(f);
+  const original=f.tabs.Equipes.getRange.bind(f.tabs.Equipes);
+  f.tabs.Equipes.getRange=function(row,col,height,width){
+    const target=original(row,col,height,width);
+    if(row===2 && col===1 && width===10){
+      const setValues=target.setValues;
+      target.setValues=function(matrix){
+        setValues(matrix);
+        // Simula backend que gravou A:F, mas descartou G:J.
+        for(let colIndex=6;colIndex<10;colIndex++)f.tabs.Equipes.rows[1][colIndex]='';
+        return target;
+      };
+    }
+    return target;
+  };
+  const result=receipt(f.ctx.doPost(f.evt()));
+  assert.equal(result.ok,false);
+  assert.match(result.error,/Persistência da equipe incompleta/);
+  assert.equal(f.records('Auditoria',15).length,1);
+  assert.equal(f.records('Equipes',8).length,0);
 });

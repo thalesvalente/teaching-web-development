@@ -51,3 +51,9 @@ A liberação para a turma exige **dois controles**: propriedade do servidor hab
 ## Segurança e governança
 
 O servidor valida os nomes completos, rejeita duplicações na mesma equipe, neutraliza fórmulas maliciosas e utiliza LockService para gravações concorrentes. Uma atividade é associada à equipe pelo ID automático; o mesmo grupo pode reenviar sem duplicar a linha de equipe. PDF e progresso JSON são exportados localmente sem envio automático. Não publique credenciais nem informações de alunos reais no GitHub. O compartilhamento público do Web App exige revisão de acesso e LGPD.
+
+## Correção de homologação 1.1.1 (23/10/2026)
+
+O receptor passou a verificar a persistência das colunas G:J da aba Equipes antes de retornar sucesso. A versão de implantação deve ser **nova**, mantendo o mesmo URL /exec. A versão pública é verificada por GET, que deverá conter `web-entregas-1.1.1`. O parser do teste HTTP passou a validar JSON escapado e o envelope completo `top.postMessage`.
+
+**Não ativar o frontend pelo sucesso de `prepararIntegracaoWeb` ou por `doPost: Completed` isoladamente.** A equipe fictícia histórica já teve a linha Equipes reconciliada; qualquer teste POST adicional deve ter verificação da Auditoria, Equipes e quatro bimestres, sem modificar notas docentes. `activated:false` permanece até recibo real com o contrato completo e prova da implantação 1.1.1.
