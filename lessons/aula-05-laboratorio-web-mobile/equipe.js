@@ -123,11 +123,12 @@
   }
   function summary(){
     const names=group.members.map(x=>x.name.trim()).filter(Boolean);
-    const ready=group.members.filter(m=>fullName(m.name)&&/^\d{1,32}$/.test(m.enrollment||'')).length;
+    const requireEnrollment=window.WebEntrega?.ativado===true;
+    const ready=group.members.filter(m=>fullName(m.name)&&(!requireEnrollment||/^\d{1,32}$/.test(m.enrollment||''))).length;
     const teamValid=group.team.trim().length>=3;
     const pct=Math.round(((teamValid?1:0)+ready)/(group.members.length+1)*100);
     let complete=false;
-    try{getIdentity();complete=true;}catch{/* validação completa exibida ao concluir */}
+    try{getIdentity({requireEnrollment});complete=true;}catch{/* validação completa exibida ao concluir */}
     el('team-members-count').textContent=names.length+'/'+MAX;
     el('team-remaining').textContent=group.members.length>=MAX
       ? 'Limite atingido' : (MAX-group.members.length)+' vagas restantes';
@@ -291,7 +292,7 @@
   });
   el('team-done').addEventListener('click',()=>{
     try{
-      const data=getIdentity();
+      const data=getIdentity({requireEnrollment:window.WebEntrega?.ativado===true});
       persist();
       clearValidity();
       feedback('Equipe '+data.team+' identificada com '+data.members.length+' integrante(s).','success');
