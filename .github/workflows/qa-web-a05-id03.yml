@@ -25,7 +25,20 @@ jobs:
           cp integrations/web-appscript-v3-qa/Code.gs /tmp/Code-v3.js
           node --check /tmp/Code-v3.js
       - name: Executar testes isolados de matrícula e nota
-        run: node --test tests/web-a05-id03/backend-v3.test.cjs
+        run: node --test tests/web-a05-id03/*.test.cjs
+      - name: Preservar fonte exata desta execução
+        if: always()
+        run: |
+          mkdir -p /tmp/web-id03-evidence
+          git rev-parse HEAD > /tmp/web-id03-evidence/COMMIT.txt
+          git archive --format=zip --output=/tmp/web-id03-evidence/source.zip HEAD lessons/aula-05-laboratorio-web-mobile integrations/web-appscript-v3-qa tests/web-a05-id03 docs/WEB_A05_ID03_QA_V3_20261023.md
+          sha256sum /tmp/web-id03-evidence/source.zip > /tmp/web-id03-evidence/SHA256.txt
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: web-id03-source
+          path: /tmp/web-id03-evidence/*
+          retention-days: 14
   frontend-v3:
     runs-on: ubuntu-latest
     timeout-minutes: 25
