@@ -74,6 +74,7 @@ test('adicionar e remover membros mantém uma só equipe e não perde o primeiro
   await page.locator('#web-member-1-name').fill('Bia Exemplo');
   await page.locator('#web-add-member').click();
   await page.locator('#web-member-2-name').fill('Caio Exemplo');
+  page.once('dialog',dialog=>dialog.accept());
   await page.locator('[data-remove="1"]').click();
   await expect(page.locator('#web-member-1-name')).toHaveValue('Caio Exemplo');
   const value=await page.evaluate(()=>window.WebTeam.snapshot());
@@ -143,7 +144,7 @@ test('POST ativado rejeita nomes incompletos e duplicados antes de enviar',async
   await page.locator('[data-close-dialog="team-dialog"]').click();
   await page.locator('#evidence-open').click();
   await page.locator('#web-submit').click();
-  await expect(page.locator('#web-delivery-status')).toContainText('Integrante repetido');
+  await expect(page.locator('#web-delivery-status')).toContainText('Nome repetido na equipe');
   expect(calls).toBe(0);
 });
 test('recibo coletivo emulado: JSON da equipe e estado pendente, nunca nota oficial',async({page})=>{
