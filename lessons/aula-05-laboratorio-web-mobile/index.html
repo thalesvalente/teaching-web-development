@@ -111,18 +111,16 @@
   <dialog class="resource-dialog team-dialog" id="team-dialog" aria-labelledby="team-title">
     <div class="dialog-header"><h2 id="team-title">Identificação da equipe — Aula 05</h2><button type="button" class="close-dialog" data-close-dialog="team-dialog" aria-label="Fechar identificação da equipe">×</button></div>
     <div class="dialog-body">
-      <p class="team-lead">Atividade em <strong>equipe</strong>: informe a equipe, a turma e o <strong>nome completo e a matrícula de cada integrante</strong>. Você pode adicionar ou remover integrantes (até 8), como na ficha de Móveis. O mesmo progresso e XP serão vinculados aos integrantes declarados após a conferência docente.</p>
+      <p class="team-lead">Atividade em <strong>equipe</strong>: informe apenas o nome da equipe e os <strong>nomes completos dos integrantes</strong>. Você pode adicionar ou remover integrantes (até 8), como na ficha de Móveis. Não é necessário informar matrícula ou turma. Os XP são formativos e ficam associados à equipe, sujeitos à conferência docente.</p>
       <div class="team-core">
-        <label for="web-team">Nome ou identificação da equipe</label>
+        <label for="web-team">Nome da equipe</label>
         <input id="web-team" type="text" maxlength="80" autocomplete="off" placeholder="Ex.: Equipe Ipê" aria-required="true">
-        <label for="web-class">Turma</label>
-        <input id="web-class" type="text" maxlength="60" autocomplete="off" placeholder="Ex.: 3º Informática A" aria-required="true">
       </div>
       <div class="team-members-toolbar"><h3 id="team-members-heading">Integrantes</h3><button type="button" id="web-add-member" class="btn secondary">+ Adicionar integrante</button></div>
       <div id="web-members" aria-labelledby="team-members-heading"></div>
-      <p id="team-feedback" role="status" aria-live="polite">Identificação parcial permitida. Salve seu progresso em JSON para continuar depois.</p>
+      <p id="team-feedback" role="status" aria-live="polite">Informe os nomes completos. É possível salvar o progresso em JSON antes de terminar.</p>
       <button type="button" id="team-done" class="btn run">Concluir identificação da equipe</button>
-      <p class="privacy">Esses dados são salvos localmente neste navegador e no JSON de progresso, quando exportado. Só serão enviados à planilha após acionar a entrega online autorizada. Nome e matrícula informados não comprovam identidade.</p>
+      <p class="privacy">Os nomes são salvos localmente neste navegador e no JSON de progresso, quando exportado. Só serão enviados à planilha após acionar a entrega online autorizada. Os nomes declarados não constituem comprovação de identidade.</p>
     </div>
   </dialog>
 
@@ -204,7 +202,7 @@ app/lab05.tsx               ← importa o componente
         <p id="web-team-summary" class="team-summary" role="status">Nenhuma equipe identificada. Use “Equipe e integrantes” no cabeçalho.</p>
         <button type="button" id="team-open-evidence" class="btn secondary">Preencher ou revisar integrantes</button>
         <p id="web-delivery-explanation" class="web-submission-explanation">
-          A equipe envia uma atividade com os nomes e matrículas de todos os integrantes. A entrega registra XP <strong>formativos declarados</strong>;
+          A equipe envia uma única atividade com os nomes completos de todos os integrantes. A entrega registra XP <strong>formativos declarados</strong>;
           não lança nota oficial. Nome e matrícula digitados não comprovam identidade.
           Não inclua senhas, documentos pessoais ou informações sigilosas no código.
         </p>
