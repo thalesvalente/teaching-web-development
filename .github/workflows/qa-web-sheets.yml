@@ -42,7 +42,7 @@ jobs:
           node --check scripts/probe-web-appscript.mjs
           node --check scripts/test-web-appscript-post.mjs
       - name: Testes de recepcao mockada e integridade
-        run: node --test tests/web-entregas.test.cjs
+        run: node --test tests/web-entregas.test.cjs tests/web-receipt-parser.test.mjs
       - name: Validar endpoint Web (vazio ou /exec) e ativacao explicita
         run: |
           node - <<'JS'
