@@ -1,0 +1,25 @@
+name: Homologacao unica Aula05 v3 (GET + POST ficticio)
+on:
+  push:
+    branches: [qa/aula05-e2e-live-v3-20261023]
+    paths: ['.github/workflows/qa-aula05-e2e-live-v3.yml']
+permissions:
+  contents: read
+concurrency:
+  group: aula05-e2e-live-v3-20261023
+  cancel-in-progress: false
+jobs:
+  one-shot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Verificar servidor remoto versionado sem escrita
+        run: node scripts/probe-web-appscript.mjs --require-enabled
+      - name: Validar fixture sem rede
+        run: node scripts/test-web-appscript-post.mjs --dry-run
+      - name: POST autorizado, apenas equipe ficticia idempotente historica
+        run: node scripts/test-web-appscript-post.mjs --url "https://script.google.com/macros/s/AKfycbyDC9tGFBTOjZXau4m2vWQVPoYa3gZKMldc1NjAMZCUstHx0SICMG8Z4ekAWvLfnmlc/exec" --confirm-write
