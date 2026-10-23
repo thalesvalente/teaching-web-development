@@ -48,3 +48,10 @@ Esta microintervenção não cria uma prova extra: é diagnóstico formativo e o
 
 O laboratório v4 inicia com um exemplo corrigido; não substitui automaticamente um TSX salvo no navegador na versão anterior. Havendo código anterior, aparece a opção de **baixar backup**. Oriente que o estudante compare e reaplique apenas suas próprias alterações, sem fazer sobrescrita automática.
 
+
+
+## Entrega coletiva e nomes dos integrantes
+
+Organize as missões em equipe, mantendo a experimentação e o feedback formativo. Uma pessoa registra no botão **Equipe e integrantes** apenas o nome da equipe e os nomes completos dos participantes. Não exigir matrícula ou turma. O laboratório aceita até oito integrantes e permite salvar/retomar a lista no JSON junto do TSX e dos XP.
+
+Na entrega coletiva há uma linha por integrante em cada bimestre da planilha Web, um registro da equipe e outro na Auditoria. Os XP não são nota; nenhuma pontuação da Aula 04 será alterada automaticamente. A identidade declarada exige conferência do docente. Evite que integrantes enviem o mesmo trabalho a partir de JSONs diferentes: escolha um responsável por acionar o envio final.
