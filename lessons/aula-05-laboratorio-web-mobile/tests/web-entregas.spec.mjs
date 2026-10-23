@@ -1,4 +1,4 @@
-/** QA Web: trabalho em equipe, sem exigir matrícula ou turma. */
+/** QA Web: matrícula por integrante em homologação. */
 import { test, expect } from '@playwright/test';
 import crypto from 'node:crypto';
 import { readFile } from 'node:fs/promises';
@@ -21,9 +21,12 @@ async function fillTeam(page,names=['Ana Exemplo','Bia Exemplo']){
   await expect(page.locator('#team-dialog')).toBeVisible();
   await page.locator('#web-team').fill('Equipe Ipê');
   await page.locator('#web-member-0-name').fill(names[0]);
+  await page.locator('#web-member-0-enrollment').fill('00001000');
+  await page.locator('#web-member-0-enrollment').fill('00001000');
   for(let i=1;i<names.length;i++){
     await page.locator('#web-add-member').click();
     await page.locator('#web-member-'+i+'-name').fill(names[i]);
+    await page.locator('#web-member-'+i+'-enrollment').fill(String(1000+i).padStart(8,'0'));
   }
   await page.locator('#team-done').click();
   await expect(page.locator('#team-dialog')).toBeHidden();
@@ -39,14 +42,15 @@ function mockReceipt(snapshot,nonce,grade=null){
     receivedAt:'2026-10-23T14:00:00.000Z',answersSha256:'a'.repeat(64),
     codeSha256:hash(snapshot.evidence.codigoFonteCompleto),
     signature:'b'.repeat(64),xpReported:snapshot.evidence.xp,
-    grade,status:'RECEBIDO_PENDENTE_VALIDACAO'
+    grade,status:'RECEBIDO_PENDENTE_VALIDACAO',
+    gradeReceived:snapshot.evidence.xp/10,bestGrades:snapshot.identity.members.map(()=>snapshot.evidence.xp/10)
   };
 }
 function mockHtml(data){
   return '<!doctype html><meta charset="utf-8"><script>top.postMessage('+
     JSON.stringify(data)+',"*");</scr'+'ipt>';
 }
-test('formulário de equipe pede somente nome da equipe e nomes completos',async({page})=>{
+test('formulário da equipe exige matrícula no envio online',async({page})=>{
   await enter(page);
   await expect(page.locator('#web-student-id')).toHaveCount(0);
   await expect(page.locator('#web-class')).toHaveCount(0);
@@ -57,23 +61,27 @@ test('formulário de equipe pede somente nome da equipe e nomes completos',async
   expect(ident.team).toBe('Equipe Ipê');
   expect(ident.members.map(m=>m.name)).toEqual(['Ana Exemplo','Bia Exemplo','Caio Exemplo']);
   expect(ident.teamId).toMatch(/^[\da-f]{8}-/);
-  expect(ident).not.toHaveProperty('enrollment');
+  expect(ident.members.every(m=>/^\d+$/.test(m.enrollment))).toBe(true);
   expect(ident).not.toHaveProperty('classGroup');
   await page.reload();
   await expect(page.locator('#team-count')).toContainText('3 nomes');
   const saved=await page.evaluate(()=>window.WebTeam.snapshot());
   expect(saved.teamId).toBe(ident.teamId);
   expect(saved.members).toHaveLength(3);
+  expect(saved.members.every(m=>m.enrollment==='')).toBe(true);
 });
 test('adicionar e remover membros mantém uma só equipe e não perde o primeiro nome',async({page})=>{
   await enter(page);
   await page.locator('#team-open-evidence').click();
   await page.locator('#web-team').fill('Equipe Cedro');
   await page.locator('#web-member-0-name').fill('Ana Exemplo');
+  await page.locator('#web-member-0-enrollment').fill('00001000');
   await page.locator('#web-add-member').click();
   await page.locator('#web-member-1-name').fill('Bia Exemplo');
+  await page.locator('#web-member-1-enrollment').fill('00001001');
   await page.locator('#web-add-member').click();
   await page.locator('#web-member-2-name').fill('Caio Exemplo');
+  await page.locator('#web-member-2-enrollment').fill('00001002');
   page.once('dialog',dialog=>dialog.accept());
   await page.locator('[data-remove="1"]').click();
   await expect(page.locator('#web-member-1-name')).toHaveValue('Caio Exemplo');
@@ -139,16 +147,19 @@ test('POST ativado rejeita nomes incompletos e duplicados antes de gerar PDF ou 
   expect(await page.evaluate(()=>window.__prints)).toBe(0);
   await page.locator('#web-team').fill('Equipe Ipê');
   await page.locator('#web-member-0-name').fill('Ana');
+  await page.locator('#web-member-0-enrollment').fill('00001000');
   await page.locator('#team-done').click();
   await expect(page.locator('#team-feedback')).toContainText('nome e sobrenome');
   await page.locator('#web-member-0-name').fill('Ana Exemplo');
+  await page.locator('#web-member-0-enrollment').fill('00001000');
   await page.locator('#web-add-member').click();
   await page.locator('#web-member-1-name').fill('Ána Exemplo');
+  await page.locator('#web-member-1-enrollment').fill('00001001');
   await page.locator('[data-close-dialog="team-dialog"]').click();
   await expect(page.locator('#evidence-dialog')).toBeVisible();
   await page.locator('#web-submit').click();
   await expect(page.locator('#team-dialog')).toBeVisible();
-  await expect(page.locator('#team-feedback')).toContainText('Nome repetido na equipe');
+  await expect(page.locator('#team-feedback')).toContainText('Nome duplicado');
   await expect(page.locator('#web-delivery-status')).toContainText('ENVIO NÃO REALIZADO');
   expect(calls).toBe(0);
   expect(await page.evaluate(()=>window.__prints)).toBe(0);
@@ -167,15 +178,15 @@ test('recibo coletivo emulado: JSON da equipe e estado pendente, nunca nota ofic
   await page.evaluate(()=>{window.__prints=0;window.print=()=>window.__prints++;});
   const [download]=await Promise.all([page.waitForEvent('download'),page.locator('#web-submit').click()]);
   expect(download.suggestedFilename()).toBe('WEB_Aula05_Evidencia_Equipe.json');
-  await expect(page.locator('#web-delivery-status')).toContainText('ENVIO CONFIRMADO! EVIDÊNCIA RECEBIDA',{timeout:10000});
+  await expect(page.locator('#web-delivery-status')).toContainText('ENVIO CONFIRMADO! NOTA RECEBIDA',{timeout:10000});
   await expect(page.locator('#web-delivery-status')).toBeVisible();
   await expect(page.locator('#web-delivery-status')).toContainText('Recibo: WEB-QA-20261023-aabbccdd');
   expect(await page.evaluate(()=>window.__prints)).toBe(1);
   await expect(page.locator('#web-delivery-status')).toContainText('Ana Exemplo; Bia Exemplo');
-  await expect(page.locator('#web-delivery-status')).toContainText('não são nota');
+  await expect(page.locator('#web-delivery-status')).toContainText('Nota recebida:');
   expect(received.identity).toEqual(await page.evaluate(()=>window.WebTeam.getIdentity()));
   expect(received.identity.members).toHaveLength(2);
-  expect(received.identity).not.toHaveProperty('enrollment');
+  expect(received.identity.members.every(m=>/^\d+$/.test(m.enrollment))).toBe(true);
   const saved=JSON.parse(await readFile(await download.path(),'utf8'));
   expect(saved.identity).toEqual(received.identity);
   expect(saved.evidence.codigoFonteCompleto).toBe(received.evidence.codigoFonteCompleto);
@@ -201,7 +212,7 @@ test('painel visual: hierarquia, contagem dinâmica, foco e CTA em desktop e mob
     await page.goto('/index.html');
     // Cada tamanho de tela é testado com um rascunho novo, sem herdar
     // participantes da resolução testada antes.
-    await page.evaluate(()=>localStorage.removeItem('ifma-web-aula05-equipe-v2'));
+    await page.evaluate(()=>localStorage.removeItem('ifma-web-aula05-equipe-v3'));
     await page.reload();
     await page.locator('#team-open').click();
     await expect(page.locator('#team-dialog')).toBeVisible();
@@ -222,12 +233,14 @@ test('painel visual: hierarquia, contagem dinâmica, foco e CTA em desktop e mob
     expect(panel.docWidth).toBeLessThanOrEqual(size.width+1);
     await page.locator('#web-team').fill('Equipe Horizonte');
     await page.locator('#web-member-0-name').fill('Ana Exemplo');
+  await page.locator('#web-member-0-enrollment').fill('00001000');
     await expect(page.locator('#team-progress')).toHaveAttribute('aria-valuenow','100');
     await expect(page.locator('#team-progress-label')).toContainText('Pronto para concluir');
     await page.locator('#web-add-member').click();
     await expect(page.locator('#team-members-count')).toHaveText('1/8');
     await expect(page.locator('#team-progress')).not.toHaveAttribute('aria-valuenow','100');
     await page.locator('#web-member-1-name').fill('Bia Exemplo');
+  await page.locator('#web-member-1-enrollment').fill('00001001');
     await expect(page.locator('#team-progress')).toHaveAttribute('aria-valuenow','100');
     const inputBounds=await page.locator('#web-member-1-name').boundingBox();
     expect(inputBounds?.width).toBeGreaterThanOrEqual(150);
@@ -236,14 +249,16 @@ test('painel visual: hierarquia, contagem dinâmica, foco e CTA em desktop e mob
     await expect(page.locator('#team-count')).toContainText('2 nomes');
   }
 });
-test('painel compacto usa lista sem matrícula ou turma e preserva remoção confirmada',async({page})=>{
+test('painel compacto acomoda matrícula e preserva remoção confirmada',async({page})=>{
   await page.setViewportSize({width:375,height:667});
   await page.goto('/index.html');
   await page.locator('#team-open').click();
   await page.locator('#web-team').fill('Equipe Bacuri');
   await page.locator('#web-member-0-name').fill('Ana Exemplo');
+  await page.locator('#web-member-0-enrollment').fill('00001000');
   await page.locator('#web-add-member').click();
   await page.locator('#web-member-1-name').fill('Bia Exemplo');
+  await page.locator('#web-member-1-enrollment').fill('00001001');
   await expect(page.locator('.team-member-number')).toHaveCount(2);
   await expect(page.locator('.team-remove-member')).toHaveCount(2);
   page.once('dialog',d=>d.accept());
@@ -292,18 +307,22 @@ test('sobrenome abreviado não é nome completo; aceita sobrenome composto',asyn
   await page.locator('#team-open-evidence').click();
   await page.locator('#web-team').fill('Equipe Lagoa');
   await page.locator('#web-member-0-name').fill('Ana B');
+  await page.locator('#web-member-0-enrollment').fill('00001000');
   await page.locator('#team-done').click();
   await expect(page.locator('#team-feedback')).toContainText('nome e sobrenome');
   await page.locator('#web-member-0-name').fill('Ana de Souza');
+  await page.locator('#web-member-0-enrollment').fill('00001000');
   await page.locator('#team-done').click();
   await expect(page.locator('#team-dialog')).toBeHidden();
   expect((await page.evaluate(()=>window.WebTeam.getIdentity())).members[0].name).toBe('Ana de Souza');
   await page.locator('#team-open-evidence').click();
   await page.locator('#web-member-0-name').fill("João D'Ávila");
+  await page.locator('#web-member-0-enrollment').fill('00001000');
   await page.locator('#team-done').click();
   expect((await page.evaluate(()=>window.WebTeam.getIdentity())).members[0].name).toBe("João D'Ávila");
   await page.locator('#team-open-evidence').click();
   await page.locator('#web-member-0-name').fill("Ana O'Connor");
+  await page.locator('#web-member-0-enrollment').fill('00001000');
   await page.locator('#team-done').click();
   expect((await page.evaluate(()=>window.WebTeam.getIdentity())).members[0].name).toBe("Ana O'Connor");
 });
@@ -323,11 +342,14 @@ test('editar um integrante limpa marcações inválidas antigas de outros membro
   await page.locator('#team-open-evidence').click();
   await page.locator('#web-team').fill('Equipe Juçara');
   await page.locator('#web-member-0-name').fill('Ana Sousa');
+  await page.locator('#web-member-0-enrollment').fill('00001000');
   await page.locator('#web-add-member').click();
   await page.locator('#web-member-1-name').fill('Ána Sousa');
+  await page.locator('#web-member-1-enrollment').fill('00001001');
   await page.locator('#team-done').click();
   await expect(page.locator('#web-member-1-name')).toHaveAttribute('aria-invalid','true');
   await page.locator('#web-member-0-name').fill('Lia Marques');
+  await page.locator('#web-member-0-enrollment').fill('00001000');
   await expect(page.locator('#web-member-1-name')).not.toHaveAttribute('aria-invalid','true');
   await page.locator('#team-done').click();
   await expect(page.locator('#evidence-dialog')).toBeVisible();
@@ -350,20 +372,23 @@ test('duplicidade com apostrofos tipograficos distintos bloqueia a equipe',async
   await page.locator('#team-open-evidence').click();
   await page.locator('#web-team').fill('Equipe Cedro');
   await page.locator('#web-member-0-name').fill("Ana O'Connor");
+  await page.locator('#web-member-0-enrollment').fill('00001000');
   await page.locator('#web-add-member').click();
   await page.locator('#web-member-1-name').fill("Ana O’Connor");
+  await page.locator('#web-member-1-enrollment').fill('00001001');
   await page.locator('#team-done').click();
-  await expect(page.locator('#team-feedback')).toContainText('Nome repetido');
+  await expect(page.locator('#team-feedback')).toContainText('Nome duplicado');
   await expect(page.locator('#web-member-1-name')).toHaveAttribute('aria-invalid','true');
 });
 
 
 test('ativos de validação possuem versão para evitar cache anterior no GitHub Pages',async({page})=>{
   await page.goto('/index.html');
-  for(const name of ['equipe.js','lab.js','report-print.js','entrega-appscript.js']){
-    await expect(page.locator('script[src="./'+name+'?v=20261023-'+(name==='entrega-appscript.js'?'qa03':'qa02')+'"]')).toHaveCount(1);
+  for(const name of ['equipe.js','report-print.js','entrega-appscript.js']) {
+    await expect(page.locator('script[src="./'+name+'?v=web-id03-qa01"]')).toHaveCount(1);
   }
-  await expect(page.locator('link[href="./style.css?v=20261023-qa02"]')).toHaveCount(1);
+  await expect(page.locator('script[src="./lab.js?v=20261023-qa02"]')).toHaveCount(1);
+  await expect(page.locator('link[href="./style.css?v=web-id03-qa01"]')).toHaveCount(1);
 });
 
 
