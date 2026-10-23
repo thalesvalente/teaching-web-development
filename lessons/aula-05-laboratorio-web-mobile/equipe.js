@@ -22,6 +22,7 @@
   const fresh=()=>({teamId:newId(),team:'',members:[blank()]});
   let group=fresh();
   let openedFromEvidence=false;
+  let returnFocus=null;
   const modal=el('team-dialog'),holder=el('web-members'),status=el('team-feedback');
   const fullName=name=>{
     const value=String(name||'').trim();
@@ -29,7 +30,8 @@
     const parts=value.split(/\s+/);
     return parts.length>=2 && parts.every(part=>
       /^[\p{L}][\p{L}\p{M}'’\-]*$/u.test(part) &&
-      (part.match(/\p{L}/gu)||[]).length>=2);
+      part.split(/[-'’]/).every(segment=>
+        (segment.match(/\p{L}/gu)||[]).length>=2));
   };
   const normalized=value=>String(value||'').trim().normalize('NFD')
     .replace(/[\u0300-\u036f]/g,'').replace(/\s+/g,' ').toLowerCase();
@@ -106,6 +108,10 @@
       ? 'Equipe '+group.team+' · '+names.length+' integrante(s): '+names.join('; ')
       : 'Equipe ainda não identificada. Use “Equipe e integrantes” no cabeçalho.';
   }
+  function clearValidity(){
+    el('web-team').removeAttribute('aria-invalid');
+    holder.querySelectorAll('input[aria-invalid]').forEach(input=>input.removeAttribute('aria-invalid'));
+  }
   function persist(){
     try{localStorage.setItem(KEY,JSON.stringify(snapshot()));}catch{/* armazenamento opcional */}
     summary();
@@ -156,6 +162,7 @@
     holder.replaceChildren(...group.members.map((_,i)=>memberInput(i)));
     el('web-add-member').disabled=group.members.length>=MAX;
     el('web-team').value=group.team;
+    clearValidity();
     summary();
     if(focusLast)el('web-member-'+(group.members.length-1)+'-name')?.focus({preventScroll:true});
   }
@@ -172,6 +179,7 @@
   render();
   function open(source){
     openedFromEvidence=source==='evidence';
+    returnFocus=openedFromEvidence?document.activeElement:null;
     if(openedFromEvidence&&el('evidence-dialog').open)el('evidence-dialog').close();
     modal.showModal();
     el('web-team').focus({preventScroll:true});
@@ -185,15 +193,28 @@
       return null;
     }
   }
+  modal.addEventListener('close',()=>{
+    // Escape, fechar ×, backdrop e conclusão devolvem o foco à ação de origem
+    // quando a identificação começou no diálogo de evidências.
+    const restore=openedFromEvidence;
+    openedFromEvidence=false;
+    if(!restore)return;
+    const evidence=el('evidence-dialog');
+    if(!evidence.open)evidence.showModal();
+    const target=returnFocus?.isConnected&&evidence.contains(returnFocus)
+      ?returnFocus:el('team-open-evidence');
+    returnFocus=null;
+    target?.focus({preventScroll:true});
+  });
   el('team-open').addEventListener('click',()=>open('header'));
   el('team-open-evidence').addEventListener('click',()=>open('evidence'));
   el('web-team').addEventListener('input',event=>{
-    group.team=event.target.value;event.target.removeAttribute('aria-invalid');persist();
+    group.team=event.target.value;clearValidity();persist();
   });
   holder.addEventListener('input',event=>{
     const i=Number(event.target.dataset.index);
     if(Number.isInteger(i)&&i>=0&&i<group.members.length){
-      group.members[i].name=event.target.value;event.target.removeAttribute('aria-invalid');persist();
+      group.members[i].name=event.target.value;clearValidity();persist();
     }
   });
   holder.addEventListener('click',event=>{
@@ -216,9 +237,9 @@
     try{
       const data=getIdentity();
       persist();
+      clearValidity();
       feedback('Equipe '+data.team+' identificada com '+data.members.length+' integrante(s).','success');
       modal.close();
-      if(openedFromEvidence)el('evidence-dialog').showModal();
     }catch(e){feedback(String(e.message||e),'error');focusInvalid();}
   });
   window.WebTeam=Object.freeze({snapshot,restore,validatePartial,getIdentity,requireIdentity,maxMembers:MAX});

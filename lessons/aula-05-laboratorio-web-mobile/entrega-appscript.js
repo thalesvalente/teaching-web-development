@@ -18,7 +18,8 @@
     /^https:\/\/(?:[a-z0-9-]+\.)?script\.googleusercontent\.com$/.test(origin);
   if (!button || !quickButton || !status) throw Error('Controles de envio Web não encontrados.');
   let busy = false;
-  button.disabled = !activated;
+  // A geração do PDF continua acessível mesmo com o POST bloqueado.
+  button.disabled = false;
   if (!validEndpoint) {
     status.textContent = 'Recebimento online ainda não configurado pelo professor. JSON, Markdown e PDF continuam disponíveis localmente.';
   } else if (!activated) {
@@ -152,7 +153,7 @@
       inform('ENVIO NÃO CONFIRMADO: '+String(error?.message||'Falha de entrega.')+
         '\nConfira o recebimento antes de tentar novamente. PDF/JSON locais não comprovam entrega.','error');
       showReceipt();
-    }finally{busy=false;button.disabled=!activated;quickButton.disabled=false;}
+    }finally{busy=false;button.disabled=false;quickButton.disabled=false;}
   }
   button.addEventListener('click',generatePdfAndSend);
   quickButton.addEventListener('click',generatePdfAndSend);

@@ -85,7 +85,9 @@ function webIdentity(input) {
        name.split(/\s+/).length<2||
        !name.split(/\s+/).every(function(part){
          return /^[\p{L}][\p{L}\p{M}'’\-]*$/u.test(part) &&
-           (part.match(/\p{L}/gu)||[]).length>=2;
+           part.split(/[-'’]/).every(function(segment){
+             return (segment.match(/\p{L}/gu)||[]).length>=2;
+           });
        }))
       webFail('Informe nome e sobrenome do integrante '+(index+1)+'.');
     var key=webNormalized(name);

@@ -117,7 +117,7 @@ test('endpoint cadastrado mas não homologado bloqueia POST e preserva exportaç
   let calls=0;
   await page.route(fake,route=>{calls++;return route.abort();});
   await enter(page);
-  await expect(page.locator('#web-submit')).toBeDisabled();
+  await expect(page.locator('#web-submit')).toBeEnabled();
   await expect(page.locator('#web-delivery-status')).toContainText('homologação');
   await expect(page.locator('#quick-pdf')).toHaveText('Gerar PDF e Enviar');
   await expect(page.locator('#web-submit')).toHaveText('Gerar PDF e Enviar');
@@ -145,7 +145,7 @@ test('POST ativado rejeita nomes incompletos e duplicados antes de gerar PDF ou 
   await page.locator('#web-add-member').click();
   await page.locator('#web-member-1-name').fill('Ána Exemplo');
   await page.locator('[data-close-dialog="team-dialog"]').click();
-  await page.locator('#evidence-open').click();
+  await expect(page.locator('#evidence-dialog')).toBeVisible();
   await page.locator('#web-submit').click();
   await expect(page.locator('#team-dialog')).toBeVisible();
   await expect(page.locator('#team-feedback')).toContainText('Nome repetido na equipe');
@@ -277,7 +277,7 @@ test('integrante adicional vazio bloqueia exportação+POST e foca o nome ausent
   await page.locator('#team-open-evidence').click();
   await page.locator('#web-add-member').click();
   await page.locator('[data-close-dialog="team-dialog"]').click();
-  await page.locator('#evidence-open').click();
+  await expect(page.locator('#evidence-dialog')).toBeVisible();
   await page.evaluate(()=>{window.__prints=0;window.print=()=>window.__prints++;});
   await page.locator('#web-submit').click();
   await expect(page.locator('#team-dialog')).toBeVisible();
@@ -298,4 +298,40 @@ test('sobrenome abreviado não é nome completo; aceita sobrenome composto',asyn
   await page.locator('#team-done').click();
   await expect(page.locator('#team-dialog')).toBeHidden();
   expect((await page.evaluate(()=>window.WebTeam.getIdentity())).members[0].name).toBe('Ana de Souza');
+});
+
+test('cancelar a identificação obrigatória restaura o diálogo de evidências e o foco',async({page})=>{
+  await enabled(page);
+  await enter(page);
+  await page.locator('#web-submit').click();
+  await expect(page.locator('#team-dialog')).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(page.locator('#team-dialog')).toBeHidden();
+  await expect(page.locator('#evidence-dialog')).toBeVisible();
+  await expect(page.locator('#web-submit')).toBeFocused();
+});
+test('editar um integrante limpa marcações inválidas antigas de outros membros',async({page})=>{
+  await enter(page);
+  await page.locator('#team-open-evidence').click();
+  await page.locator('#web-team').fill('Equipe Juçara');
+  await page.locator('#web-member-0-name').fill('Ana Sousa');
+  await page.locator('#web-add-member').click();
+  await page.locator('#web-member-1-name').fill('Ána Sousa');
+  await page.locator('#team-done').click();
+  await expect(page.locator('#web-member-1-name')).toHaveAttribute('aria-invalid','true');
+  await page.locator('#web-member-0-name').fill('Lia Marques');
+  await expect(page.locator('#web-member-1-name')).not.toHaveAttribute('aria-invalid','true');
+  await page.locator('#team-done').click();
+  await expect(page.locator('#evidence-dialog')).toBeVisible();
+});
+test('botão do formulário gera PDF mesmo offline, mas não envia registros',async({page})=>{
+  await enabled(page,false);
+  let posts=0;await page.route(fake,route=>{posts++;return route.abort();});
+  await enter(page);
+  await fillTeam(page,['Ana Exemplo']);
+  await page.evaluate(()=>{window.__printedCount=0;window.print=()=>window.__printedCount++;});
+  await page.locator('#web-submit').click();
+  await expect(page.locator('#web-delivery-status')).toContainText('ENVIO NÃO REALIZADO');
+  expect(await page.evaluate(()=>window.__printedCount)).toBe(1);
+  expect(posts).toBe(0);
 });

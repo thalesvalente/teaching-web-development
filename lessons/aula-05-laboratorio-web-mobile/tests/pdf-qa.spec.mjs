@@ -106,7 +106,7 @@ test('impressão deixa observações vazias, sem pontuação artificial nem envi
   await expect(page.locator('#print-report .doc-pending')).toHaveCount(14);
   await expect(page.locator('#print-report .doc-unanswered')).toHaveCount(2);
   await expect(page.locator('#xp-top')).toHaveText('0');
-  await expect(page.locator('#web-submit')).toBeDisabled();
+  await expect(page.locator('#web-submit')).toBeEnabled();
   await expect(page.locator('#print-report')).toContainText('não comprova entrega no Google Sheets');
 });
 test('texto informado aparece literalmente no PDF, sem interpretar HTML ou executar scripts',async({page})=>{
