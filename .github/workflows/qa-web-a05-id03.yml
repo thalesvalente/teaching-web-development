@@ -1,0 +1,49 @@
+name: WEB-A05-ID03 — Matrículas QA V3
+on:
+  push:
+    branches: [feat/web-a05-matricula-v3-qa-20261023]
+  pull_request:
+    paths:
+      - 'lessons/aula-05-laboratorio-web-mobile/**'
+      - 'integrations/web-appscript-v3-qa/**'
+      - 'tests/web-a05-id03/**'
+      - '.github/workflows/qa-web-a05-id03.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  backend-v3:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verificar sintaxe Apps Script sem instalar nem implantar
+        run: |
+          cp integrations/web-appscript-v3-qa/Code.gs /tmp/Code-v3.js
+          node --check /tmp/Code-v3.js
+      - name: Executar testes isolados de matrícula e nota
+        run: node --test tests/web-a05-id03/backend-v3.test.cjs
+  frontend-v3:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    defaults:
+      run:
+        working-directory: lessons/aula-05-laboratorio-web-mobile
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: lessons/aula-05-laboratorio-web-mobile/package-lock.json
+      - name: Instalar dependências reproduzíveis
+        run: npm ci
+      - name: Instalar Chromium para QA visual
+        run: npx playwright install --with-deps chromium
+      - name: Testes do laboratório
+        run: npm run check:logic
+      - name: E2E responsivo e regressão
+        run: npm run test:e2e
