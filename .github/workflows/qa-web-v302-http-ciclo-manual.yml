@@ -1,0 +1,76 @@
+name: "Web V3.0.2 - Ciclo HTTP QA manual (open/closed)"
+# Nunca executado por push/PR. Cada fase requer acionamento manual.
+on:
+  workflow_dispatch:
+    inputs:
+      phase:
+        description: "open somente apos liberarRecebimentoQAWebV3 no editor; closed depois de bloquearRecebimentoNotasV3"
+        type: choice
+        required: true
+        options:
+          - open
+          - closed
+      confirmacao:
+        description: "Digite WEB_V302_QA_FICTICIOS para confirmar a execucao controlada"
+        type: string
+        required: true
+permissions:
+  contents: read
+concurrency:
+  group: web-v302-manual-qa-http
+  cancel-in-progress: false
+jobs:
+  http-v302:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: lessons/aula-05-laboratorio-web-mobile
+    steps:
+      - name: Gate explicito (falha antes de qualquer POST se nao autorizado)
+        working-directory: .
+        env:
+          CONFIRMACAO: ${{ inputs.confirmacao }}
+          FASE: ${{ inputs.phase }}
+        run: |
+          if [ "$CONFIRMACAO" != "WEB_V302_QA_FICTICIOS" ]; then
+            echo "::error::Confirmacao exata obrigatoria; sem chamada ao Apps Script"
+            exit 2
+          fi
+          if [ "$FASE" != "open" ] && [ "$FASE" != "closed" ]; then
+            echo "::error::Fase invalida"
+            exit 3
+          fi
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: lessons/aula-05-laboratorio-web-mobile/package-lock.json
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - name: Identificador unico por rodada sem dados academicos
+        run: echo "WEB_QA_RUN_ID=$(cat /proc/sys/kernel/random/uuid)" >> "$GITHUB_ENV"
+      - name: POST REAL QA / evidencias sinteticas / verificacao criptografica de recibo
+        env:
+          WEB_QA_V3_EXEC_URL: https://script.google.com/macros/s/AKfycbzW5ekgFdlyayf14Pi-uX7uBygxRMr2FqJS6hrQeKxsdj-WdVcyT0JI8vuzhVyT5L_W/exec
+          WEB_QA_SHEET_ID: 1SpL_B_fENFo0PF_-18m4wvle2p1NpbTYStFPEnM7JmE
+          WEB_QA_AUTHORIZATION: FICTICIOS_WEB_V3
+          WEB_QA_BACKUP_CONFIRMED: 'true'
+          WEB_QA_PHASE: ${{ inputs.phase }}
+        run: npx playwright test -c playwright.http.config.mjs
+      - name: Registrar aviso de fechamento operacional
+        if: always()
+        env:
+          FASE: ${{ inputs.phase }}
+        run: |
+          if [ "$FASE" = "open" ]; then
+            echo "::warning::ACAO MANUAL IMEDIATA: executar bloquearRecebimentoNotasV3 no projeto Web Apps Script independentemente de PASS/FAIL. So depois executar fase closed."
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: web-v302-http-${{ inputs.phase }}-${{ github.run_id }}
+          path: lessons/aula-05-laboratorio-web-mobile/test-results/http-real-qa/**/http-qa-summary.json
+          if-no-files-found: warn
+          retention-days: 14
