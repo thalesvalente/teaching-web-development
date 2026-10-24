@@ -111,3 +111,28 @@ test('atividade encerrada mostra bloqueio específico, não recibo de sucesso',a
   await expect(page.locator('#web-delivery-status')).toContainText('Suas respostas foram preservadas.');
   await expect(page.locator('#web-delivery-status')).not.toContainText('ENVIO CONFIRMADO');
 });
+
+test('identificação declarada usa só equipe, nome completo e matrícula, sem login institucional',async({page})=>{
+  await open(page,true);
+  await page.locator('#team-open').click();
+  await expect(page.locator('#team-intro')).toContainText('Sem login ou conta institucional');
+  await expect(page.locator('#team-intro')).toContainText('nome da equipe');
+  const visibleIds=await page.locator('#team-dialog input:visible').evaluateAll(elements=>elements.map(e=>e.id));
+  expect(visibleIds).toEqual(['web-team','web-member-0-name','web-member-0-enrollment']);
+  await page.locator('#web-add-member').click();
+  const expanded=await page.locator('#team-dialog input:visible').evaluateAll(elements=>elements.map(e=>e.id));
+  expect(expanded).toEqual(['web-team','web-member-0-name','web-member-0-enrollment','web-member-1-name','web-member-1-enrollment']);
+  await page.locator('#web-team').fill('Equipe Horizonte');
+  await page.locator('#web-member-0-name').fill('Ana Teste Ficticio');
+  await page.locator('#web-member-0-enrollment').fill('00001234');
+  await page.locator('#web-member-1-name').fill('Bruno Teste Ficticio');
+  await page.locator('#web-member-1-enrollment').fill('00005678');
+  await page.locator('#team-done').click();
+  await expect(page.locator('#team-dialog')).toBeHidden();
+  const identity=await page.evaluate(()=>window.WebTeam.getIdentity());
+  expect(identity.team).toBe('Equipe Horizonte');
+  expect(identity.members).toEqual([
+    {name:'Ana Teste Ficticio',enrollment:'00001234'},
+    {name:'Bruno Teste Ficticio',enrollment:'00005678'}
+  ]);
+});
