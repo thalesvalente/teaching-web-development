@@ -4,7 +4,8 @@ on:
     branches:
       - feat/web-a05-matricula-v3-qa-20261023
     paths:
-      - scripts/web_a05_http_blocked_probe.py
+      - scripts/web_a05_http_blocked_browser.mjs
+      - scripts/web_a05_http_blocked_browser.test.mjs
       - .github/workflows/qa-web-v3-http-blocked.yml
   workflow_dispatch:
 permissions:
@@ -15,13 +16,29 @@ concurrency:
 jobs:
   blocked-only:
     runs-on: ubuntu-latest
-    timeout-minutes: 6
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-node@v4
         with:
-          python-version: '3.13'
-      - name: Verify Python script syntax
-        run: python -m py_compile scripts/web_a05_http_blocked_probe.py
-      - name: Probe QA deployment GET and malformed POST - NEVER accepts student submissions
-        run: python scripts/web_a05_http_blocked_probe.py
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: lessons/aula-05-laboratorio-web-mobile/package-lock.json
+      - name: Testar validadores sem rede
+        run: node --test scripts/web_a05_http_blocked_browser.test.mjs
+      - name: Instalar dependências fixadas da aula
+        working-directory: lessons/aula-05-laboratorio-web-mobile
+        run: npm ci
+      - name: Instalar Chromium
+        working-directory: lessons/aula-05-laboratorio-web-mobile
+        run: npx playwright install --with-deps chromium
+      - name: GET e POST bloqueado reais - payload vazio, sem dados acadêmicos
+        run: node scripts/web_a05_http_blocked_browser.mjs
+      - name: Preservar diagnóstico sanitizado
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: web-v3-http-blocked-${{ github.sha }}
+          path: artifacts/web-v3-http-blocked.json
+          if-no-files-found: warn
+          retention-days: 14
