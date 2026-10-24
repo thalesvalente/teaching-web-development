@@ -1,12 +1,7 @@
 name: "QA Web V3 - HTTP blocked probe"
+# No automatic requests against a deployed project during source changes.
+# Run only after the owner updates /exec to 3.0.2 and archives older deployments.
 on:
-  push:
-    branches:
-      - feat/web-a05-matricula-v3-qa-20261023
-    paths:
-      - scripts/web_a05_http_blocked_browser.mjs
-      - scripts/web_a05_http_blocked_browser.test.mjs
-      - .github/workflows/qa-web-v3-http-blocked.yml
   workflow_dispatch:
 permissions:
   contents: read
@@ -34,7 +29,7 @@ jobs:
         run: npx playwright install --with-deps chromium
       - name: Registrar rodada sintética isolada
         run: echo "WEB_QA_RUN_ID=$(node -p 'require("node:crypto").randomUUID()')" >> "$GITHUB_ENV"
-      - name: Formulário real da candidata - somente fase bloqueada
+      - name: Formulário real 3.0.2 com preflight RPC - somente fase bloqueada
         working-directory: lessons/aula-05-laboratorio-web-mobile
         env:
           WEB_QA_V3_EXEC_URL: https://script.google.com/macros/s/AKfycbzW5ekgFdlyayf14Pi-uX7uBygxRMr2FqJS6hrQeKxsdj-WdVcyT0JI8vuzhVyT5L_W/exec
@@ -42,16 +37,11 @@ jobs:
           WEB_QA_AUTHORIZATION: FICTICIOS_WEB_V3
           WEB_QA_PHASE: blocked
         run: npx playwright test -c playwright.http.config.mjs
-      - name: Conferir GET e mensagem de bloqueio ao final - payload vazio
-        if: always()
-        run: node scripts/web_a05_http_blocked_browser.mjs
       - name: Preservar diagnóstico sanitizado
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: web-v3-http-blocked-${{ github.sha }}
-          path: |
-            artifacts/web-v3-http-blocked.json
-            lessons/aula-05-laboratorio-web-mobile/test-results/http-real-qa/**/http-qa-summary*.json
+          path: lessons/aula-05-laboratorio-web-mobile/test-results/http-real-qa/**/http-qa-summary*.json
           if-no-files-found: warn
           retention-days: 14
