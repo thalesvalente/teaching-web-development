@@ -1,0 +1,46 @@
+name: Web 3.2 — cadastro imutável e confirmação de matrícula
+on:
+  pull_request:
+    paths:
+      - 'integrations/web-appscript-production/**'
+      - 'tests/web-production/**'
+      - 'lessons/aula-05-laboratorio-web-mobile/**'
+      - '.github/workflows/qa-web-roster-320.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: roster-320-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: G9 backend e regressões QA sem Google
+        run: node --test tests/web-production/*.test.cjs tests/web-a05-id03/*.test.cjs
+      - name: Instalar dependências fixadas
+        working-directory: lessons/aula-05-laboratorio-web-mobile
+        run: |
+          npm ci
+          npx playwright install --with-deps chromium firefox webkit
+          sudo apt-get update -qq && sudo apt-get install -y poppler-utils
+      - name: Nova identificação em três navegadores — servidor modelado, sem dados reais
+        working-directory: lessons/aula-05-laboratorio-web-mobile
+        run: npx playwright test -c playwright.roster.config.mjs
+      - name: Lógica didática e regressões compatíveis
+        working-directory: lessons/aula-05-laboratorio-web-mobile
+        run: |
+          npm run check:logic
+          npx playwright test
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: web320-qa-evidence
+          path: |
+            lessons/aula-05-laboratorio-web-mobile/test-results/
+          retention-days: 7
