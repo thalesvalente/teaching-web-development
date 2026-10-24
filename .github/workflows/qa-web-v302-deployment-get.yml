@@ -38,3 +38,38 @@ jobs:
               print('GET_V302_INCONCLUSIVE',type(error).__name__,str(error)[:180])
               sys.exit(3)
           PY
+
+  browser-blocked:
+    name: Fronteira RPC e bloqueio pelo Chromium (sem escrita)
+    needs: verify-version
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    defaults:
+      run:
+        working-directory: lessons/aula-05-laboratorio-web-mobile
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: lessons/aula-05-laboratorio-web-mobile/package-lock.json
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - name: Identificador técnico único
+        run: echo "WEB_QA_RUN_ID=$(node -p 'require(\"node:crypto\").randomUUID()')" >> "$GITHUB_ENV"
+      - name: HTTP real bloqueado e RPC sem privilégios
+        env:
+          WEB_QA_V3_EXEC_URL: https://script.google.com/macros/s/AKfycbzW5ekgFdlyayf14Pi-uX7uBygxRMr2FqJS6hrQeKxsdj-WdVcyT0JI8vuzhVyT5L_W/exec
+          WEB_QA_SHEET_ID: 1SpL_B_fENFo0PF_-18m4wvle2p1NpbTYStFPEnM7JmE
+          WEB_QA_AUTHORIZATION: FICTICIOS_WEB_V3
+          WEB_QA_PHASE: blocked
+        run: npx playwright test -c playwright.http.config.mjs
+      - name: Salvar relatório sanitizado
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: web-v302-http-rpc-bloqueado
+          path: lessons/aula-05-laboratorio-web-mobile/test-results/http-real-qa/**/http-qa-summary.json
+          if-no-files-found: warn
+          retention-days: 14
