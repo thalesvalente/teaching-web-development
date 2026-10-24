@@ -14,7 +14,7 @@ A identificação evolui de "o estudante digita nome e matrícula" para:
 4. No envio, o backend reconsulta a aba `Alunos`, obtém os nomes autoritativos, valida matrícula/status, assina o recibo, mantém **maior nota por matrícula/atividade**, atualiza a média do bimestre e acrescenta somente as evidências autorizadas à Auditoria.
 5. **Não há login, senha, e-mail, CPF, conta Google do aluno ou autenticação institucional.** A confirmação exibida é uma conferência *autodeclarada*, não prova de autoria.
 
-**Bloqueio imediato de compatibilidade:** o Web 3.1.0 atualmente publicado exige somente dígitos (`/^\\d{1,32}$/` em `equipe.js`, `notasEnrollment` e `notasCheckIdentity`), enquanto as 38 matrículas trazem letras e pontos no formato observado `NNNNNNNN.ITANNNN`. **NÃO habilitar novos envios até atualizar e homologar ambos os lados.** Se a recepção de produção já estiver aberta, o proprietário deve executar `bloquearRecebimentoProducaoWeb` antes da migração; não fechar permanentemente a Aula 05.
+**Bloqueio imediato de compatibilidade:** o Web 3.1.0 atualmente publicado exige somente dígitos (`/^\d{1,32}$/` em `equipe.js`, `notasEnrollment` e `notasCheckIdentity`), enquanto as 38 matrículas trazem letras e pontos no formato observado `NNNNNNNN.ITANNNN`. **NÃO habilitar novos envios até atualizar e homologar ambos os lados.** Se a recepção de produção já estiver aberta, o proprietário deve executar `bloquearRecebimentoProducaoWeb` antes da migração; não fechar permanentemente a Aula 05.
 
 ## 2. Estado da planilha e política de dados
 
@@ -80,7 +80,7 @@ Resposta positiva restrita aos campos `ok, channel, nonce, name, enrollmentCanon
 
 | ID | Arquivos | Mudança necessária | Gate mínimo |
 | --- | --- | --- | --- |
-| BE-01 | `integrations/web-appscript-production/Code.gs` | Canonicalização `trim().toUpperCase()`, validação completa da matrícula textual conforme padrão observado `^[0-9]{8}\\.ITA[0-9]{4}$`; não converter em número nem comparar somente sufixos | 38 registros pré-cadastrados passam integridade; identificadores diferentes não colidem |
+| BE-01 | `integrations/web-appscript-production/Code.gs` | Canonicalização `trim().toUpperCase()`, validação completa da matrícula textual conforme padrão observado `^[0-9]{8}\.ITA[0-9]{4}$`; não converter em número nem comparar somente sufixos | 38 registros pré-cadastrados passam integridade; identificadores diferentes não colidem |
 | BE-02 | Mesmo backend | Nova operação **read-only** de consulta por matrícula em `doPost`, com resposta `HtmlService`/nonce/canal e origem esperada; mesmo gateway de privacidade e rate-limit; leitura apenas da linha solicitada; sem cadastro/escrita | Nome certo apenas para matrícula completa; nenhuma relação nominal pública |
 | BE-03 | `notasCheckIdentity`, `notasNormalize`, `notasPlan` | Rejeitar matrícula inexistente; remover autocriação de `Alunos`; hidratar nome **exclusivamente da planilha**, aceitar `VALIDADO_DOCENTE` e outros estados explicitamente permitidos; admitir homônimos com IDs diferentes | Nenhuma entrega de matrícula não cadastrada; zero overwrite indevido |
 | BE-04 | `doPost`, `webReturn` e recibos | Despacho de consulta versus entrega; `web-a05-submission-v3` no PROD; replay/versionamento de assinatura; proteção contra HTML/script injection; lock e readback para escrita | Nenhum nome/nota falso no recibo ou escrita parcial |
