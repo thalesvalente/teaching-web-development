@@ -545,6 +545,11 @@ function notasStore(payload,nonce,config){
     var old=notasVerifyAudit(before.sheets.Auditoria,same[0]);
     if(old[23]!==n.requestHash)notasErr('DUPLICIDADE_TECNICA',null,null,'Este identificador já pertence a outro conteúdo.','Confira o recibo anterior.');
     n.identity.members=JSON.parse(old[25]);
+    // Replay mantém token de confirmação expirado válido para RECUPERAR o recibo,
+    // mas nunca deve atestar resultado persistido divergente da Auditoria assinada.
+    // Não reescrever/conciliar Resultado, boletim ou Alunos neste caminho.
+    notasCheckCatalog(before);
+    notasRecordIntegrity(before,n,notasActivity(before,n));
     return notasReceipt(n,old,nonce,before,{teacherHold:old[27],replay:true});
   }
   notasHydrate_(before,n);
