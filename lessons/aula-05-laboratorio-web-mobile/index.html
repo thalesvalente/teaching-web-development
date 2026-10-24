@@ -6,13 +6,14 @@
   <meta name="description" content="Aula 05: Laboratório Vivo com tutorial guiado, código React Native comentado, regras visíveis e duas prévias interativas Web e Mobile.">
   <meta name="theme-color" content="#10472e">
   <title>Aula 05 · Laboratório Vivo · Tutorial Web ↔ Mobile | IFMA</title>
-  <link rel="stylesheet" href="./style.css?v=web-id03-qa03">
-  <link rel="stylesheet" href="./identity-http.css?v=web-id03-qa03">
-  <script defer src="./entrega-config.js?v=web-id03-qa03"></script>
-  <script defer src="./report-print.js?v=web-id03-qa03"></script>
-  <script defer src="./equipe.js?v=web-id03-qa03"></script>
-  <script defer src="./lab.js?v=web-id03-qa03"></script>
-  <script defer src="./entrega-appscript.js?v=web-id03-qa03"></script>
+  <link rel="stylesheet" href="./style.css?v=web-prod-310">
+  <link rel="stylesheet" href="./identity-http.css?v=web-prod-310">
+  <script defer src="./entrega-config.js?v=web-prod-310"></script>
+  <script defer src="./report-print.js?v=web-prod-310"></script>
+  <script defer src="./equipe.js?v=web-prod-310"></script>
+  <script defer src="./lab.js?v=web-prod-310"></script>
+  <script defer src="./production-gate.js?v=web-prod-310"></script>
+  <script defer src="./entrega-appscript.js?v=web-prod-310"></script>
 </head>
 <body>
   <a class="skip" href="#missao-atual">Pular para a missão atual</a>
@@ -30,7 +31,7 @@
         <button type="button" id="save-progress" class="header-action emphasis">Salvar progresso</button>
         <button type="button" id="review-xp" class="header-action" title="Rever as missões técnicas no código atual sem apagar XP conquistados">Conferir progresso</button>
         <button type="button" id="load-progress" class="header-action">Retomar arquivo</button>
-        <button type="button" id="quick-pdf" class="header-action" title="É obrigatório informar nome completo e matrícula para enviar online. O envio depende de homologação.">Gerar PDF e Enviar</button>
+        <button type="button" id="quick-pdf" class="header-action" title="É obrigatório informar nome completo e matrícula para enviar online. O recebimento depende da liberação pelo professor.">Gerar PDF e Enviar</button>
         <button type="button" id="evidence-open" class="header-action">Evidências <span aria-hidden="true">↗</span></button>
         <input type="file" id="progress-file" accept=".json,application/json" hidden aria-label="Selecionar arquivo JSON de progresso">
       </nav>
@@ -237,13 +238,13 @@ app/lab05.tsx               ← importa o componente
           Gerar PDF e Enviar
         </button>
         <p id="web-delivery-status" role="status" aria-live="polite" tabindex="-1">
-          Recebimento online ainda não homologado. O PDF pode ser salvo localmente após identificar a equipe.
+          O recebimento será verificado antes do envio. O PDF pode ser salvo localmente após identificar a equipe.
           Exportação local continua disponível.
         </p>
       </fieldset>
       <details><summary>Ver situação de cada exercício</summary><ul id="evidence-list" class="evidence-list"></ul></details>
       <div class="evidence-actions"><button type="button" id="export-json" class="btn secondary">Exportar evidências JSON</button><button type="button" id="export-md" class="btn secondary">Exportar Markdown</button><button type="button" id="print" class="btn secondary">Imprimir / salvar PDF A4</button></div>
-      <p class="privacy">Rascunho salvo somente neste navegador, se o armazenamento estiver disponível. Quando o envio estiver habilitado, clicar em “Gerar PDF e Enviar” transmite os nomes, as matrículas, o código e as evidências ao Apps Script. Os dados podem ser gravados mesmo se o recibo não chegar; somente um recibo válido confirma o recebimento nesta tela. XP já conquistados são preservados; a conferência do código atual pode ser repetida quando desejar.</p>
+      <p class="privacy">Rascunho salvo somente neste navegador, se o armazenamento estiver disponível. Quando o envio estiver habilitado, clicar em “Gerar PDF e Enviar” transmite os nomes, as matrículas, o código e as evidências ao Apps Script. Os dados serão usados pelo professor para registrar a entrega e as notas. Não informe CPF, senha ou dados sensíveis nas respostas. Para correções, procure o professor. Os dados podem ser gravados mesmo se o recibo não chegar; somente um recibo válido confirma o recebimento nesta tela. XP já conquistados são preservados; a conferência do código atual pode ser repetida quando desejar.</p>
       <p id="evidence-status" role="status" aria-live="polite"></p>
     </div>
   </dialog>
