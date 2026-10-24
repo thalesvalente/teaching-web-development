@@ -44,25 +44,30 @@ jobs:
                   assert hashlib.sha256(p.read_bytes()).hexdigest()==x['baseSha256'], 'BASE_DRIFT: '+x['path']
                   subprocess.run(['git','apply','--check','--whitespace=nowarn','-'],input=x['patch'],text=True,check=True)
                   subprocess.run(['git','apply','--whitespace=nowarn','-'],input=x['patch'],text=True,check=True)
+              elif x['path'].startswith('.github/workflows/'):
+                  assert p.is_file() and hashlib.sha256(p.read_bytes()).hexdigest()==x['sha256'], 'WORKFLOW_MUST_BE_PREINSTALLED_BY_OWNER'
               else:
                   p.parent.mkdir(parents=True,exist_ok=True)
                   p.write_text(x['content'],encoding='utf-8')
               assert hashlib.sha256(p.read_bytes()).hexdigest()==x['sha256'], 'OUTPUT_HASH_MISMATCH: '+x['path']
-          pathlib.Path('/tmp/web320-paths.json').write_text(json.dumps(paths))
-          print('SOURCE_INTEGRITY_PASS',len(paths),'files; no Google calls')
+          pathlib.Path('/tmp/web320-paths.json').write_text(json.dumps([p for p in paths if not p.startswith('.github/workflows/')]))
+          print('SOURCE_INTEGRITY_PASS',len(paths),'files; no Google calls; workflows read-only')
           PY
+          python3 scripts/web320_candidate_fixes.py
       - name: Sintaxe, cadastro somente leitura e regressões Node
         run: |
           node scripts/check-web-config.cjs
           node --test tests/web-production/*.test.cjs tests/web-a05-id03/*.test.cjs
           for f in lessons/aula-05-laboratorio-web-mobile/roster-client.js lessons/aula-05-laboratorio-web-mobile/equipe-roster.js lessons/aula-05-laboratorio-web-mobile/entrega-appscript.js; do node --check "$f"; done
-      - name: Versionar código legível na branch candidata, sem merge ou deploy
+      - name: Versionar código legível, sem editar workflows e sem merge ou deploy
         run: |
           python3 - <<'PY'
           import json,pathlib,subprocess
           paths=json.loads(pathlib.Path('/tmp/web320-paths.json').read_text())
           subprocess.run(['git','add','--']+paths,check=True)
-          subprocess.run(['git','rm','--','.source/web320/part-0.xz','.source/web320/part-1.xz','.source/web320/part-2.xz','.source/web320/part-3.xz','.github/workflows/build-web-roster-320.yml'],check=True)
+          subprocess.run(['git','rm','--','.source/web320/part-0.xz','.source/web320/part-1.xz','.source/web320/part-2.xz','.source/web320/part-3.xz','scripts/web320_candidate_fixes.py'],check=True)
+          changed=subprocess.check_output(['git','diff','--cached','--name-only'],text=True).splitlines()
+          assert not any(p.startswith('.github/workflows/') for p in changed),'WORKFLOW_WRITE_FORBIDDEN'
           subprocess.run(['git','config','user.name','github-actions[bot]'],check=True)
           subprocess.run(['git','config','user.email','41898282+github-actions[bot]@users.noreply.github.com'],check=True)
           subprocess.run(['git','commit','-m','feat(web): consultar matrícula e confirmar nome com cadastro imutável — 3.2.0'],check=True)
