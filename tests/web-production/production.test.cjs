@@ -31,6 +31,14 @@ test('replay recusa resultado persistido adulterado mesmo com nonce e HMAC origi
   assert.equal(f.batches(),batches,'replay inconsistente não escreve');
   assert.equal(f.snapshot(),snapshot,'replay não reconcilia notas nem cadastro');
 });
+test('replay recusa nome alterado manualmente no boletim e não corrige cadastro',()=>{const f=fixture(),e=f.event();
+  const first=readonly(f,()=>f.receive(e));assert.equal(first.ok,true);
+  const batches=f.batches();f.set('4º Bimestre',2,1,'Outra Pessoa Ficticia');
+  const snapshot=f.snapshot(),d=readonly(f,()=>f.receive(e));
+  assert.equal(d.ok,false,'replay com nome de boletim divergente não pode atestar sucesso');
+  assert.equal(f.batches(),batches,'nenhuma escrita em replay inconsistente');
+  assert.equal(f.snapshot(),snapshot,'não reconciliar nome ou matrícula por script');
+});
 test('replay recusa assinatura de Auditoria alterada e não grava ou corrige Alunos',()=>{const f=fixture(),e=f.event();
   assert.equal(readonly(f,()=>f.receive(e)).ok,true);
   const before=f.batches();f.set('Auditoria',2,10,'assinatura-ficticia-corrompida');
