@@ -1,0 +1,11 @@
+import {test} from 'node:test';
+import assert from 'node:assert/strict';
+import {BLOCKED,isExpectedGet,validOrigin,isBlockedReply,htmlDiagnostics} from './web_a05_http_blocked_browser.mjs';
+const nonce='qa-blocked-test-only';
+const reply=()=>({origin:'https://n-example-script.googleusercontent.com',data:{ok:false,channel:'web-entrega-aula05',nonce,message:'Recebimento QA V3 bloqueado.',code:'ENVIO_SEM_CONFIRMACAO',retryable:false}});
+test('GET exige versão e estado exatos',()=>{assert.equal(isExpectedGet(BLOCKED),true);for(const s of ['',null,BLOCKED.replace('bloqueado','habilitado QA'),BLOCKED.replace('3.0.1','2.0.1'),'<html>Login</html>'])assert.equal(isExpectedGet(s),false);});
+test('origens não permitem wildcard, http ou sufixo malicioso',()=>{assert.equal(validOrigin('https://script.google.com'),true);for(const s of ['https://googleusercontent.com','https://evil.googleusercontent.com','http://script.google.com','https://script.google.com.evil.example','null',null])assert.equal(validOrigin(s),false);});
+test('resposta autêntica de bloqueio é aceita',()=>assert.equal(isBlockedReply(reply(),nonce),true));
+for(const [field,value]of [['ok',true],['ok','false'],['channel','other'],['nonce','other'],['message','Outro erro'],['code','INTERNAL_ERROR'],['retryable',true]])test('rejeita alteração no campo '+field+'='+value,()=>{const m=reply();m.data[field]=value;assert.equal(isBlockedReply(m,nonce),false);});
+test('origem falsa e envelope ausente nunca passam',()=>{const m=reply();m.origin='https://evil.example';assert.equal(isBlockedReply(m,nonce),false);assert.equal(Boolean(isBlockedReply(null,nonce)),false);});
+test('diagnóstico distingue wrapper escapado sem interpretar HTML',()=>{const text='<iframe></iframe><script>var userHtml="\\x3cscript\\x3e"</script>';const d=htmlDiagnostics(text);assert.equal(d.sandbox,true);assert.equal(d.escapedMarkup,true);assert.equal(d.literalFalse,false);assert.equal(d.literalEnvelope,false);assert.ok(!JSON.stringify(d).includes(text));});
