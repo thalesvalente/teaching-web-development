@@ -42,18 +42,13 @@ test('G7 preflight: catálogo legado bloqueia prontidão mesmo com flag global a
 
 test('G7 isolamento: propriedade de destino por si só não autoriza retarget de QA',()=>{
   const f=fixture(),master=f.ctx.WEB_V3_PRIVATE_.WEB_CFG.spreadsheetId;
+  assert.equal(f.ctx.WEB_V3_PRIVATE_.notasConfig().id,master);
+  const snapshot=f.snapshot();
   f.props.set('WEB_NOTAS_PROD_SPREADSHEET_ID','qa-isolada-exemplo-sem-acesso');
-  const config=f.ctx.WEB_V3_PRIVATE_.notasConfig();
-  assert.notEqual(config.id,master);
-  const book={id:config.id,sheets:{
-    Alunos:{title:'Alunos',id:203},Resultados:{title:'Resultados',id:204}
-  }};
-  const updates=[{updateCells:{
-    start:{sheetId:204,rowIndex:1,columnIndex:0},
-    rows:[{values:[{userEnteredValue:{stringValue:'DADO FICTICIO'}}]}],
-    fields:'userEnteredValue'
-  }}];
-  assert.throws(()=>f.ctx.WEB_V3_PRIVATE_.notasCommit_(book,updates,config,'submission'),/Destino inválido/);
+  // Defesa atual é ainda mais restritiva: notasConfig recusa outra planilha
+  // antes de montar requisições. Para QA exige projeto novo + WEB_CFG isolado.
+  assert.throws(()=>f.ctx.WEB_V3_PRIVATE_.notasConfig(),/Destino de produção não autorizado/);
+  assert.equal(f.snapshot(),snapshot);
   assert.equal(f.batches(),0);
 });
 
