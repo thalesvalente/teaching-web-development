@@ -1,0 +1,35 @@
+name: Web produção — integridade e envio protegido
+on:
+  pull_request:
+    paths:
+      - integrations/web-appscript-production/**
+      - tests/web-production/**
+      - lessons/aula-05-laboratorio-web-mobile/**
+      - .github/workflows/qa-web-production.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: web-prod-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  production:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: lessons/aula-05-laboratorio-web-mobile/package-lock.json
+      - name: Servidor, controles administrativos e regressão QA sem rede
+        run: node --test tests/web-a05-id03/*.test.cjs tests/web-production/*.test.cjs scripts/web_v3_rpc_security.test.cjs scripts/web_a05_http_blocked_browser.test.mjs
+      - name: Instalar navegadores reproduzíveis
+        working-directory: lessons/aula-05-laboratorio-web-mobile
+        run: |
+          npm ci
+          npx playwright install --with-deps chromium firefox webkit
+      - name: Gate de produção em Chromium Firefox e WebKit (Google simulado)
+        working-directory: lessons/aula-05-laboratorio-web-mobile
+        run: npx playwright test -c playwright.production.config.mjs --reporter=list
