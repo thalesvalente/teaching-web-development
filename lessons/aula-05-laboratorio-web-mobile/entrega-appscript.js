@@ -57,7 +57,8 @@
   function post(identity, evidence, hash) {
     const nonce = crypto.randomUUID();
     const payload = JSON.stringify({
-      schema:'web-a05-submission-v2',activity:ACTIVITY,identity,evidence
+      schema:'web-a05-submission-v2',activity:ACTIVITY,identity,evidence,
+      ...(config.requiredMode==='PROD'?{environment:'PROD'}:{})
     });
     if (payload.length > 44000) return Promise.reject(Error('Arquivo muito grande para entrega online; exporte e consulte o professor.'));
     return new Promise((resolve,reject) => {
@@ -118,6 +119,17 @@
   }
   async function generatePdfAndSend(){
     if(busy)return;
+    if(activated&&config.requiredMode==='PROD'){
+      busy=true;button.disabled=true;quickButton.disabled=true;
+      try{
+        inform('Conferindo a disponibilidade da atividade. Seus dados ainda não foram enviados.');
+        if(!window.WebProductionGate?.ensureReady)throw Error('Verificação de produção indisponível. Atualize a página.');
+        await window.WebProductionGate.ensureReady(config);
+      }catch(error){
+        inform('ENVIO NÃO REALIZADO: '+String(error?.message||'Recebimento indisponível.'),'error');
+        showReceipt();return;
+      }finally{busy=false;button.disabled=false;quickButton.disabled=false;}
+    }
     // Validação anterior ao PDF, ao JSON e a qualquer solicitação de rede.
     const identity=window.WebTeam?.requireIdentity?.({requireEnrollment:activated});
     if(!identity){

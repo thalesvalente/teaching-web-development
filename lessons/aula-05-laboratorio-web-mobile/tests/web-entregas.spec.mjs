@@ -385,10 +385,10 @@ test('duplicidade com apostrofos tipograficos distintos bloqueia a equipe',async
 test('ativos de validação possuem versão para evitar cache anterior no GitHub Pages',async({page})=>{
   await page.goto('/index.html');
   for(const name of ['equipe.js','report-print.js','entrega-appscript.js']) {
-    await expect(page.locator('script[src="./'+name+'?v=web-id03-qa03"]')).toHaveCount(1);
+    await expect(page.locator('script[src="./'+name+'?v=web-prod-310"]')).toHaveCount(1);
   }
-  await expect(page.locator('script[src="./lab.js?v=web-id03-qa03"]')).toHaveCount(1);
-  await expect(page.locator('link[href="./style.css?v=web-id03-qa03"]')).toHaveCount(1);
+  await expect(page.locator('script[src="./lab.js?v=web-prod-310"]')).toHaveCount(1);
+  await expect(page.locator('link[href="./style.css?v=web-prod-310"]')).toHaveCount(1);
 });
 
 
