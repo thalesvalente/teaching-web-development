@@ -1,0 +1,62 @@
+name: "Web QA V3.0.2 - aplicar isolamento RPC uma vez"
+on:
+  push:
+    branches: [feat/web-a05-matricula-v3-qa-20261023]
+    paths: [.github/workflows/build-web-v302-hardening.yml]
+permissions:
+  contents: read
+concurrency:
+  group: web-v302-source-hardening
+  cancel-in-progress: false
+jobs:
+  hardened-source:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref }}
+          fetch-depth: 1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Conferir revisão de entrada e aplicar transformação fixada por hashes
+        run: |
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          python3 scripts/harden_web_v3_rpc.py
+          cp integrations/web-appscript-v3-qa/Code.gs /tmp/web-v302.js
+          node --check /tmp/web-v302.js
+          node --test tests/web-a05-id03/*.test.cjs scripts/web_v3_rpc_security.test.cjs > /tmp/web-v302-tests.tap
+          tail -12 /tmp/web-v302-tests.tap
+      - name: Conferir allowlist e publicar apenas a correção testada na branch Draft
+        env:
+          TARGET_BRANCH: feat/web-a05-matricula-v3-qa-20261023
+        run: |
+          python3 - <<'PY'
+          import subprocess
+          expected={'integrations/web-appscript-v3-qa/Code.gs','integrations/web-appscript-v3-qa/HomologacaoV3.gs','integrations/web-appscript-v3-qa/appsscript.json','tests/web-a05-id03/harness-v3.cjs'}
+          actual=set(subprocess.check_output(['git','diff','--name-only'],text=True).splitlines())
+          if actual!=expected: raise SystemExit('ABORT: diff fora do escopo previsto')
+          PY
+          test "$(git ls-remote origin "refs/heads/$TARGET_BRANCH" | cut -f1)" = "$GITHUB_SHA"
+          git add -- integrations/web-appscript-v3-qa/Code.gs integrations/web-appscript-v3-qa/HomologacaoV3.gs integrations/web-appscript-v3-qa/appsscript.json tests/web-a05-id03/harness-v3.cjs
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'fix(web): isolar auxiliares RPC e exigir administrador na candidata 3.0.2'
+          git push origin "HEAD:refs/heads/$TARGET_BRANCH"
+          git rev-parse HEAD > /tmp/web-v302-commit.txt
+      - name: Preservar fontes e testes sem segredos
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: web-v302-hardening-reviewed-source
+          path: |
+            integrations/web-appscript-v3-qa/Code.gs
+            integrations/web-appscript-v3-qa/HomologacaoV3.gs
+            integrations/web-appscript-v3-qa/appsscript.json
+            /tmp/web-v302-tests.tap
+            /tmp/web-v302-commit.txt
+          if-no-files-found: warn
+          retention-days: 14

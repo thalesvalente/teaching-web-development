@@ -1,0 +1,47 @@
+name: "QA Web V3 - HTTP blocked probe"
+# No automatic requests against a deployed project during source changes.
+# Run only after the owner updates /exec to 3.0.2 and archives older deployments.
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: web-v3-http-blocked-qa
+  cancel-in-progress: false
+jobs:
+  blocked-only:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: lessons/aula-05-laboratorio-web-mobile/package-lock.json
+      - name: Testar validadores sem rede
+        run: node --test scripts/web_a05_http_blocked_browser.test.mjs
+      - name: Instalar dependências fixadas da aula
+        working-directory: lessons/aula-05-laboratorio-web-mobile
+        run: npm ci
+      - name: Instalar Chromium
+        working-directory: lessons/aula-05-laboratorio-web-mobile
+        run: npx playwright install --with-deps chromium
+      - name: Registrar rodada sintética isolada
+        run: echo "WEB_QA_RUN_ID=$(node -p 'require("node:crypto").randomUUID()')" >> "$GITHUB_ENV"
+      - name: Formulário real 3.0.2 com preflight RPC - somente fase bloqueada
+        working-directory: lessons/aula-05-laboratorio-web-mobile
+        env:
+          WEB_QA_V3_EXEC_URL: https://script.google.com/macros/s/AKfycbzW5ekgFdlyayf14Pi-uX7uBygxRMr2FqJS6hrQeKxsdj-WdVcyT0JI8vuzhVyT5L_W/exec
+          WEB_QA_SHEET_ID: 1SpL_B_fENFo0PF_-18m4wvle2p1NpbTYStFPEnM7JmE
+          WEB_QA_AUTHORIZATION: FICTICIOS_WEB_V3
+          WEB_QA_PHASE: blocked
+        run: npx playwright test -c playwright.http.config.mjs
+      - name: Preservar diagnóstico sanitizado
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: web-v3-http-blocked-${{ github.sha }}
+          path: lessons/aula-05-laboratorio-web-mobile/test-results/http-real-qa/**/http-qa-summary*.json
+          if-no-files-found: warn
+          retention-days: 14

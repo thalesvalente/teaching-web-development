@@ -418,3 +418,45 @@
 #quick-pdf{border-color:#146444;background:#e5f3e9;color:#10472e;font-weight:850}
 #web-delivery-status:focus-visible{outline:3px solid #d9a12a;outline-offset:3px}
 .team-dialog input[aria-invalid="true"]{outline:2px solid #b52226;outline-offset:2px;border-color:#b52226}
+
+
+/* WEB-A05-ID-03 — identificação por matrícula, WCAG 2.2 AA e layout responsivo. */
+.team-dialog .member-row-fields label[for$="-enrollment"]{
+  margin-top:10px;
+  font-size:11px;
+  color:#264e3a;
+}
+.team-dialog .member-row-fields input[id$="-enrollment"]{
+  min-height:44px;
+  font-size:16px;
+  font-variant-numeric:tabular-nums;
+  letter-spacing:.02em;
+  border:1px solid #8a9e90!important;
+  padding:9px 11px!important;
+  border-radius:8px!important;
+  background:#fff!important;
+}
+.team-dialog .member-row-fields small[id$="-enrollment-help"]{
+  font-size:11px;line-height:1.5;color:#466351;
+  overflow-wrap:anywhere;
+}
+.team-dialog .member-row-fields input[aria-invalid="true"]{
+  outline:3px solid #ad2428!important;
+  outline-offset:2px!important;
+  background:#fff7f5!important;
+}
+.team-dialog .member-row:focus-within{outline:1px solid #4f9872;outline-offset:2px}
+.team-feedback[data-kind="error"]{overflow-wrap:anywhere;white-space:pre-line}
+@media(max-width:640px){
+  .team-dialog .member-row{align-items:flex-start}
+  .team-dialog .member-row-fields{min-width:0}
+  .team-dialog .member-row-header{align-self:flex-start;margin-top:12px}
+}
+@media(max-width:360px){
+  .team-dialog .member-row{padding:10px 8px;gap:5px}
+  .team-dialog .team-remove-member{width:35px;height:44px}
+  .team-member-number{width:26px;height:32px}
+}
+@media(prefers-reduced-motion:reduce){
+  .team-dialog .member-row-fields input{scroll-behavior:auto}
+}

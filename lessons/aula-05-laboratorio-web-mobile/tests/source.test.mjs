@@ -127,7 +127,7 @@ test('XP acumulativos sobrevivem à edição, ao rerun e à reprovação posteri
 });
 
 
-test('Aula 05 registra equipe e nomes sem exigir matrícula ou turma',()=>{
+test('Aula 05 exige matrícula no envio e preserva PDF local com nomes',()=>{
   const teamJs=read('equipe.js');
   const delivery=read('entrega-appscript.js');
   const pdf=read('report-print.js');
@@ -135,10 +135,13 @@ test('Aula 05 registra equipe e nomes sem exigir matrícula ou turma',()=>{
     assert.ok(html.includes('id="'+id+'"'), 'Campo coletivo ausente: '+id);
   }
   assert.doesNotMatch(html,/id="web-student-id"|id="web-class"/);
-  assert.match(teamJs,/function getIdentity\(\)/);
+  assert.match(teamJs,/function getIdentity\(options=/);
   assert.match(teamJs,/teamId:newId\(\)/);
   assert.match(teamJs,/MAX=8/);
-  assert.doesNotMatch(delivery,/studentIdentity\(|web-student-id/);
+  assert.match(delivery,/web-a05-submission-v2/);
+  assert.match(teamJs,/member\.enrollment/);
+  assert.match(teamJs,/web-member-.*-enrollment/);
+  assert.match(html,/Matrícula|matrícula/);
   assert.match(delivery,/teamIdentity\(\)/);
   assert.match(delivery,/laboratorio-vivo-tsx-equipe/);
   assert.match(html,/id="quick-pdf"[^>]*>Gerar PDF e Enviar/);

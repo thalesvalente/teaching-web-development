@@ -1,0 +1,45 @@
+name: QA HTTP/site Web (somente mocks)
+on:
+  pull_request:
+    paths:
+      - 'lessons/aula-05-laboratorio-web-mobile/**'
+      - 'tests/web-a05-id03/**'
+      - '.github/workflows/qa-web-http-site.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  identity-and-browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    defaults:
+      run:
+        working-directory: lessons/aula-05-laboratorio-web-mobile
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: lessons/aula-05-laboratorio-web-mobile/package-lock.json
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium firefox webkit
+      - run: sudo apt-get update -qq && sudo apt-get install -y poppler-utils
+      - name: Backend e gates HTTP sem rede
+        run: node --test ../../tests/web-a05-id03/*.test.cjs
+      - run: npm run check:logic
+      - run: npx playwright test --reporter=list,json
+        env:
+          PLAYWRIGHT_JSON_OUTPUT_NAME: test-artifacts/chromium-results.json
+      - name: Identidade em três navegadores (mock, nunca HTTP Google)
+        run: npx playwright test -c playwright.cross.config.mjs --reporter=list,json
+        env:
+          PLAYWRIGHT_JSON_OUTPUT_NAME: test-artifacts/cross-results.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: web-http-site-browser-evidence
+          path: |
+            lessons/aula-05-laboratorio-web-mobile/test-results
+            lessons/aula-05-laboratorio-web-mobile/test-artifacts
+          retention-days: 7

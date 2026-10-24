@@ -1,0 +1,66 @@
+name: WEB-A05-ID03 — Matrículas QA V3
+on:
+  push:
+    branches: [feat/web-a05-matricula-v3-qa-20261023]
+  pull_request:
+    paths:
+      - 'lessons/aula-05-laboratorio-web-mobile/**'
+      - 'integrations/web-appscript-v3-qa/**'
+      - 'tests/web-a05-id03/**'
+      - 'scripts/web_v3_rpc_security.test.cjs'
+      - 'scripts/web_a05_http_blocked_browser*'
+      - '.github/workflows/qa-web-a05-id03.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  backend-v3:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verificar sintaxe Apps Script sem instalar nem implantar
+        run: |
+          cp integrations/web-appscript-v3-qa/Code.gs /tmp/Code-v3.js
+          node --check /tmp/Code-v3.js
+      - name: Testar notas, segurança RPC e validadores HTTP sem rede
+        run: node --test tests/web-a05-id03/*.test.cjs scripts/web_v3_rpc_security.test.cjs scripts/web_a05_http_blocked_browser.test.mjs
+      - name: Preservar fonte exata desta execução
+        if: always()
+        run: |
+          mkdir -p /tmp/web-id03-evidence
+          git rev-parse HEAD > /tmp/web-id03-evidence/COMMIT.txt
+          git archive --format=zip --output=/tmp/web-id03-evidence/source.zip HEAD lessons/aula-05-laboratorio-web-mobile integrations/web-appscript-v3-qa tests/web-a05-id03 docs/WEB_A05_ID03_QA_V3_20261023.md scripts/web_v3_rpc_security.test.cjs scripts/web_a05_http_blocked_browser.mjs scripts/web_a05_http_blocked_browser.test.mjs
+          sha256sum /tmp/web-id03-evidence/source.zip > /tmp/web-id03-evidence/SHA256.txt
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: web-id03-source
+          path: /tmp/web-id03-evidence/*
+          retention-days: 14
+  frontend-v3:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    defaults:
+      run:
+        working-directory: lessons/aula-05-laboratorio-web-mobile
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: lessons/aula-05-laboratorio-web-mobile/package-lock.json
+      - name: Instalar dependências reproduzíveis
+        run: npm ci
+      - name: Instalar Chromium para QA visual
+        run: npx playwright install --with-deps chromium
+      - name: Instalar verificação de PDF A4
+        run: sudo apt-get update -qq && sudo apt-get install -y poppler-utils
+      - name: Testes do laboratório
+        run: npm run check:logic
+      - name: E2E responsivo e regressão
+        run: npm run test:e2e

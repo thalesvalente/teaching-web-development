@@ -7,10 +7,11 @@ async function open(page){
   await page.goto('/index.html');
   await expect(page.locator('#compiler-status')).toContainText('Executado',{timeout:30000});
 }
-async function fillRequiredTeam(page){
+async function fillRequiredTeam(page,enrollment=''){
   await page.locator('#team-open').click();
   await page.locator('#web-team').fill('Equipe Bacuri');
   await page.locator('#web-member-0-name').fill('Marina Sousa');
+  if(enrollment)await page.locator('#web-member-0-enrollment').fill(enrollment);
   await page.locator('#team-done').click();
 }
 async function printNoModal(page,button){
@@ -45,7 +46,9 @@ test('modelo A4 tem capa IFMA, identidade, 14 missões, parcial e textos sem Mar
   await expect(area.locator('.doc-cover')).toContainText('Campus Itapecuru-Mirim');
   await expect(area.locator('.doc-cover')).toContainText('Equipe Ipê');
   await expect(area.locator('.doc-cover')).toContainText('Ana Exemplo; Bia Exemplo');
-  await expect(area.locator('.doc-cover')).not.toContainText('Matrícula');
+  // Novo contrato: matrícula identificada no PDF, mas não obrigatória offline.
+  await expect(area.locator('.doc-cover')).toContainText('Ana Exemplo — Matrícula: não informada (PDF local)');
+  await expect(area.locator('.doc-cover')).toContainText('Bia Exemplo — Matrícula: não informada (PDF local)');
   await expect(area.locator('.doc-cover')).not.toContainText('Turma');
   await expect(area.locator('.doc-score')).toContainText('5 / 100 XP');
   await expect(area.locator('.doc-score')).toContainText('13 pendentes');
@@ -66,7 +69,7 @@ test('Chromium imprime PDF A4 real com texto legível, cores e paginação',asyn
   await page.locator('#mission-select').selectOption('run');
   await page.locator('#guide-check').click();
   await expect(page.locator('#xp-top')).toHaveText('5');
-  await fillRequiredTeam(page);
+  await fillRequiredTeam(page,'00001234');
   await printNoModal(page,'#quick-pdf');
   await page.emulateMedia({media:'print'});
   const pdf=await page.pdf({preferCSSPageSize:true,printBackground:true});
@@ -88,6 +91,7 @@ test('Chromium imprime PDF A4 real com texto legível, cores e paginação',asyn
   expect(content).toContain('Relatório de aprendizagem');
   expect(content).toContain('Equipe Bacuri');
   expect(content).toContain('Marina Sousa');
+  expect(content).toContain('00001234');
   expect(content).toMatch(/5\s*\/\s*100\s*XP/);
   expect(content).toContain('Primeiro contato: execute o projeto');
   expect(content).toContain('Explique a ponte Web');

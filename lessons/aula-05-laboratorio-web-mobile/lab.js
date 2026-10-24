@@ -396,7 +396,9 @@ function registrar() {
       localStorage.setItem(key, JSON.stringify({
         code: panels.shared, answers: readAnswers(), activeTask: activeTask().id,
         note: byId('observacao').value, nativeNote: byId('limite-real').value,
-        team: window.WebTeam?.snapshot() || null,
+        // Matrículas NÃO entram no salvamento AUTOMÁTICO do navegador.
+        team: (() => {const data=window.WebTeam?.snapshot?.();return data?
+          {...data,members:data.members.map(m=>({name:m.name}))}:null;})(),
         completed: tasks.filter(t => passed[t.id]).map(t => t.id),
         details: Object.fromEntries(tasks.filter(t => passed[t.id]).map(t => [t.id, completedDetail[t.id] || 'Concluído em sessão anterior'])),
       }));
@@ -962,7 +964,7 @@ function registrar() {
   // texto plano, com bullets e asteriscos literais. Agora o HTML de impressão
   // segue a identidade das fichas do IFMA, mantendo resultados PARCIAIS.
   function printPartial() {
-    const identity=window.WebTeam?.requireIdentity?.();
+    const identity=window.WebTeam?.requireIdentity?.({requireEnrollment:false});
     if(!identity){
       progressMessage('Para gerar o PDF, informe nome da equipe e nome e sobrenome de todos os integrantes.',true);
       return false;
