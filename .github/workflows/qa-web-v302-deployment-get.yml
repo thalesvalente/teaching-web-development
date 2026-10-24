@@ -57,7 +57,7 @@ jobs:
       - run: npm ci
       - run: npx playwright install --with-deps chromium
       - name: Identificador técnico único
-        run: echo "WEB_QA_RUN_ID=$(node -p 'require(\"node:crypto\").randomUUID()')" >> "$GITHUB_ENV"
+        run: echo "WEB_QA_RUN_ID=$(cat /proc/sys/kernel/random/uuid)" >> "$GITHUB_ENV"
       - name: HTTP real bloqueado e RPC sem privilégios
         env:
           WEB_QA_V3_EXEC_URL: https://script.google.com/macros/s/AKfycbzW5ekgFdlyayf14Pi-uX7uBygxRMr2FqJS6hrQeKxsdj-WdVcyT0JI8vuzhVyT5L_W/exec
