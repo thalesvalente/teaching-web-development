@@ -1,8 +1,6 @@
 name: "WEB V3.0.2 - GET publicado, somente leitura"
+# Run explicitly only; never issue Google requests automatically on source changes.
 on:
-  push:
-    branches: [feat/web-a05-matricula-v3-qa-20261023]
-    paths: [.github/workflows/qa-web-v302-deployment-get.yml]
   workflow_dispatch:
 permissions:
   contents: read
