@@ -1,0 +1,70 @@
+name: Web 3.2 — fechar regressões legadas sem Google
+on:
+  push:
+    branches: [feat/web-roster-320-readonly-20261024]
+    paths: ['scripts/web320-final-fixture.patch', '.github/workflows/apply-web320-fixture-fix.yml']
+permissions:
+  contents: write
+concurrency:
+  group: web320-fixture-fix
+  cancel-in-progress: false
+jobs:
+  apply:
+    if: github.actor == 'thalesvalente' && github.ref == 'refs/heads/feat/web-roster-320-readonly-20261024'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feat/web-roster-320-readonly-20261024
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Aplicar teste por hash, sem mudar código da aplicação
+        run: |
+          python3 - <<'PY'
+          import hashlib,pathlib,subprocess
+          p=pathlib.Path('scripts/web320-final-fixture.patch')
+          assert hashlib.sha256(p.read_bytes()).hexdigest()=='c6bbdad3a0e87a2f04576fbae41eaf30d7954ebb9eb5d79ce97ed2570b111b25'
+          targets=[line[6:] for line in p.read_text().splitlines() if line.startswith('+++ b/')]
+          assert targets==['lessons/aula-05-laboratorio-web-mobile/tests/web-entregas.spec.mjs']
+          subprocess.run(['git','apply','--check',str(p)],check=True)
+          subprocess.run(['git','apply',str(p)],check=True)
+          PY
+          node --check lessons/aula-05-laboratorio-web-mobile/tests/web-entregas.spec.mjs
+          node --test tests/web-production/*.test.cjs tests/web-a05-id03/*.test.cjs
+      - name: Versionar somente fixture corrigida
+        run: |
+          git add lessons/aula-05-laboratorio-web-mobile/tests/web-entregas.spec.mjs
+          git rm scripts/web320-final-fixture.patch
+          if git diff --cached --name-only | grep -q '^.github/workflows/'; then exit 9; fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'test(web): isolar contextos legados e verificar cache de todos os módulos 3.2'
+          git push origin HEAD:refs/heads/feat/web-roster-320-readonly-20261024
+      - name: Preparar navegadores
+        working-directory: lessons/aula-05-laboratorio-web-mobile
+        run: |
+          npm ci
+          npx playwright install --with-deps chromium firefox webkit
+          sudo apt-get update -qq && sudo apt-get install -y poppler-utils
+      - name: Novo fluxo em três navegadores e regressão integral
+        working-directory: lessons/aula-05-laboratorio-web-mobile
+        run: |
+          npx playwright test -c playwright.roster.config.mjs --reporter=list
+          npm run check:logic
+          npx playwright test --reporter=list
+      - name: Registrar fontes verificáveis
+        if: always()
+        run: |
+          git rev-parse HEAD > /tmp/web320-final-COMMIT.txt
+          git archive --format=zip HEAD -o /tmp/web320-final-source.zip
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: web320-final-evidence
+          path: |
+            /tmp/web320-final-COMMIT.txt
+            /tmp/web320-final-source.zip
+            lessons/aula-05-laboratorio-web-mobile/test-results/
+          retention-days: 7
