@@ -1,0 +1,27 @@
+name: "QA Web V3 - HTTP blocked probe"
+on:
+  push:
+    branches:
+      - feat/web-a05-matricula-v3-qa-20261023
+    paths:
+      - scripts/web_a05_http_blocked_probe.py
+      - .github/workflows/qa-web-v3-http-blocked.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: web-v3-http-blocked-qa
+  cancel-in-progress: false
+jobs:
+  blocked-only:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Verify Python script syntax
+        run: python -m py_compile scripts/web_a05_http_blocked_probe.py
+      - name: Probe QA deployment GET and malformed POST - NEVER accepts student submissions
+        run: python scripts/web_a05_http_blocked_probe.py
