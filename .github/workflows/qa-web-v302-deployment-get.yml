@@ -1,0 +1,40 @@
+name: "WEB V3.0.2 - GET publicado, somente leitura"
+on:
+  push:
+    branches: [feat/web-a05-matricula-v3-qa-20261023]
+    paths: [.github/workflows/qa-web-v302-deployment-get.yml]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify-version:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: GET somente leitura, sem POST, sem dados pessoais
+        env:
+          QA_URL: https://script.google.com/macros/s/AKfycbzW5ekgFdlyayf14Pi-uX7uBygxRMr2FqJS6hrQeKxsdj-WdVcyT0JI8vuzhVyT5L_W/exec
+        run: |
+          python - <<'PY'
+          import os,sys,urllib.request
+          expected='Web web-notas-3.0.2-candidata — QA — recebimento bloqueado — matrícula obrigatória, maior nota, média automática'
+          try:
+              req=urllib.request.Request(os.environ['QA_URL'],headers={'User-Agent':'WebQA-v302-GET-preflight/1.0'},method='GET')
+              with urllib.request.urlopen(req,timeout=25) as response:
+                  body=response.read(2048).decode('utf-8','replace').strip()
+                  code=response.status
+              print('WEB_V302_GET',repr({'http':code,'body':body[:200]}))
+              if code==200 and body==expected:
+                  print('GET_V302_BLOCKED_PASS')
+                  sys.exit(0)
+              if 'web-notas-3.0.1-candidata' in body:
+                  print('GET_V302_NO_GO_OLD_301_DEPLOYMENT')
+              elif 'habilitado QA' in body:
+                  print('GET_V302_NO_GO_SUBMISSIONS_ENABLED')
+              else:
+                  print('GET_V302_NO_GO_UNEXPECTED_RESPONSE')
+              sys.exit(2)
+          except Exception as error:
+              print('GET_V302_INCONCLUSIVE',type(error).__name__,str(error)[:180])
+              sys.exit(3)
+          PY
