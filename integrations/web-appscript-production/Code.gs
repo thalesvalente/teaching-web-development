@@ -545,12 +545,14 @@ function notasStore(payload,nonce,config){
     var old=notasVerifyAudit(before.sheets.Auditoria,same[0]);
     if(old[23]!==n.requestHash)notasErr('DUPLICIDADE_TECNICA',null,null,'Este identificador já pertence a outro conteúdo.','Confira o recibo anterior.');
     n.identity.members=JSON.parse(old[25]);
-    // Replay mantém token de confirmação expirado válido para RECUPERAR o recibo,
-    // mas nunca deve atestar resultado persistido divergente da Auditoria assinada.
-    // Não reescrever/conciliar Resultado, boletim ou Alunos neste caminho.
-    notasCheckCatalog(before);
-    notasRecordIntegrity(before,n,notasActivity(before,n));
-    return notasReceipt(n,old,nonce,before,{teacherHold:old[27],replay:true});
+    // Replay recupera o recibo mesmo com confirmação expirada, sem autorizar
+    // mutação: percorre as mesmas validações de cadastro, vínculo NOMINAL,
+    // resultados, boletim e Auditoria assinada de uma submissão comum.
+    // notasPlan retorna requests=[] no replay; jamais persistir nesse ramo.
+    var replayPlan=notasPlan(before,n,nonce);
+    notasAssert(replayPlan.replay===true&&replayPlan.requests.length===0,
+      'Replay sem integridade verificável.');
+    return notasReceipt(n,replayPlan.entry,nonce,before,replayPlan);
   }
   notasHydrate_(before,n);
   var plan=notasPlan(before,n,nonce),after,rosterBefore=JSON.stringify(before.sheets.Alunos);
