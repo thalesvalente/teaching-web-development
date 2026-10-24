@@ -64,3 +64,23 @@ test('retificação manual da chave não duplica notas nem remapeia histórico �
   assert.equal(f.batches(),batches);assert.equal(JSON.stringify(f.state().Auditoria),oldAudit);
   assert.equal(f.state()['4º Bimestre'].cells.length,2);
 });
+
+for(const version of ['web-notas-3.0.0-candidata','web-notas-3.0.1-candidata','web-notas-3.0.2-candidata','web-notas-3.1.0']){
+  test('leitura do recibo histórico '+version+' conserva matrícula numérica e assinatura',()=>{
+    const f=fixture();assert.equal(send(f,.5).ok,true);
+    const book=f.ctx.notasReadBook(f.ctx.notasConfig(),['Auditoria']);
+    const row=book.sheets.Auditoria.rows[1];row[13]=version;
+    row[25]=JSON.stringify([{name:'Nome Teste Historico',enrollment:'00009999'}]);
+    row[9]=f.ctx.notasAuditSign(row);
+    const before=JSON.stringify(book.sheets.Auditoria.rows),batches=f.batches();
+    assert.equal(f.ctx.notasVerifyAudit(book.sheets.Auditoria,1)[13],version);
+    assert.equal(JSON.stringify(book.sheets.Auditoria.rows),before);assert.equal(f.batches(),batches);
+  });
+}
+test('matrícula numérica não pode ser introduzida em recibo novo 3.2.0',()=>{
+  const f=fixture();assert.equal(send(f,.5).ok,true);
+  const book=f.ctx.notasReadBook(f.ctx.notasConfig(),['Auditoria']);
+  const row=book.sheets.Auditoria.rows[1];row[25]=JSON.stringify([{name:'Nome Teste Historico',enrollment:'00009999'}]);
+  row[9]=f.ctx.notasAuditSign(row);
+  assert.throws(()=>f.ctx.notasVerifyAudit(book.sheets.Auditoria,1),/Matrículas da auditoria inválidas/);
+});

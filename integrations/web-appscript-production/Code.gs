@@ -395,7 +395,7 @@ function notasVerifyAudit(sheet,i){
   notasAssert(webSha256(r[14])===r[21]&&webSha256(ev.codigoFonteCompleto||'')===r[16]&&notasAuditSign(r)===r[9],
     'Assinatura/hashes da auditoria inválidos.');
   var members;try{members=JSON.parse(r[25]);}catch(e){webFail('Integrantes da auditoria inválidos.');}
-  notasAssert(Array.isArray(members)&&members.every(function(m){return typeof m.enrollment==='string'&&(/^[0-9]{8}\.ITA[0-9]{4}$/.test(m.enrollment)||(r[13]==='web-notas-3.1.0'&&/^\d{1,32}$/.test(m.enrollment)))&&notasFullName(m.name);}),
+  notasAssert(Array.isArray(members)&&members.every(function(m){return typeof m.enrollment==='string'&&(/^[0-9]{8}\.ITA[0-9]{4}$/.test(m.enrollment)||(['web-notas-3.0.0-candidata','web-notas-3.0.1-candidata','web-notas-3.0.2-candidata','web-notas-3.1.0'].includes(r[13])&&/^\d{1,32}$/.test(m.enrollment)))&&notasFullName(m.name);}),
     'Matrículas da auditoria inválidas.');
   notasGrade(r[10]);return r;
 }

@@ -14,7 +14,7 @@ async function setup(page,{health={},active=true,mutateReply=null}={}){
     let data=JSON.parse(response.html.match(/top\.postMessage\((\{.*\}),/)[1]);
     if(r.method()==='GET')Object.assign(data,health);if(mutateReply)data=await mutateReply(data,payload);
     // TEST ONLY: deliver fixture response to loopback. Google is never contacted.
-    await route.fulfill({contentType:'text/html',body:'<script>top.postMessage('+JSON.stringify(data).replace(/</g,'\\u003c')+',"*")</script>'});
+    await route.fulfill({contentType:'text/html; charset=utf-8',body:'<!doctype html><meta charset="utf-8"><script>top.postMessage('+JSON.stringify(data).replace(/</g,'\\u003c')+',"*")</script>'});
   });
   await page.goto('/index.html');await expect(page.locator('#compiler-status')).toContainText('Executado');
   await page.evaluate(()=>{window.print=()=>{};});
@@ -31,7 +31,7 @@ test('ROSTER-01 único campo digitável de integrante é matrícula; nome nunca 
 test('ROSTER-02 consulta, confirmação e envio usam backend modelado real sem alterar Alunos',async({page})=>{
   const c=await setup(page);await identify(page);await expect(page.locator('#web-member-0-name')).toHaveText('Estudante Teste Alfa');await expect(page.locator('#web-member-0-enrollment')).toHaveAttribute('readonly','');
   await submit(page);await expect(page.locator('#web-delivery-status')).toContainText('ENVIO CONFIRMADO');
-  expect(c.sent().schema).toBe('web-a05-submission-v3');expect(Object.keys(c.sent().identity.members[0]).sort()).toEqual(['confirmed','confirmationToken','enrollment']);
+  expect(c.sent().schema).toBe('web-a05-submission-v3');expect(Object.keys(c.sent().identity.members[0]).sort()).toEqual(['confirmationToken','confirmed','enrollment']);
   expect(c.f.value('4º Bimestre',2,2)).toBe(A);expect(c.f.value('4º Bimestre',2,1)).toBe('Estudante Teste Alfa');c.unchanged();
 });
 test('ROSTER-03 nome encontrado ainda exige confirmação explícita',async({page})=>{const c=await setup(page);await page.locator('#web-member-0-enrollment').fill(A);await page.locator('#web-member-0-lookup').click();await expect(page.locator('#web-member-0-confirm')).toBeVisible();await page.locator('#team-done').click();await expect(page.locator('#team-dialog')).toBeVisible();await expect(page.locator('#team-feedback')).toContainText('confirme');expect(c.calls).not.toContain('submitTeam');c.unchanged();});
