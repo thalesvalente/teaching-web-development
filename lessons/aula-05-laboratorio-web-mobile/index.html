@@ -116,7 +116,7 @@
         <button type="button" class="close-dialog team-close" data-close-dialog="team-dialog" aria-label="Fechar identificação da equipe">×</button>
         <div class="team-head-content">
           <div class="team-head-icon" aria-hidden="true"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
-          <div><p class="team-kicker">Seu grupo, sua entrega</p><h2 id="team-title">Identificação da equipe</h2><p id="team-intro">Uma atividade, todos os integrantes. Informe nome completo e matrícula de cada integrante para envio online. O PDF local permanece possível sem matrícula.</p></div>
+          <div><p class="team-kicker">Seu grupo, sua entrega</p><h2 id="team-title">Identificação da equipe</h2><p id="team-intro">Sem login ou conta institucional: informe apenas o nome da equipe e, para cada integrante, nome completo e matrícula. O PDF local pode ser gerado sem matrícula.</p></div>
         </div>
         <div class="team-head-progress" aria-label="Progresso de identificação da equipe">
           <span id="team-progress-caption">Preencha o nome da equipe e dos integrantes</span>
@@ -225,12 +225,12 @@ app/lab05.tsx               ← importa o componente
       <textarea id="limite-real" rows="3" placeholder="Ex.: teclado e acessibilidade no Expo Go."></textarea>
       <fieldset class="web-submission-fields" id="web-submission-fields" aria-describedby="web-delivery-explanation">
         <legend>Entrega da equipe (Google Sheets)</legend>
-        <p><strong>Identificação da equipe e de todos os integrantes:</strong></p>
+        <p><strong>Identificação simples:</strong> preencha nome da equipe, nome completo e matrícula de cada integrante. Não é necessário entrar no SUAP ou usar conta institucional.</p>
         <p id="web-team-summary" class="team-summary" role="status">Nenhuma equipe identificada. Use “Equipe e integrantes” no cabeçalho.</p>
         <button type="button" id="team-open-evidence" class="btn secondary">Preencher ou revisar integrantes</button>
         <p id="web-delivery-explanation" class="web-submission-explanation">
           A equipe envia uma única atividade com nome completo e matrícula de cada integrante. O servidor converte a pontuação em <strong>nota de 0 a 10</strong>,
-          preserva a maior nota por estudante e atividade e atualiza a média. A nota depende de conferência docente; informar matrícula não comprova identidade.
+          preserva a maior nota por estudante e atividade e atualiza a média. Os dados são informados pela própria equipe, sem autenticação institucional. A matrícula não comprova autoria; o professor pode conferir inconsistências e validar as notas.
           Não inclua senhas, documentos pessoais ou informações sigilosas no código.
         </p>
         <button type="button" class="btn run" id="web-submit">
