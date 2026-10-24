@@ -1,0 +1,72 @@
+name: "Web V3.0.2 — fases HTTP sintéticas controladas"
+# Não dispara por alteração de código, PR, merge ou agendamento.
+# Apenas push manual do arquivo trigger nesta branch.
+on:
+  push:
+    branches:
+      - feat/web-a05-matricula-v3-qa-20261023
+    paths:
+      - docs/web-v302-http-trigger.txt
+permissions:
+  contents: read
+concurrency:
+  group: web-v302-http-ciclo-unico
+  cancel-in-progress: false
+jobs:
+  verify-and-execute:
+    if: github.actor == 'thalesvalente'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: lessons/aula-05-laboratorio-web-mobile
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validar comando explícito antes de chamar Google
+        working-directory: .
+        run: |
+          marker=$(tr -d '\r\n' < docs/web-v302-http-trigger.txt)
+          case "$marker" in
+            RUN_WEB_V302_OPEN_FICTICIOS)
+              echo "WEB_QA_PHASE=open" >> "$GITHUB_ENV"
+              echo "::warning::FASE OPEN: bloquearRecebimentoNotasV3 deve ser executado pelo docente imediatamente após o teste."
+              ;;
+            RUN_WEB_V302_CLOSED_FICTICIOS)
+              echo "WEB_QA_PHASE=closed" >> "$GITHUB_ENV"
+              ;;
+            *)
+              echo "::error::Comando QA inválido; zero POST"
+              exit 3
+              ;;
+          esac
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: lessons/aula-05-laboratorio-web-mobile/package-lock.json
+      - name: Instalar dependências fixadas
+        run: npm ci
+      - name: Instalar Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Registrar identificador técnico único
+        run: echo "WEB_QA_RUN_ID=$(cat /proc/sys/kernel/random/uuid)" >> "$GITHUB_ENV"
+      - name: Verificar RPC e POST real usando dados somente fictícios
+        env:
+          WEB_QA_V3_EXEC_URL: https://script.google.com/macros/s/AKfycbzW5ekgFdlyayf14Pi-uX7uBygxRMr2FqJS6hrQeKxsdj-WdVcyT0JI8vuzhVyT5L_W/exec
+          WEB_QA_SHEET_ID: 1SpL_B_fENFo0PF_-18m4wvle2p1NpbTYStFPEnM7JmE
+          WEB_QA_AUTHORIZATION: FICTICIOS_WEB_V3
+          WEB_QA_BACKUP_CONFIRMED: 'true'
+        run: npx playwright test -c playwright.http.config.mjs
+      - name: Aviso de bloqueio obrigatório (mesmo em falha)
+        if: always()
+        run: |
+          if [ "$WEB_QA_PHASE" = "open" ]; then
+            echo "::warning::ACAO IMEDIATA: executar bloquearRecebimentoNotasV3 no editor antes da fase closed."
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: web-v302-ciclo-${{ github.run_id }}
+          path: lessons/aula-05-laboratorio-web-mobile/test-results/http-real-qa/**/http-qa-summary.json
+          if-no-files-found: warn
+          retention-days: 14
