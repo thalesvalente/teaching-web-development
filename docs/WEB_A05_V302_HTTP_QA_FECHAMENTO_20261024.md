@@ -59,12 +59,12 @@ Os testes de integridade e de readback foram executados via consulta direta à c
 **GO restrito para o ciclo HTTP do ambiente QA 3.0.2, encerrado e com recepção bloqueada.**
 
 **NO-GO para produção e para merge/publicação.** Antes de liberar estudantes reais:
-- validar formato de matrícula e vinculação à identidade do aluno por fonte institucional/autenticação; matrícula digitada não comprova autoria;
+- **Decisão posterior ADR-001 (24/10/2026): identificação declarada, sem login, sem integração ao SUAP e sem validação institucional.** Estudante informa apenas nome da equipe, nome completo e matrícula; a matrícula não comprova autoria, e conflitos continuam sujeitos à conferência docente;
 - revisar risco de enumeração e permissões do endpoint público, conformidade de proteção de dados e rate limiting;
 - conciliar notas reais e legislação/procedimento interno de lançamento, sem inferir matrícula de registros legados;
 - respeitar a decisão docente P1: **não editar notas manuais com recebimento aberto**; só corrigir após bloqueio e encerramento da atividade;
 - revisar PR #20 e PR #21, QA nos navegadores/dispositivos e decidir explicitamente a promoção ao Pages.
 
-Esta homologação só comprova os gates descritos, não a capacidade de identificar autores reais nem a prontidão de produção. O workflow que abre a recepção exige ações administrativas do proprietário e não fornece garantia de bloqueio automático caso o operador não execute `bloquearRecebimentoNotasV3`.
+**Atualização da decisão funcional:** [ADR-001 — Identificação declarada](./WEB_A05_ADR_001_IDENTIFICACAO_DECLARADA_20261024.md) substitui a exigência anterior de autenticação institucional. O QA 3.0.2 permanece sintético e bloqueado; uso real exige ambiente próprio e proteção dos dados, sem login do aluno.\n\nEsta homologação só comprova os gates descritos, não a capacidade de identificar autores reais nem a prontidão de produção. O workflow que abre a recepção exige ações administrativas do proprietário e não fornece garantia de bloqueio automático caso o operador não execute `bloquearRecebimentoNotasV3`.
 
 **Política após fechamento:** não reativar a flag para repetir o ensaio; não disparar `RUN_WEB_V302_OPEN_FICTICIOS` sem nova janela autorizada, baseline e controle de bloqueio. O marcador final deve permanecer `RUN_WEB_V302_CLOSED_FICTICIOS`.
