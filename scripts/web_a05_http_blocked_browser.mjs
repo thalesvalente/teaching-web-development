@@ -73,6 +73,20 @@ export async function main(){
     summary.replyOrigin=reply.origin;summary.replyCode=reply.data?.code;
     assert.equal(summary.replyVerified,true,'Resposta real não comprova bloqueio com nonce/canal/origem corretos');
     assert.equal(summary.postRequests,1,'Quantidade de POSTs inesperada');
+    // Só typeof de metadados já enviados ao navegador. NÃO chamar função remota.
+    summary.rpcSurface=[];
+    for(const frame of page.frames()){
+      let origin;try{origin=new URL(frame.url()).origin;}catch{continue;}
+      if(!validOrigin(origin))continue;
+      const surface=await frame.evaluate(()=>{
+        const r=window.google?.script?.run;
+        return {bridgePresent:!!r,secretHelperVisible:typeof r?.notasSecret==='function',
+          writeHelperVisible:typeof r?.notasStore==='function',
+          adminOpenVisible:typeof r?.liberarRecebimentoQAWebV3==='function',
+          nonexistentVisible:typeof r?.qaNonexistentFunction987654321==='function'};
+      }).catch(()=>({inspectionUnavailable:true}));
+      summary.rpcSurface.push({origin,...surface});
+    }
   }catch(error){failed=true;summary.errorType=error.name;}
   finally{
     if(context){try{summary.getAfter=await checkGet();}catch{summary.getAfter=false;failed=true;}}
