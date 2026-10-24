@@ -1,0 +1,68 @@
+name: Web — montar produção 3.1.0 e validar
+on:
+  push:
+    branches: [release/web-producao-310-20261024]
+    paths:
+      - .github/workflows/build-web-production-310.yml
+      - scripts/build_web_production.py
+      - scripts/prepare_web_production_site.py
+      - tests/web-production/production.test.cjs
+      - lessons/aula-05-laboratorio-web-mobile/production-gate.js
+      - lessons/aula-05-laboratorio-web-mobile/tests/production-gate.spec.mjs
+permissions:
+  contents: write
+concurrency:
+  group: web-prod-build-310
+  cancel-in-progress: true
+jobs:
+  build-verified:
+    if: github.actor == 'thalesvalente'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: release/web-producao-310-20261024
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: lessons/aula-05-laboratorio-web-mobile/package-lock.json
+      - name: Gerar backend separado e site com proteção de ambiente
+        run: |
+          python3 scripts/build_web_production.py
+          python3 scripts/prepare_web_production_site.py
+          cp integrations/web-appscript-production/Code.gs /tmp/web-production.js
+          node --check /tmp/web-production.js
+          node --check lessons/aula-05-laboratorio-web-mobile/production-gate.js
+          node --test tests/web-a05-id03/*.test.cjs scripts/web_v3_rpc_security.test.cjs scripts/web_a05_http_blocked_browser.test.mjs tests/web-production/*.test.cjs
+      - name: Instalar navegadores e validação de impressão
+        working-directory: lessons/aula-05-laboratorio-web-mobile
+        run: |
+          npm ci
+          npx playwright install --with-deps chromium
+          sudo apt-get update -qq && sudo apt-get install -y poppler-utils
+      - name: Testar laboratório e proteção de produção sem rede Google
+        working-directory: lessons/aula-05-laboratorio-web-mobile
+        run: |
+          npm run check:logic
+          npx playwright test --reporter=list
+      - name: Commit somente dos resultados gerados após testes aprovados
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add integrations/web-appscript-production tests/web-production/harness.cjs
+          git add lessons/aula-05-laboratorio-web-mobile/entrega-config.js lessons/aula-05-laboratorio-web-mobile/entrega-appscript.js lessons/aula-05-laboratorio-web-mobile/index.html
+          git add tests/web-a05-id03/frontend-cache.test.cjs lessons/aula-05-laboratorio-web-mobile/tests/web-entregas.spec.mjs lessons/aula-05-laboratorio-web-mobile/tests-live/http-qa-support.mjs
+          if ! git diff --cached --quiet; then
+            git commit -m 'feat(web): integrar produção 3.1.0 validada, notas da turma e proteção de envio'
+            git push origin HEAD:release/web-producao-310-20261024
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: web-production-310-files
+          path: |
+            integrations/web-appscript-production/*
+            lessons/aula-05-laboratorio-web-mobile/test-results
+          retention-days: 14
