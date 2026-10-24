@@ -1,5 +1,8 @@
 /** QA Web: matrícula por integrante em homologação. */
 import { test, expect } from '@playwright/test';
+
+// Historical v2 identity fixture. Roster 3.2 runs separately in roster-320.spec.mjs.
+test.beforeEach(async({page})=>{await page.route('**/entrega-config.js*',route=>route.fulfill({contentType:'application/javascript',body:"window.WebEntregaConfig=Object.freeze({endpoint:'',activated:false,schema:'web-a05-submission-v2',activity:'WEB-AULA05-2026'});"}));});
 import crypto from 'node:crypto';
 import { readFile } from 'node:fs/promises';
 const fake='https://script.google.com/macros/s/WEB-QA-MOCK-2026/exec';

@@ -46,7 +46,7 @@
        !Array.isArray(identity.members) ||
        validated.members.length!==identity.members.length ||
        validated.members.some((m,i)=>m.name!==identity.members[i]?.name || (m.enrollment||'')!==(identity.members[i]?.enrollment||'')))
-      throw Error('PDF local requer nome da equipe e nome completo dos integrantes; matrícula só é exigida no envio online.');
+      throw Error('O relatório requer identificação local consistente. Consulte e confirme matrículas para enviar online.');
     const total=snapshot.exercicios.length;
     const done=snapshot.exercicios.filter(item=>item.estado==='APROVADO').length;
     const pending=total-done;
