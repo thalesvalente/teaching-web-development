@@ -1,6 +1,8 @@
 import {test,expect} from '@playwright/test';
 import {createHash} from 'node:crypto';
-import {loadLiveSettings,expectedGet,mountCandidate,QA_ORIGIN,QA_PATH,fictionalMembers,watchMessages,waitMessage,postAgain} from './http-qa-support.mjs';
+import {mkdir,writeFile} from 'node:fs/promises';
+import path from 'node:path';
+import {loadLiveSettings,expectedGet,mountCandidate,QA_ORIGIN,QA_PATH,fictionalMembers,watchMessages,waitMessage,postAgain,verifyRpcBoundary} from './http-qa-support.mjs';
 const settings=loadLiveSettings();
 test('HTTP QA V3 — '+settings.phase+' (sem mock de Google)',async({page,context,request},testInfo)=>{
   const summary={phase:settings.phase,runId:settings.runId,postRealHttp:false,production:false,
@@ -10,12 +12,14 @@ test('HTTP QA V3 — '+settings.phase+' (sem mock de Google)',async({page,contex
   try{
     const response=await request.get(settings.endpoint,{timeout:30000,maxRedirects:5});
     expect(response.status()).toBe(200);
-    expect(expectedGet(await response.text(),settings.phase),'GET deve comprovar V3.0.1 QA e flag prevista').toBe(true);checked('HTTP-01');
+    expect(expectedGet(await response.text(),settings.phase),'GET deve comprovar V3.0.2 QA e flag prevista').toBe(true);checked('HTTP-01');
     const hashes=await mountCandidate(context,settings);await watchMessages(page);
     page.on('request',req=>{if(req.url()===settings.endpoint&&req.method()==='POST')submitted=new URLSearchParams(req.postData()||'');});
     await page.goto(QA_ORIGIN+QA_PATH+'index.html');
     expect(await page.evaluate(()=>location.origin)).toBe(QA_ORIGIN);
     await expect(page.locator('#compiler-status')).toContainText('Executado',{timeout:30000});checked('HTTP-03');
+    // Validate security BEFORE any student submission, using {} and read-only status denial.
+    summary.security=await verifyRpcBoundary(page,settings.endpoint);checked('SEC-RPC');
     await page.evaluate(({members,runId})=>window.WebTeam.restore({teamId:runId,team:'Equipe QA HTTP',members}),{members:fictionalMembers(),runId:settings.runId});
     await page.locator('#evidence-open').click();
     const sent=page.waitForRequest(req=>req.url()===settings.endpoint&&req.method()==='POST');
@@ -24,6 +28,7 @@ test('HTTP QA V3 — '+settings.phase+' (sem mock de Google)',async({page,contex
     const form=Object.fromEntries(submitted),first=await waitMessage(page,form.nonce);
     if(settings.phase!=='open'){
       expect(first.data.ok).toBe(false);expect(first.data.message).toContain('bloqueado');
+      await expect(page.locator('#web-delivery-status')).toContainText('bloqueado');
       await expect(page.locator('#web-delivery-status')).not.toContainText('ENVIO CONFIRMADO');checked('HTTP-02');
       summary.closure='GET_E_POST_BLOQUEADOS';summary.status='HTTP_BLOQUEADO_PASS_SCOPED';
     }else{
@@ -34,7 +39,6 @@ test('HTTP QA V3 — '+settings.phase+' (sem mock de Google)',async({page,contex
       expect(receipt.codeSha256).toBe(createHash('sha256').update(value.evidence.codigoFonteCompleto).digest('hex'));
       expect(receipt.signature).toMatch(/^[a-f0-9]{64}$/);expect(receipt.grade).toBeNull();checked('HTTP-04');checked('HTTP-05');
       summary.receipts.push({receiptId:receipt.receiptId,signature:receipt.signature,codeSha256:receipt.codeSha256,receivedGrade:receipt.gradeReceived,bestGrades:receipt.bestGrades,origin:first.origin});
-      // A assinatura é formato aqui; verificação criptográfica é administrativa, não se expõe HMAC ao browser.
       const replay=await postAgain(page,settings.endpoint,form);
       expect(replay.data.receiptId).toBe(receipt.receiptId);expect(replay.data.signature).toBe(receipt.signature);
       expect(replay.data.teacherReviewRequired).toBe(receipt.teacherReviewRequired);checked('HTTP-10');
@@ -63,7 +67,17 @@ test('HTTP QA V3 — '+settings.phase+' (sem mock de Google)',async({page,contex
     summary.sourceHashes=hashes;
   }catch(error){summary.status='HTTP_QA_FAIL';summary.errorType=error.name;throw error;}
   finally{
+    let finalFailure=null;
     if(settings.phase==='open')console.log('AÇÃO OBRIGATÓRIA: executar bloquearRecebimentoNotasV3 no editor, depois fase closed e conferir a planilha. Não repetir entrega incerta.');
-    await testInfo.attach('http-qa-summary.json',{body:JSON.stringify(summary,null,2),contentType:'application/json'});
+    else{
+      try{const r=await request.get(settings.endpoint,{timeout:30000,maxRedirects:5});
+        summary.finalGetBlocked=r.status()===200&&expectedGet(await r.text(),settings.phase);
+        if(!summary.finalGetBlocked)throw Error('GET_FINAL_BLOQUEADO_NAO_CONFIRMADO');
+      }catch(error){finalFailure=error;summary.status='HTTP_QA_FAIL';summary.closure='NAO_CONFIRMADA';}
+    }
+    const report=testInfo.outputPath('http-qa-summary.json');await mkdir(path.dirname(report),{recursive:true});
+    await writeFile(report,JSON.stringify(summary,null,2)+'\n');
+    await testInfo.attach('http-qa-summary.json',{path:report,contentType:'application/json'});
+    if(finalFailure)throw finalFailure;
   }
 });
