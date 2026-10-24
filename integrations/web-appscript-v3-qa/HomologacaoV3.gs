@@ -1,5 +1,8 @@
 /** Homologação REAL no runtime Apps Script, com planilha QA. NÃO é POST HTTP. */
 function executarHomologacaoMatriculasV3(){
+  webAdminIdentityV3_(false);
+  var WEB_CFG=WEB_V3_PRIVATE_.WEB_CFG,WEB_TASKS=WEB_V3_PRIVATE_.WEB_TASKS,webSha256=WEB_V3_PRIVATE_.webSha256,notasAssert=WEB_V3_PRIVATE_.notasAssert,notasConfig=WEB_V3_PRIVATE_.notasConfig,notasReadBook=WEB_V3_PRIVATE_.notasReadBook,notasRows=WEB_V3_PRIVATE_.notasRows;
+
   var cfg=notasConfig(),props=PropertiesService.getScriptProperties(),summary=null;
   notasAssert(cfg.mode==='QA'&&cfg.id===WEB_CFG.spreadsheetId,'Destino QA inválido.');
   notasAssert(!cfg.enabled,'Bloqueie primeiro o recebimento para iniciar a homologação.');

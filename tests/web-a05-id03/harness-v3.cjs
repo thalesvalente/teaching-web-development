@@ -6,8 +6,10 @@ const SOURCE_ID='1SpL_B_fENFo0PF_-18m4wvle2p1NpbTYStFPEnM7JmE';
 const TEAM_ID='a54a0500-2026-4000-8000-000000000001';
 const TASKS=[['run',5],['map',5],['title',6],['placeholder',6],['limit',12],['maximum',10],['button',7],['error',7],['success',7],['color',6],['trim',8],['invalid',8],['isolation',8],['quiz',5]];
 const clone=x=>JSON.parse(JSON.stringify(x));
-function fixture(){
+function fixture(options={}){
   const p=new Map([['WEB_NOTAS_V3_SUBMISSIONS_ENABLED','true'],['WEB_NOTAS_V3_HMAC_SECRET','test-only-secret-'.repeat(5)]]);
+  p.set('WEB_NOTAS_V3_ADMIN_EMAIL','owner@example.test');
+  p.set('WEB_NOTAS_V3_SECURITY_READY','true');
   let model={},batches=0,locks=0,reads=0,failMode='',captured=[];
   const utilities={DigestAlgorithm:{SHA_256:'SHA_256'},Charset:{UTF_8:'UTF_8'},
     computeDigest:(a,v)=>[...crypto.createHash('sha256').update(String(v)).digest()],
@@ -71,6 +73,8 @@ function fixture(){
     return {spreadsheetId:SOURCE_ID,replies:body.requests.map(()=>({}))};
   }
   const ctx=vm.createContext({console,Utilities:utilities,
+    Session:{getActiveUser:()=>({getEmail:()=>options.activeEmail===undefined?'owner@example.test':options.activeEmail}),
+      getEffectiveUser:()=>({getEmail:()=>options.effectiveEmail===undefined?'owner@example.test':options.effectiveEmail})},
     PropertiesService:{getScriptProperties:()=>({getProperty:k=>p.has(k)?p.get(k):null,setProperty:(k,v)=>p.set(k,v)})},
     LockService:{getScriptLock:()=>({waitLock(){if(failMode==='lock')throw Error('PRIVATE_LOCK');locks++;},releaseLock(){locks--;}})},
     HtmlService:{XFrameOptionsMode:{ALLOWALL:'ALLOWALL'},createHtmlOutput:html=>({html,setXFrameOptionsMode(){return this;}})},
@@ -81,9 +85,13 @@ function fixture(){
       const titles=options.ranges.map(r=>r.match(/^'((?:[^']|'')+)'!/)[1].replace(/''/g,"'"));return state(titles);},batchUpdate:applyBatch}}
   });
   new vm.Script(source,{filename:'Code.gs'}).runInContext(ctx);
+  // Test-only access to lexical helpers. NEVER copy these aliases into Apps Script.
+  const internal=ctx.WEB_V3_PRIVATE_;
+  if(options.exposeInternals!==false)for(const [name,value]of Object.entries(internal))if(!(name in ctx))ctx[name]=value;
+
   for(let n=1;n<=4;n++)add(n+'º Bimestre',100+n,[['Aluno','Matrícula','Equipe',...(n===3?['Aula 04 E3-I1 /10']:n===4?['Aula 05 /10']:[]),'Média /10']]);
-  add('Auditoria',200,[Array.from(ctx.AU_HEADERS)]);add('Equipes',201,[Array.from(ctx.T_HEADERS)]);add('Alunos',203,[Array.from(ctx.A_HEADERS)]);add('Resultados',204,[Array.from(ctx.R_HEADERS)]);
-  add('Atividades',202,[Array.from(ctx.ACT_HEADERS),['WEB-AULA04-E3-I1-2026','Aula 04 E3-I1',3,'Aula 04 E3-I1 /10','manual',false],
+  add('Auditoria',200,[Array.from(internal.AU_HEADERS)]);add('Equipes',201,[Array.from(internal.T_HEADERS)]);add('Alunos',203,[Array.from(internal.A_HEADERS)]);add('Resultados',204,[Array.from(internal.R_HEADERS)]);
+  add('Atividades',202,[Array.from(internal.ACT_HEADERS),['WEB-AULA04-E3-I1-2026','Aula 04 E3-I1',3,'Aula 04 E3-I1 /10','manual',false],
     ['WEB-AULA05-2026','Aula 05',4,'Aula 05 /10','web-a05-submission-v2',true]]);
   const identity=()=>({team:'Equipe QA Alfa',teamId:TEAM_ID,members:[{name:'Ana Teste Ficticio',enrollment:'00001234'},{name:'Bruno Teste Ficticio',enrollment:'00005678'}]});
   const evidence=(approved=[])=>({schema:'ifma-web-aula05-lab-v4',tipo:'formativo-nao-e-nota',maximoXp:100,
@@ -99,6 +107,6 @@ function fixture(){
   function eventY(grade,bim=4,ident=identity()){return {parameter:{nonce:crypto.randomUUID(),payload:JSON.stringify({schema:'web-notas-submission-v3',activity:'WEB-ATIVIDADE-Y-2026',identity:ident,evidence:{schema:'web-notas-evidencia-v3',nota:grade,maximoNota:10,observacao:'QA'}})}};}
   return {ctx,props:p,identity,evidence,event,receive,parsed,set,value,configureY,eventY,
     state:()=>clone(model),snapshot:()=>JSON.stringify(model),batches:()=>batches,locks:()=>locks,reads:()=>reads,captured:()=>clone(captured),
-    mode:v=>{failMode=v},model:()=>model,add};
+    session:(active,effective)=>{options.activeEmail=active;options.effectiveEmail=effective;},mode:v=>{failMode=v},model:()=>model,add};
 }
 module.exports={fixture,TASKS,TEAM_ID,source,clone};

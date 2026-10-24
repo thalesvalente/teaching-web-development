@@ -1,5 +1,10 @@
+/** V3.0.2: only HTTP handlers and authenticated administrative facades are public.
+ * Helpers live inside a closure; no secret, store or signature helper is a top-level RPC.
+ * Do not reintroduce top-level aliases from test harnesses in this project.
+ */
+var WEB_V3_PRIVATE_ = (function(){
 /**
- * WEB-A05-ID-03 — 3.0.1 CANDIDATA QA, NÃO IMPLANTADA.
+ * WEB-A05-ID-03 — 3.0.2 CANDIDATA QA, NÃO IMPLANTADA.
  * SOMENTE Desenvolvimento Web. Destino fixo: NOVA CÓPIA V3 sintética.
  * SEM identificação real de estudantes, SEM servidor público habilitado.
  * Matrícula como texto; conflitos de identidade sem divulgação de terceiros.
@@ -8,7 +13,7 @@
  */
 var WEB_CFG=Object.freeze({
   spreadsheetId:'1SpL_B_fENFo0PF_-18m4wvle2p1NpbTYStFPEnM7JmE',
-  version:'web-notas-3.0.1-candidata',activity:'WEB-AULA05-2026',
+  version:'web-notas-3.0.2-candidata',activity:'WEB-AULA05-2026',
   schema:'ifma-web-aula05-lab-v4',channel:'web-entrega-aula05',
   origin:'https://thalesvalente.github.io',maxPayloadChars:44000,maxRows:10000
 });
@@ -170,7 +175,7 @@ function notasConfig() {
   notasAssert(id===WEB_CFG.spreadsheetId,'Este receptor V3 só permite a cópia QA V3.');
   var mode=p.getProperty('WEB_NOTAS_V3_MODE')||'QA';
   notasAssert(mode==='QA','Produção V3 não autorizada.');
-  return {id:id,mode:mode,enabled:p.getProperty('WEB_NOTAS_V3_SUBMISSIONS_ENABLED')==='true'};
+  return {id:id,mode:mode,enabled:p.getProperty('WEB_NOTAS_V3_SUBMISSIONS_ENABLED')==='true'&&p.getProperty('WEB_NOTAS_V3_SECURITY_READY')==='true'};
 }
 function notasSecret() {
   var s=PropertiesService.getScriptProperties().getProperty('WEB_NOTAS_V3_HMAC_SECRET');
@@ -312,7 +317,10 @@ function notasAuditSign(row){
   if(row[13]!=='web-notas-3.0.0-candidata'){
     notasAssert(typeof row[27]==='boolean','Pendência assinada inválida.');data.push(row[27]);
   }
-  return notasSign(JSON.stringify(data));
+  var legacy=PropertiesService.getScriptProperties().getProperty('WEB_NOTAS_V3_HMAC_LEGACY_301');
+  var historical=['web-notas-3.0.0-candidata','web-notas-3.0.1-candidata'].includes(row[13]);
+  var key=historical&&legacy?legacy:notasSecret();
+  return webHex(Utilities.computeHmacSha256Signature(JSON.stringify(data),key));
 }
 function notasVerifyAudit(sheet,i){
   var r=sheet.rows[i],ev;
@@ -627,4 +635,69 @@ function verificarStatusWebV3(){
   r.activityStatus=Object.keys(cat).map(function(id){return {id:id,bimestre:cat[id].bim,
     enabled:cat[id].enabled&&!p.getProperty(notasClosedKeyV3(id)),closed:!!p.getProperty(notasClosedKeyV3(id))};});
   console.log('WEB_V3_STATUS '+JSON.stringify(r));return r;
+}
+
+return Object.freeze({WEB_CFG:WEB_CFG,WEB_TASKS:WEB_TASKS,NOTAS_STATUS:NOTAS_STATUS,A_HEADERS:A_HEADERS,R_HEADERS:R_HEADERS,T_HEADERS:T_HEADERS,AU_HEADERS:AU_HEADERS,ACT_HEADERS:ACT_HEADERS,webFail:webFail,webText:webText,webCode:webCode,webSafe:webSafe,webNormalized:webNormalized,webEvidence:webEvidence,webHex:webHex,webSha256:webSha256,notasAssert:notasAssert,notasBlank:notasBlank,notasGrade:notasGrade,notasMax:notasMax,notasMean:notasMean,notasErr:notasErr,notasFullName:notasFullName,notasEnrollment:notasEnrollment,webIdentity:webIdentity,notasAverageFormula:notasAverageFormula,notasConfig:notasConfig,notasSecret:notasSecret,notasSign:notasSign,notasNoXpKeys:notasNoXpKeys,notasIdentityAllowed:notasIdentityAllowed,notasNormalize:notasNormalize,notasColName:notasColName,notasReadBook:notasReadBook,notasHeaders:notasHeaders,notasCatalog:notasCatalog,notasActivity:notasActivity,notasCell:notasCell,notasWrite:notasWrite,notasWriteFormula:notasWriteFormula,notasNewRow:notasNewRow,notasRows:notasRows,notasIndex:notasIndex,notasCheckCatalog:notasCheckCatalog,notasCheckIdentity:notasCheckIdentity,notasAuditSign:notasAuditSign,notasVerifyAudit:notasVerifyAudit,notasAuditEntry:notasAuditEntry,notasTeamKey:notasTeamKey,notasAuditWinner:notasAuditWinner,notasRecordIntegrity:notasRecordIntegrity,notasPlan:notasPlan,notasVerifyWrites:notasVerifyWrites,notasReceipt:notasReceipt,notasStore:notasStore,webReturn:webReturn,doGet:doGet,doPost:doPost,prepararIntegracaoNotasV3:prepararIntegracaoNotasV3,statusIntegracaoNotasV3:statusIntegracaoNotasV3,consultarConflitoDocenteV3:consultarConflitoDocenteV3,cadastrarAtividadeNotasV3:cadastrarAtividadeNotasV3,notasLegacyHoldV3:notasLegacyHoldV3,notasClosedKeyV3:notasClosedKeyV3,notasCheckOpenV3:notasCheckOpenV3,bloquearRecebimentoNotasV3:bloquearRecebimentoNotasV3,encerrarAtividadeNotasV3:encerrarAtividadeNotasV3,encerrarAula05ParaCorrecaoV3:encerrarAula05ParaCorrecaoV3,liberarRecebimentoQAWebV3:liberarRecebimentoQAWebV3,verificarStatusWebV3:verificarStatusWebV3});
+})();
+
+/** Effective user alone identifies the deployment owner, not the caller. Fail closed. */
+function webAdminIdentityV3_(bootstrap){
+  var active='',effective='';
+  try{active=String(Session.getActiveUser().getEmail()||'').trim().toLowerCase();
+      effective=String(Session.getEffectiveUser().getEmail()||'').trim().toLowerCase();}catch(e){}
+  if(!active||!effective||active!==effective)throw new Error('ADMIN_NAO_AUTORIZADO');
+  var p=PropertiesService.getScriptProperties(),saved=p.getProperty('WEB_NOTAS_V3_ADMIN_EMAIL');
+  if(saved?active!==saved:!bootstrap)throw new Error('ADMIN_NAO_AUTORIZADO');
+  if(!saved)p.setProperty('WEB_NOTAS_V3_ADMIN_EMAIL',active);
+}
+function webAdminExecV3_(name,args,bootstrap){
+  webAdminIdentityV3_(bootstrap===true);
+  if(name==='prepararIntegracaoNotasV3')WEB_V3_PRIVATE_.bloquearRecebimentoNotasV3();
+  if(name==='liberarRecebimentoQAWebV3'&&PropertiesService.getScriptProperties().getProperty('WEB_NOTAS_V3_SECURITY_READY')!=='true')
+    throw new Error('ROTACAO_QA_PENDENTE: arquive implantações anteriores e execute rotacionarChaveQAWebV3.');
+  return WEB_V3_PRIVATE_[name].apply(null,Array.prototype.slice.call(args));
+}
+function doGet(){return WEB_V3_PRIVATE_.doGet();}
+function doPost(e){return WEB_V3_PRIVATE_.doPost(e);}
+function prepararIntegracaoNotasV3(){return webAdminExecV3_('prepararIntegracaoNotasV3',arguments,true);}
+function statusIntegracaoNotasV3(){return webAdminExecV3_('statusIntegracaoNotasV3',arguments,false);}
+function consultarConflitoDocenteV3(){return webAdminExecV3_('consultarConflitoDocenteV3',arguments,false);}
+function cadastrarAtividadeNotasV3(){return webAdminExecV3_('cadastrarAtividadeNotasV3',arguments,false);}
+function bloquearRecebimentoNotasV3(){return webAdminExecV3_('bloquearRecebimentoNotasV3',arguments,false);}
+function encerrarAtividadeNotasV3(){return webAdminExecV3_('encerrarAtividadeNotasV3',arguments,false);}
+function encerrarAula05ParaCorrecaoV3(){return webAdminExecV3_('encerrarAula05ParaCorrecaoV3',arguments,false);}
+function liberarRecebimentoQAWebV3(){return webAdminExecV3_('liberarRecebimentoQAWebV3',arguments,false);}
+function verificarStatusWebV3(){return webAdminExecV3_('verificarStatusWebV3',arguments,false);}
+
+/** Run only AFTER archiving ALL older deployments of this Web script project.
+ * Keeps the old QA key solely to read existing receipts; never prints either key.
+ */
+function rotacionarChaveQAWebV3(){
+  webAdminIdentityV3_(false);
+  var p=PropertiesService.getScriptProperties(),lock=LockService.getScriptLock(),held=false;
+  if(p.getProperty('WEB_NOTAS_V3_SUBMISSIONS_ENABLED')==='true')throw new Error('BLOQUEIE_RECEBIMENTO_ANTES');
+  try{lock.waitLock(20000);held=true;
+    if(p.getProperty('WEB_NOTAS_V3_SUBMISSIONS_ENABLED')==='true')throw new Error('BLOQUEIE_RECEBIMENTO_ANTES');
+    var c=WEB_V3_PRIVATE_.notasConfig();
+    if(p.getProperty('WEB_NOTAS_V3_SECURITY_READY')==='true'){
+      if(!p.getProperty('WEB_NOTAS_V3_HMAC_LEGACY_301'))throw new Error('ESTADO_ROTACAO_INCONSISTENTE');
+      return {status:'ROTACAO_QA_JA_REALIZADA',enabled:false,version:'web-notas-3.0.2-candidata'};
+    }
+    var book=WEB_V3_PRIVATE_.notasReadBook(c,['Auditoria']);
+    book.sheets.Auditoria.rows.forEach(function(row,i){
+      if(i>0&&row&&!WEB_V3_PRIVATE_.notasBlank(row[7])){
+        if(!['web-notas-3.0.0-candidata','web-notas-3.0.1-candidata'].includes(row[13]))throw new Error('ROTACAO_EXIGE_CONFERENCIA_DOCENTE');
+        WEB_V3_PRIVATE_.notasVerifyAudit(book.sheets.Auditoria,i);
+      }
+    });
+    var legacy=p.getProperty('WEB_NOTAS_V3_HMAC_LEGACY_301');
+    if(!legacy){legacy=WEB_V3_PRIVATE_.notasSecret();p.setProperty('WEB_NOTAS_V3_HMAC_LEGACY_301',legacy);}
+    // READY written last: interrupted rotation stays blocked and may be resumed.
+    var key=Utilities.getUuid().replace(/-/g,'')+Utilities.getUuid().replace(/-/g,'');
+    p.setProperty('WEB_NOTAS_V3_HMAC_SECRET',key);
+    p.setProperty('WEB_NOTAS_V3_SECURITY_ROTATED_AT',new Date().toISOString());
+    p.setProperty('WEB_NOTAS_V3_SECURITY_READY','true');
+    var result={status:'ROTACAO_QA_CONCLUIDA',enabled:false,version:'web-notas-3.0.2-candidata',historicalSignatures:'PRESERVADAS'};
+    console.log('WEB_V3_SEGURANCA '+JSON.stringify(result));return result;
+  }finally{if(held)lock.releaseLock();}
 }
