@@ -28,7 +28,7 @@
     if (!validEndpoint()) {
       status.textContent = 'Recebimento online não habilitado. No modo QA, configure o receptor fictício na identificação da equipe. PDF e JSON locais continuam disponíveis.';
     } else if (!activated()) {
-      status.textContent = 'O receptor foi informado, mas o recebimento ainda não está pronto. Confira a configuração QA.';
+      status.textContent = 'O endereço Apps Script foi cadastrado, mas o recebimento segue em homologação. Confira a configuração QA.';
     } else {
       status.textContent = 'Recebimento QA preparado. Use apenas matrículas fictícias; a disponibilidade será conferida no servidor antes de qualquer envio.';
     }
