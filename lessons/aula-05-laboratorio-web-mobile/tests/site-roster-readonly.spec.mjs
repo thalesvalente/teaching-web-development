@@ -34,17 +34,19 @@ async function openWithMockedQa(page){
     });
   });
   await page.goto('/index.html');
+  await expect(page.locator('#compiler-status')).toContainText('Executado',{timeout:30000});
   await page.locator('#team-open').click();
   return operations;
 }
 
 test('SITE-V3-01: formulário padrão do laboratório não aceita nome digitado nem envia para produção',async({page})=>{
   await page.goto('/index.html');
+  await expect(page.locator('#compiler-status')).toContainText('Executado',{timeout:30000});
   await expect(page.locator('#team-open')).toBeVisible();
   await page.locator('#team-open').click();
   await expect(page.locator('#web-members input[type="text"]')).toHaveCount(1);
-  await expect(page.locator('#team-dialog input:visible').evaluateAll(xs=>xs.map(x=>x.id)))
-    .resolves.toEqual(['web-team','web-member-0-enrollment']);
+  const inputs=await page.locator('#team-dialog input:visible').evaluateAll(xs=>xs.map(x=>x.id));
+  expect(inputs).toEqual(['web-team','web-member-0-enrollment']);
   await expect(page.locator('#web-member-0-name')).toHaveText('Nome não consultado');
   const cfg=await page.evaluate(()=>window.WebEntregaConfig);
   expect(cfg.schema).toBe('web-a05-submission-v3');
