@@ -120,7 +120,9 @@
       if(m.name){
         const row=text('label','','roster-confirm'),checkbox=document.createElement('input');checkbox.type='checkbox';checkbox.id='web-member-'+i+'-confirm';checkbox.checked=m.confirmed;checkbox.disabled=m.state==='disputed';
         checkbox.onchange=()=>{m.confirmed=checkbox.checked;summary();};
-        const confirmHint=text('small','A confirmação continua válida nesta sessão enquanto matrícula e cadastro docente permanecerem iguais. O servidor verificará mudanças no envio.','roster-confirm-hint');
+        const confirmHint=text('small',/^v2\.[a-f0-9]{64}$/.test(m.token)?
+          'A confirmação permanece válida nesta sessão enquanto o cadastro docente e a matrícula não forem alterados.':
+          'Confirmação temporária da versão anterior: válida por 15 minutos. Após atualizar o receptor QA, consulte esta matrícula uma vez para obter a confirmação permanente.','roster-confirm-hint');
         confirmHint.id='web-member-'+i+'-confirm-hint';checkbox.setAttribute('aria-describedby',confirmHint.id);
         row.append(checkbox,text('span','Confirmo que o nome exibido corresponde à matrícula informada.'));fields.append(row,confirmHint);
         const wrong=text('button','Nome incorreto — procurar o professor','btn roster-dispute');wrong.type='button';wrong.onclick=()=>{m.confirmed=false;m.token='';m.state='disputed';m.error='Somente o professor pode corrigir o cadastro diretamente na planilha. Esta entrega fica bloqueada.';render();feedback(m.error,'error');};fields.append(wrong);
