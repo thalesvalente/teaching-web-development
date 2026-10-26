@@ -1,10 +1,10 @@
-/** V3.0.2: only HTTP handlers and authenticated administrative facades are public.
+/** V3.2.0: only HTTP handlers and authenticated administrative facades are public.
  * Helpers live inside a closure; no secret, store or signature helper is a top-level RPC.
  * Do not reintroduce top-level aliases from test harnesses in this project.
  */
 var WEB_V3_PRIVATE_ = (function(){
 /**
- * WEB-A05-ID-03 — 3.1.0 — PRODUÇÃO; ativação explícita do proprietário.
+ * WEB-A05-ID-03 — 3.2.0 — PRODUÇÃO; ativação explícita do proprietário.
  * SOMENTE Desenvolvimento Web. Destino fixo: boletim novo e privado da turma.
  * Identificação declarada sem login; administração autenticada e recepção bloqueada por padrão.
  * Matrícula como texto; conflitos de identidade sem divulgação de terceiros.
@@ -13,7 +13,7 @@ var WEB_V3_PRIVATE_ = (function(){
  */
 var WEB_CFG=Object.freeze({
   spreadsheetId:'1cPQD_ie3cEqt11fLXT398DPQIi5bnqkmTqfl9yk8a_Q',
-  version:'web-notas-3.1.0',activity:'WEB-AULA05-2026',
+  version:'web-notas-3.2.0',activity:'WEB-AULA05-2026',
   schema:'ifma-web-aula05-lab-v4',channel:'web-entrega-aula05',
   origin:'https://thalesvalente.github.io',maxPayloadChars:44000,maxRows:10000
 });
@@ -129,6 +129,8 @@ function notasFullName(name) {
   if(typeof name!=='string'||name.length>100)return false;
   var s=name.trim();return s.length>=5 && /^[\p{L}\p{M}'’\-\s]+$/u.test(s) &&
     s.split(/\s+/).length>=2 && s.split(/\s+/).every(function(part){
+      // A conjunção portuguesa e é válida em nomes completos cadastrados.
+      if(part.toLowerCase()==='e')return true;
       return /^[\p{L}][\p{L}\p{M}'’\-]*$/u.test(part) &&
         part.split(/[-'’]/).every(function(x){return x.length>0;}) &&
         part.split(/[-'’]/).some(function(x){return (x.match(/\p{L}/gu)||[]).length>=2;});
@@ -136,35 +138,33 @@ function notasFullName(name) {
 }
 function notasEnrollment(value, i) {
   if(typeof value!=='string'||!value.trim())
-    notasErr('MATRICULA_OBRIGATORIA',i,'enrollment','Matrícula obrigatória para envio online.','Informe a matrícula institucional do integrante '+(i+1)+'.');
-  var s=value.trim();
-  // Limite técnico: 1 a 32 algarismos ASCII, sem presumir comprimento institucional.
-  // Identificação declarada: não consulta SUAP nem autentica o estudante.
-  if(s.length>32||!/^\d+$/.test(s))
-    notasErr('MATRICULA_FORMATO_INVALIDO',i,'enrollment','Matrícula deve conter somente algarismos, preservando zeros iniciais.','Confira a matrícula digitada; em caso de dúvida, procure o professor.');
-  return s;
+    notasErr('MATRICULA_OBRIGATORIA',i,'enrollment','Informe a matrícula completa.','Consulte sua matrícula ou procure o professor.');
+  // Canonicaliza SOMENTE a entrada de pesquisa. Alunos nunca é regravada.
+  var key=value.trim().toUpperCase();
+  if(!/^[0-9]{8}\.ITA[0-9]{4}$/.test(key))
+    notasErr('MATRICULA_FORMATO_INVALIDO',i,'enrollment','Use a matrícula completa, com ponto, letras ITA e zeros iniciais.','Confira o documento da turma. Não use somente os últimos algarismos.');
+  return key;
 }
+
 function webIdentity(input) {
-  if(!input||typeof input!=='object'||Array.isArray(input))webFail('Identificação ausente.');
+  notasExactKeys_(input,['team','teamId','members']);
   var team=webText(input.team,80,'equipe'),teamId=webText(input.teamId,36,'ID técnico');
   notasAssert(team.length>=3,'Nome da equipe incompleto.');
   notasAssert(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(teamId),'Identificador técnico inválido.');
   notasAssert(Array.isArray(input.members)&&input.members.length>=1&&input.members.length<=8,'Informe entre 1 e 8 integrantes.');
-  var seenEnrollment=Object.create(null),seenNames=Object.create(null);
+  var seen=Object.create(null);
   var members=input.members.map(function(m,i){
-    if(!m||typeof m!=='object'||Array.isArray(m))webFail('Integrante '+(i+1)+' inválido.');
-    var name=webText(m.name,100,'nome do integrante '+(i+1));
-    if(!notasFullName(name))notasErr('NOME_COMPLETO_INVALIDO',i,'name','Informe nome completo e sobrenome.','Corrija o nome do integrante '+(i+1)+'.');
-    var enrollment=notasEnrollment(m.enrollment,i),norm=webNormalized(name);
-    if(Object.prototype.hasOwnProperty.call(seenEnrollment,enrollment))
-      notasErr('MATRICULA_DUPLICADA_EQUIPE',i,'enrollment','Matrícula repetida nos integrantes '+(seenEnrollment[enrollment]+1)+' e '+(i+1)+'.','Cada integrante precisa informar sua própria matrícula.');
-    if(Object.prototype.hasOwnProperty.call(seenNames,norm))
-      notasErr('NOME_DUPLICADO_EQUIPE',i,'name','Nome repetido nos integrantes '+(seenNames[norm]+1)+' e '+(i+1)+'.','Confirme se os integrantes são pessoas distintas.');
-    seenEnrollment[enrollment]=i;seenNames[norm]=i;
-    return {name:name,enrollment:enrollment};
+    notasExactKeys_(m,['enrollment','confirmationToken','confirmed']);
+    var key=notasEnrollment(m.enrollment,i);
+    if(seen[key])notasErr('MATRICULA_DUPLICADA_EQUIPE',i,'enrollment','Matrícula repetida na equipe.','Cada integrante deve ser incluído uma única vez.');
+    seen[key]=true;
+    if(m.confirmed!==true||typeof m.confirmationToken!=='string'||!(/^(?:\d{13}|v2)\.[a-f0-9]{64}$/.test(m.confirmationToken)))
+      notasErr('CONFIRMACAO_OBRIGATORIA',i,'enrollment','Consulte a matrícula e confirme o nome exibido.','Reinicie a identificação local e consulte novamente.');
+    return {enrollment:key,confirmationToken:m.confirmationToken,confirmed:true};
   });
   return {team:team,teamId:teamId,members:members};
 }
+
 function notasAverageFormula(row, count) {
   if(!count)return '=IF($A'+row+'="";"";"")';
   return '=IF($A'+row+'="";"";IF(COUNT($D'+row+':INDEX('+row+':'+row+';1;COLUMN()-1))=0;"";ROUND(AVERAGE($D'+row+':INDEX('+row+':'+row+';1;COLUMN()-1));2)))';
@@ -186,7 +186,7 @@ function notasSign(text){return webHex(Utilities.computeHmacSha256Signature(Stri
 function notasNoXpKeys(value){return !value||typeof value!=='object'||Object.keys(value).every(function(k){return !/^(xp|maximoXp|xpReported)$/i.test(k)&&notasNoXpKeys(value[k]);});}
 function notasIdentityAllowed(identity,config){
   notasAssert(config.mode==='PROD','Ambiente de produção inválido.');
-  // Campos já validados por webIdentity; não exige cadastro ou conta institucional.
+  // O cadastro docente é obrigatório e lido por notasHydrate_; não há login do aluno.
   notasAssert(identity.members.length>=1&&identity.members.length<=8,'Integrantes inválidos.');
 }
 /** Limites de uso de melhor esforço. CacheService não é identidade nem proteção DDoS. */
@@ -202,9 +202,10 @@ function notasRateLimit_(identity){
 }
 function notasNormalize(payload){
   notasAssert(payload&&typeof payload==='object'&&!Array.isArray(payload),'Payload inválido.');
+  notasExactKeys_(payload,['operation','environment','schema','activity','identity','evidence']);
   var identity=webIdentity(payload.identity),contract=payload.schema,evidence,grade,original;
   notasAssert(typeof payload.activity==='string'&&/^[A-Z0-9][A-Z0-9_-]{2,79}$/.test(payload.activity),'Atividade inválida.');
-  if(contract==='web-a05-submission-v2'){
+  if(contract==='web-a05-submission-v3'){
     notasAssert(payload.activity===WEB_CFG.activity,'Contrato A05 exclusivo de Aula 05.');
     original=webEvidence(payload.evidence);grade=original.xp/10;
     evidence={schema:'web-notas-evidencia-v3',sourceSchema:original.schema,nota:grade,maximoNota:10,
@@ -224,8 +225,106 @@ function notasNormalize(payload){
   return {identity:identity,contract:contract,activity:payload.activity,evidence:evidence,
     evidenceJson:evidenceJson,grade:grade,storedHash:webSha256(evidenceJson),originalHash:webSha256(JSON.stringify(original)),
     codeHash:webSha256(code),requestHash:webSha256(JSON.stringify({contract:contract,identity:identity,activity:payload.activity,evidence:evidence})),
-    instrument:contract==='web-a05-submission-v2'?'laboratorio-vivo-tsx-equipe':'atividade-nota-equipe'};
+    instrument:contract==='web-a05-submission-v3'?'laboratorio-vivo-tsx-equipe':'atividade-nota-equipe'};
 }
+
+/** Contracts reject all mutation fields, including requests from a modified browser. */
+function notasExactKeys_(value,keys){
+  notasAssert(value&&typeof value==='object'&&!Array.isArray(value),'Objeto inválido.');
+  if(Object.keys(value).some(function(k){return keys.indexOf(k)<0;}))
+    notasErr('OPERACAO_NAO_PERMITIDA',null,null,'O cadastro só pode ser editado manualmente pelo professor na planilha.','Atualize a página. Nenhuma alteração cadastral é permitida por este aplicativo.');
+}
+function notasRosterIndex_(book){
+  var alunos=book.sheets.Alunos,unique=Object.create(null);notasHeaders(alunos,A_HEADERS);
+  alunos.rows.forEach(function(row,i){
+    if(i===0||!row||row.every(notasBlank))return;
+    var key=row[0];
+    notasAssert(typeof key==='string'&&/^[0-9]{8}\.ITA[0-9]{4}$/.test(key),'Cadastro precisa de conferência manual do professor.');
+    notasAssert(typeof row[1]==='string'&&notasFullName(row[1])&&row[2]===webNormalized(row[1]),'Cadastro precisa de conferência manual do professor.');
+    notasAssert(!unique[key],'Cadastro contém matrícula duplicada; solicite conferência docente.');
+    notasAssert(!(alunos.formulas[i]||[]).some(Boolean),'Cadastro contém fórmula; solicite conferência docente.');
+    unique[key]={row:row,index:i};
+  });
+  return unique;
+}
+function notasStudent_(index,key,i){
+  var saved=index[key];
+  if(!saved||saved.row[3]!=='VALIDADO_DOCENTE')
+    notasErr('MATRICULA_NAO_DISPONIVEL',i,'enrollment','Matrícula não encontrada ou indisponível para esta atividade.','Confira a matrícula completa. Somente o professor pode corrigir o cadastro diretamente na planilha.');
+  return saved;
+}
+function notasConfirmation_(saved,teamId,activity,expires){
+  // Compatibilidade com confirmações temporárias 3.2.0 ainda válidas.
+  var row=[];for(var i=0;i<8;i++)row.push(saved.row[i]===undefined?'':saved.row[i]);
+  return String(expires)+'.'+notasSign(JSON.stringify(['roster-v1',teamId,activity,row,String(expires)]));
+}
+function notasConfirmationStable_(saved,teamId,activity){
+  // Comprovante de confirmação pessoal de uso da página: sem relógio,
+  // assinado sobre a linha docente completa, equipe e atividade.
+  // Mudança de matrícula, nome, estado ou metadado invalida automaticamente.
+  var row=[];for(var i=0;i<8;i++)row.push(saved.row[i]===undefined?'':saved.row[i]);
+  return 'v2.'+notasSign(JSON.stringify(['roster-v2',teamId,activity,row]));
+}
+function notasHydrate_(book,n){
+  var index=notasRosterIndex_(book);
+  n.identity.members=n.identity.members.map(function(m,i){
+    var saved=notasStudent_(index,m.enrollment,i),token=m.confirmationToken;
+    if(token.indexOf('v2.')===0){
+      // Validação por assinatura e cadastro atual, sem expiração cronológica.
+      if(notasConfirmationStable_(saved,n.identity.teamId,n.activity)!==token)
+        notasErr('CONFIRMACAO_DESATUALIZADA',i,'enrollment','O cadastro foi alterado desde a confirmação.','Consulte a matrícula novamente e confira o nome atualizado.');
+    }else{
+      var expires=Number(token.split('.')[0]);
+      if(expires<Date.now()||expires>Date.now()+20*60000||notasConfirmation_(saved,n.identity.teamId,n.activity,expires)!==token)
+        notasErr('CONFIRMACAO_DESATUALIZADA',i,'enrollment','A confirmação anterior expirou ou o cadastro mudou.','Consulte a matrícula novamente e confira o nome.');
+    }
+    return {name:saved.row[1],enrollment:m.enrollment};
+  });
+}
+function notasLookup_(payload,nonce,config){
+  notasExactKeys_(payload,['operation','environment','activity','teamId','enrollment']);
+  notasAssert(payload.environment==='PROD'&&typeof payload.activity==='string'&&/^[A-Z0-9][A-Z0-9_-]{2,79}$/.test(payload.activity),'Ambiente/atividade incompatível.');
+  var key=notasEnrollment(payload.enrollment,0),teamId=webText(payload.teamId,36,'ID técnico');
+  notasAssert(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(teamId),'Identificador técnico inválido.');
+  notasLookupLimit_(teamId,key);
+  var book=notasReadBook(config,['Alunos','Atividades']),a=notasCatalog(book.sheets.Atividades)[payload.activity];
+  notasAssert(a&&['web-a05-submission-v3','web-notas-submission-v3'].includes(a.contract),'Atividade indisponível.');
+  notasCheckOpenV3(a,payload.activity,a.contract);
+  var saved=notasStudent_(notasRosterIndex_(book),key,0);
+  return {ok:true,channel:'web-roster-lookup-aula05',nonce:nonce,version:WEB_CFG.version,
+    name:saved.row[1],enrollmentCanonical:key,confirmationToken:notasConfirmationStable_(saved,teamId,payload.activity)};
+}
+function notasLookupLimit_(teamId,key){
+  var cache=CacheService.getScriptCache(),minute=Math.floor(Date.now()/60000);
+  var keys=[['roster:global:'+minute,120],['roster:team:'+minute+':'+webSha256(teamId),24],['roster:entry:'+minute+':'+webSha256(key),12]];
+  keys.forEach(function(pair){var n=Number(cache.get(pair[0])||0);
+    if(!Number.isFinite(n)||n>=pair[1])notasErr('LIMITE_TEMPORARIO',null,'enrollment','Limite temporário de consultas. Aguarde antes de tentar novamente.','Não repita consultas continuamente. Procure o professor se persistir.');});
+  keys.forEach(function(pair){cache.put(pair[0],String(Number(cache.get(pair[0])||0)+1),120);});
+}
+/** The ONLY gateway for Sheets mutations. Unknown operations and destinations fail closed. */
+function notasCommit_(book,requests,config,scope){
+  notasAssert(book.id===config.id&&config.id===WEB_CFG.spreadsheetId,'Destino inválido.');
+  var names=scope==='catalog'?['Atividades','1º Bimestre','2º Bimestre','3º Bimestre','4º Bimestre']:
+    ['Auditoria','Equipes','Resultados','1º Bimestre','2º Bimestre','3º Bimestre','4º Bimestre'];
+  var allowed=Object.create(null),blocked=book.sheets.Alunos&&book.sheets.Alunos.id;
+  names.forEach(function(name){var sheet=book.sheets[name];if(sheet){notasAssert(sheet.title===name&&sheet.id!==blocked,'Destino cadastral proibido.');allowed[sheet.id]=sheet;}});
+  notasAssert(Array.isArray(requests)&&requests.length>0,'Lote vazio.');
+  requests.forEach(function(req){
+    notasAssert(req&&Object.keys(req).length===1,'Requisição de escrita inválida.');
+    var kind=Object.keys(req)[0],x=req[kind],loc;
+    if(kind==='updateCells'){
+      notasAssert(x&&Object.keys(x).every(function(k){return ['start','rows','fields'].includes(k);})&&x.fields==='userEnteredValue','Máscara de escrita proibida.');
+      loc=x.start;notasAssert(loc&&Number.isInteger(loc.rowIndex)&&loc.rowIndex>=0&&Number.isInteger(loc.columnIndex)&&loc.columnIndex>=0,'Coordenadas explícitas obrigatórias.');
+      notasAssert(Array.isArray(x.rows)&&x.rows.length>0&&x.rows.every(function(r){return Array.isArray(r.values)&&r.values.length>0;}),'Linhas inválidas.');
+    }else if(scope==='catalog'&&['insertDimension','setDataValidation','repeatCell'].includes(kind)){
+      loc=x.range;notasAssert(loc&&Object.keys(x).every(function(k){return ['range','inheritFromBefore','rule','cell','fields'].includes(k);}), 'Operação de catálogo inválida.');
+      if(kind==='repeatCell')notasAssert(x.fields==='userEnteredValue','Máscara de catálogo proibida.');
+    }else webFail('Operação de escrita não permitida.');
+    notasAssert(loc&&Number.isInteger(loc.sheetId)&&allowed[loc.sheetId]&&loc.sheetId!==blocked,'Escrita cadastral proibida (INV-MAT-01).');
+  });
+  return Sheets.Spreadsheets.batchUpdate({requests:requests},config.id);
+}
+
 function notasColName(index){var text='';for(var n=index+1;n>0;n=Math.floor((n-1)/26))text=String.fromCharCode(65+(n-1)%26)+text;return text;}
 function notasReadBook(config,titles){
   var meta=Sheets.Spreadsheets.get(config.id,{fields:'spreadsheetId,properties(locale,timeZone),sheets(properties)'});
@@ -257,7 +356,7 @@ function notasCatalog(s){notasHeaders(s,ACT_HEADERS);var result=Object.create(nu
     notasAssert(Number.isInteger(r[2])&&r[2]>=1&&r[2]<=4,'Bimestre inválido.');
     notasAssert(typeof r[3]==='string'&&r[3].endsWith(' /10')&&r[3]!=='Média /10','Cabeçalho de nota inválido.');
     notasAssert(!used[r[2]+'|'+r[3]],'Atividade duplicada.');
-    notasAssert(['manual','web-a05-submission-v2','web-notas-submission-v3'].includes(r[4])&&typeof r[5]==='boolean','Contrato/flag de atividade inválidos.');
+    notasAssert(['manual','web-a05-submission-v2','web-a05-submission-v3','web-notas-submission-v3'].includes(r[4])&&typeof r[5]==='boolean','Contrato/flag de atividade inválidos.');
     used[r[2]+'|'+r[3]]=true;result[r[0]]={id:r[0],bim:r[2],title:r[2]+'º Bimestre',header:r[3],contract:r[4],enabled:r[5]};
   });return result;
 }
@@ -283,44 +382,16 @@ function notasCheckCatalog(book){notasHeaders(book.sheets.Auditoria,AU_HEADERS);
   notasHeaders(book.sheets.Resultados,R_HEADERS);notasHeaders(book.sheets.Equipes,T_HEADERS);notasCatalog(book.sheets.Atividades);}
 
 function notasCheckIdentity(book,n){
-  var alunos=book.sheets.Alunos, roster=book.sheets[notasActivity(book,n).title];
-  var unique=Object.create(null), byName=Object.create(null);
-  alunos.rows.forEach(function(row,i){
-    if(i===0||!row||notasBlank(row[0]))return;
-    var key=row[0],norm=row[2];
-    notasAssert(typeof key==='string'&&/^\d{1,32}$/.test(key),'Matrícula armazenada não textual/inválida.');
-    notasAssert(typeof norm==='string'&&norm===webNormalized(row[1]),'Nome normalizado inválido no cadastro.');
-    notasAssert(!unique[key],'Matrícula duplicada no cadastro docente.');
-    unique[key]={row:row,index:i};
-    (byName[norm]=byName[norm]||[]).push({enrollment:key,row:row});
-  });
+  var unique=notasRosterIndex_(book),roster=book.sheets[notasActivity(book,n).title];
   n.identity.members.forEach(function(m,i){
-    var norm=webNormalized(m.name),saved=unique[m.enrollment];
-    if(saved&&saved.row[2]!==norm)
-      notasErr('MATRICULA_NOME_DIVERGENTE',i,'enrollment',
-        'Esta matrícula já está associada a um nome diferente no cadastro Web.',
-        'Confira nome completo e matrícula; se estiverem corretos, solicite conferência docente.');
-    if(saved && !['DECLARADO','VALIDADO_DOCENTE','VALIDADO_HOMONIMO'].includes(saved.row[3]))
-      notasErr('IDENTIDADE_REVISAO_DOCENTE',i,'enrollment','Identificação bloqueada para revisão docente.','Procure o professor antes de reenviar.');
-    var collisions=(byName[norm]||[]).filter(function(x){return x.enrollment!==m.enrollment;});
-    if(collisions.length && !(saved && saved.row[6]===true &&
-       collisions.every(function(x){return x.row[6]===true && x.row[3]==='VALIDADO_HOMONIMO';})))
-      notasErr('NOME_MATRICULA_DIVERGENTE',i,'name',
-        'Este nome já está associado a outra matrícula na disciplina Web.',
-        'Confira os dados. Em caso de homônimos, solicite validação administrativa dos dois cadastros.');
-    // Não associar uma nova matrícula à linha herdada de UUID, nem tratar nomes isolados como identidade.
-    roster.rows.forEach(function(row,j){
-      if(j===0||!row||notasBlank(row[0]))return;
-      if(row[1]===m.enrollment && webNormalized(row[0])!==norm)
-        notasErr('MATRICULA_NOME_DIVERGENTE',i,'name','Esta matrícula consta no boletim com nome diferente.','Solicite conferência docente.');
-      if(webNormalized(row[0])===norm && row[1]!==m.enrollment && !collisions.length)
-        notasErr('IDENTIDADE_LEGADA_PENDENTE',i,'enrollment',
-          'O boletim contém um registro de mesmo nome sem matrícula conciliada.',
-          'Não reutilize a linha anterior por nome; solicite a regularização do cadastro ao professor.');
-    });
-  });
-  return unique;
+    var saved=notasStudent_(unique,m.enrollment,i);
+    if(saved.row[1]!==m.name)notasErr('CONFIRMACAO_DESATUALIZADA',i,'enrollment','Cadastro atualizado pelo professor.','Consulte e confirme novamente.');
+    // Equal names with distinct pre-registered enrollments are legitimate.
+    roster.rows.forEach(function(row,j){if(j>0&&row&&row[1]===m.enrollment&&row[0]!==m.name)
+      notasErr('VINCULO_DOCENTE_PENDENTE',i,'enrollment','O boletim precisa de conferência docente após atualização cadastral.','Procure o professor. Nenhuma correção automática foi feita.');});
+  });return unique;
 }
+
 function notasAuditSign(row){
   var data=[row[0],row[1],row[2],row[3],row[4],row[5],row[6],row[7],row[8],
     row[10],row[13],row[14],row[15],row[16],row[17],row[20],row[21],row[22],row[23],row[24],row[25],row[26]];
@@ -338,7 +409,7 @@ function notasVerifyAudit(sheet,i){
   notasAssert(webSha256(r[14])===r[21]&&webSha256(ev.codigoFonteCompleto||'')===r[16]&&notasAuditSign(r)===r[9],
     'Assinatura/hashes da auditoria inválidos.');
   var members;try{members=JSON.parse(r[25]);}catch(e){webFail('Integrantes da auditoria inválidos.');}
-  notasAssert(Array.isArray(members)&&members.every(function(m){return typeof m.enrollment==='string'&&/^\d+$/.test(m.enrollment)&&notasFullName(m.name);}),
+  notasAssert(Array.isArray(members)&&members.every(function(m){return typeof m.enrollment==='string'&&(/^[0-9]{8}\.ITA[0-9]{4}$/.test(m.enrollment)||(['web-notas-3.0.0-candidata','web-notas-3.0.1-candidata','web-notas-3.0.2-candidata','web-notas-3.1.0'].includes(r[13])&&/^\d{1,32}$/.test(m.enrollment)))&&notasFullName(m.name);}),
     'Matrículas da auditoria inválidas.');
   notasGrade(r[10]);return r;
 }
@@ -365,15 +436,21 @@ function notasAuditWinner(audit,receipt,enrollment,activity){
 function notasRecordIntegrity(book,n,act){
   var aud=book.sheets.Auditoria,res=book.sheets.Resultados,roster=book.sheets[act.title];
   aud.rows.forEach(function(r,i){if(i>0&&r&&!notasBlank(r[7]))notasVerifyAudit(aud,i);});
-  var seenResult=Object.create(null);
+  var currentRoster=notasRosterIndex_(book),seenResult=Object.create(null);
   res.rows.forEach(function(r,i){if(i>0&&r&&!notasBlank(r[0])){
+    if(!currentRoster[r[0]])notasErr('VINCULO_DOCENTE_PENDENTE',null,null,
+      'Há um resultado vinculado a matrícula não presente no cadastro atual.',
+      'O professor deve conferir manualmente os vínculos. Nenhuma matrícula ou nota foi remapeada.');
     var k=r[0]+'|'+r[1];notasAssert(!seenResult[k],'Resultado duplicado.');seenResult[k]=i;
     notasGrade(r[2]);var w=notasAuditWinner(aud,r[3],r[0],r[1]);
     notasAssert(w[10]===r[2]&&w[0]===r[4]&&w[8]===r[8], 'Resultado não corresponde ao recibo vencedor.');
   }});
   var seenRoster=Object.create(null);
   roster.rows.forEach(function(r,i){if(i>0&&r&&!notasBlank(r[0])){
-    notasAssert(typeof r[1]==='string'&&/^\d+$/.test(r[1]),'Linha sem matrícula válida: reconciliação docente.');
+    notasAssert(typeof r[1]==='string'&&/^[0-9]{8}\.ITA[0-9]{4}$/.test(r[1]),'Linha sem matrícula válida: reconciliação docente.');
+    if(!currentRoster[r[1]])notasErr('VINCULO_DOCENTE_PENDENTE',null,null,
+      'Há uma matrícula no boletim que precisa de conferência cadastral docente.',
+      'O professor deve conferir os vínculos manualmente antes de reabrir as entregas.');
     notasAssert(!seenRoster[r[1]],'Matrícula duplicada no boletim.');seenRoster[r[1]]=true;
     var meanFormula=(roster.formulas[i]||[])[act.mean]||'';
     notasAssert(meanFormula===notasAverageFormula(i+1,act.mean-3),'Fórmula de média incompatível.');
@@ -403,12 +480,10 @@ function notasPlan(book,n,nonce){
     req.push(notasWrite(teams,teamRow,14,[JSON.stringify(n.identity.members),n.contract]));
   }
   req.push(notasWrite(teams,teamRow,12,[row[7],row[6]]));
-  var nextStudent=notasNewRow(alunos,[0]),nextRoster=notasNewRow(roster,[0,1,2]),nextResult=notasNewRow(res,[0,1]);
+  var nextRoster=notasNewRow(roster,[0,1,2]),nextResult=notasNewRow(res,[0,1]);
   var memberGrades=[],holds=[];
   n.identity.members.forEach(function(m,i){
-    if(!catalog[m.enrollment]){
-      req.push(notasWrite(alunos,nextStudent++,0,[m.enrollment,m.name,webNormalized(m.name),'DECLARADO','',now,false,'']));
-    }
+    notasAssert(!!catalog[m.enrollment],'Matrícula não cadastrada; somente inclusão manual docente.');
     var rr=notasRows(roster,1,m.enrollment);
     notasAssert(rr.length<=1,'Matrícula duplicada no boletim.');
     var existingResult=resultIndex[m.enrollment+'|'+n.activity],rowResult=existingResult===undefined?null:res.rows[existingResult],
@@ -462,11 +537,12 @@ function notasVerifyWrites(book,plan){
 function notasReceipt(n,entry,nonce,book,plan){
   var grades=n.identity.members.map(function(m){var rs=notasRows(book.sheets.Resultados,0,m.enrollment).filter(function(i){return book.sheets.Resultados.rows[i][1]===n.activity;});
     notasAssert(rs.length===1,'Nota por aluno ausente.');return {best:book.sheets.Resultados.rows[rs[0]][2]};});
-  return {ok:true,channel:n.contract==='web-a05-submission-v2'?WEB_CFG.channel:'web-notas',nonce:nonce,
+  return {ok:true,channel:n.contract==='web-a05-submission-v3'?WEB_CFG.channel:'web-notas',nonce:nonce,
     receiptId:entry[7],activity:n.activity,instrument:n.instrument,receivedAt:entry[6],
     teamId:n.identity.teamId,memberCount:n.identity.members.length,answersSha256:entry[8],
     codeSha256:entry[16],storedEvidenceSha256:entry[21],signature:entry[9],grade:null,
     gradeReceived:entry[10],bestGrades:grades.map(function(x){return x.best;}),
+    members:JSON.parse(entry[25]),version:WEB_CFG.version,
     status:NOTAS_STATUS,teacherReviewRequired:Boolean(plan.teacherHold),
     warning:plan.teacherHold?'Entrega recebida; avaliação docente preservada e pendente de revisão.':
       'Nota calculada a partir de evidência declarada; sujeito à conferência docente.'};
@@ -477,16 +553,35 @@ function notasStore(payload,nonce,config){
   var head=notasReadBook(config,['Atividades']),a=notasCatalog(head.sheets.Atividades)[n.activity];
   notasCheckOpenV3(a,n.activity,n.contract);
   var titles=['Atividades','Auditoria','Equipes','Alunos','Resultados',a.title],before=notasReadBook(config,titles);
-  var plan=notasPlan(before,n,nonce),after;
+  var same=notasRows(before.sheets.Auditoria,22,webSha256(nonce));
+  notasAssert(same.length<=1,'Nonce duplicado na auditoria.');
+  if(same.length){
+    var old=notasVerifyAudit(before.sheets.Auditoria,same[0]);
+    if(old[23]!==n.requestHash)notasErr('DUPLICIDADE_TECNICA',null,null,'Este identificador já pertence a outro conteúdo.','Confira o recibo anterior.');
+    n.identity.members=JSON.parse(old[25]);
+    // Replay recupera o recibo mesmo com confirmação expirada, sem autorizar
+    // mutação: percorre as mesmas validações de cadastro, vínculo NOMINAL,
+    // resultados, boletim e Auditoria assinada de uma submissão comum.
+    // notasPlan retorna requests=[] no replay; jamais persistir nesse ramo.
+    var replayPlan=notasPlan(before,n,nonce);
+    notasAssert(replayPlan.replay===true&&replayPlan.requests.length===0,
+      'Replay sem integridade verificável.');
+    return notasReceipt(n,replayPlan.entry,nonce,before,replayPlan);
+  }
+  notasHydrate_(before,n);
+  var plan=notasPlan(before,n,nonce),after,rosterBefore=JSON.stringify(before.sheets.Alunos);
   if(plan.requests.length){
-    try{Sheets.Spreadsheets.batchUpdate({requests:plan.requests},config.id);}
+    // Reject bad destinations BEFORE the network-uncertainty catch.
+    try{notasCommit_(before,plan.requests,config,'submission');}
     catch(e){try{after=notasReadBook(config,titles);notasVerifyWrites(after,plan);}
       catch(unconfirmed){webFail('Envio sem confirmação. Confira os recibos antes de repetir o POST.');}}
   }
   after=after||notasReadBook(config,titles);notasVerifyWrites(after,plan);
+  notasAssert(JSON.stringify(after.sheets.Alunos)===rosterBefore,'Cadastro mudou durante a entrega. Consulte o professor antes de reenviar.');
   notasCheckCatalog(after);notasCheckIdentity(after,n);notasRecordIntegrity(after,n,plan.act);
   return notasReceipt(n,plan.entry,nonce,after,plan);
 }
+
 function webReturn(result){var safe=JSON.stringify(result).replace(/</g,'\\u003c').replace(/>/g,'\\u003e')
     .replace(/&/g,'\\u0026').replace(/\u2028/g,'\\u2028').replace(/\u2029/g,'\\u2029');
   return HtmlService.createHtmlOutput('<!doctype html><html><meta charset="utf-8"><body><script>top.postMessage('
@@ -500,13 +595,13 @@ function doGet(e){
     if(!/^[A-Za-z0-9-]{12,90}$/.test(nonce))return ContentService.createTextOutput('Requisição inválida.').setMimeType(ContentService.MimeType.TEXT);
     var active=false;
     try{if(c.enabled){var b=notasReadBook(c,['Atividades']),a=notasCatalog(b.sheets.Atividades)[WEB_CFG.activity];
-      active=!!(a&&a.enabled&&!PropertiesService.getScriptProperties().getProperty(notasClosedKeyV3(WEB_CFG.activity)));}}
+      active=!!(a&&a.contract==='web-a05-submission-v3'&&a.enabled&&!PropertiesService.getScriptProperties().getProperty(notasClosedKeyV3(WEB_CFG.activity)));}}
     catch(error){active=false;}
     return webReturn({ok:true,channel:'web-status-aula05',nonce:nonce,version:WEB_CFG.version,
       mode:'PROD',enabled:active,activity:WEB_CFG.activity});
   }
   return ContentService.createTextOutput('Web '+WEB_CFG.version+' — PROD — recebimento '+
-    (c.enabled?'habilitado':'bloqueado')+' — nome, matrícula e equipe; notas 0–10 e maior nota')
+    (c.enabled?'habilitado':'bloqueado')+' — matrícula pré-cadastrada; cadastro somente leitura; notas 0–10 e maior nota')
     .setMimeType(ContentService.MimeType.TEXT);
 }
 function doPost(e){var nonce='',channel=WEB_CFG.channel,held=false,lock=null;
@@ -514,19 +609,22 @@ function doPost(e){var nonce='',channel=WEB_CFG.channel,held=false,lock=null;
     notasAssert(e&&e.parameter,'Requisição ausente.');nonce=webText(e.parameter.nonce,90,'nonce');
     notasAssert(/^[A-Za-z0-9-]{12,90}$/.test(nonce),'Nonce inválido.');
     var raw=e.parameter.payload;notasAssert(typeof raw==='string'&&raw.length<=WEB_CFG.maxPayloadChars,'Payload inválido.');
+    var payload;try{payload=JSON.parse(raw);}catch(error){webFail('JSON inválido.');}
+    notasAssert(payload&&typeof payload==='object'&&!Array.isArray(payload),'Requisição inválida.');
+    if(payload.operation==='lookupStudent')channel='web-roster-lookup-aula05';
+    else if(payload.operation!=='submitTeam')notasErr('OPERACAO_NAO_PERMITIDA',null,null,'Operação não permitida.','Atualize a página. O cadastro é somente leitura.');
+    else if(payload.schema==='web-notas-submission-v3')channel='web-notas';
     var cfg=notasConfig();notasAssert(cfg.enabled,'Recebimento de atividades bloqueado pelo professor.');
-    var payload;try{payload=JSON.parse(raw);}catch(e){webFail('JSON inválido.');}
-    if(payload.schema==='web-notas-submission-v3')channel='web-notas';
     lock=LockService.getScriptLock();lock.waitLock(20000);held=true;
-    // Releitura sob lock: um POST que esperou não pode usar a flag antiga.
     cfg=notasConfig();notasAssert(cfg.enabled,'Recebimento de atividades bloqueado pelo professor.');
-    return webReturn(notasStore(payload,nonce,cfg));
+    return webReturn(payload.operation==='lookupStudent'?notasLookup_(payload,nonce,cfg):notasStore(payload,nonce,cfg));
   }catch(err){return webReturn({ok:false,channel:channel,nonce:nonce,
     code:err.publicCode||'ENVIO_SEM_CONFIRMACAO',memberIndex:Number.isInteger(err.memberIndex)?err.memberIndex:null,
     field:err.field||null,message:err.webPublic?String(err.message).slice(0,220):'Falha interna. Consulte o docente.',
-    action:err.action||'Confira a situação na Auditoria antes de reenviar.',retryable:false});
+    action:err.action||'Confira a situação com o professor antes de reenviar.',retryable:false});
   }finally{if(held)lock.releaseLock();}
 }
+
 function prepararIntegracaoNotasV3(){var cfg=notasConfig(),book=notasReadBook(cfg,['Atividades','Auditoria','Equipes','Alunos','Resultados']);
   notasCheckCatalog(book);var p=PropertiesService.getScriptProperties();
   if(p.getProperty('WEB_NOTAS_PROD_SUBMISSIONS_ENABLED')===null)p.setProperty('WEB_NOTAS_PROD_SUBMISSIONS_ENABLED','false');
@@ -550,7 +648,7 @@ function cadastrarAtividadeNotasV3(spec){
   var c=notasConfig();notasAssert(spec&&typeof spec==='object'&&Number.isInteger(spec.bim)&&spec.bim>=1&&spec.bim<=4,'Bimestre inválido.');
   var lock=LockService.getScriptLock(),held=false;
   try{lock.waitLock(20000);held=true;
-    var title=spec.bim+'º Bimestre',book=notasReadBook(c,['Atividades',title]);
+    var title=spec.bim+'º Bimestre',book=notasReadBook(c,['Atividades','Alunos',title]);
     var cat=notasCatalog(book.sheets.Atividades),name=webText(spec.name,100,'nome da atividade'),
       header=webText(spec.header,100,'coluna'),contract=spec.contract;
     notasAssert(typeof spec.id==='string'&&/^[A-Z0-9][A-Z0-9_-]{2,79}$/.test(spec.id)&&
@@ -574,8 +672,8 @@ function cadastrarAtividadeNotasV3(spec){
         cell:notasCell('',notasAverageFormula(2,mean-2)),fields:'userEnteredValue'}},
       notasWrite(at,ar,0,[spec.id,name,spec.bim,header,contract,spec.enabled===true])
     ];
-    Sheets.Spreadsheets.batchUpdate({requests:requests},c.id);
-    var after=notasReadBook(c,['Atividades',title]),k=notasCatalog(after.sheets.Atividades)[spec.id],ss=after.sheets[title];
+    notasCommit_(book,requests,c,'catalog');
+    var after=notasReadBook(c,['Atividades','Alunos',title]),k=notasCatalog(after.sheets.Atividades)[spec.id],ss=after.sheets[title];
     notasAssert(k&&ss.rows[0][mean]===header&&ss.rows[0][mean+1]==='Média /10','Cadastro não confirmado; não repita sem verificar.');
     return {status:'CADASTRADA',id:spec.id,bimestre:spec.bim};
   }finally{if(held)lock.releaseLock();}
@@ -617,7 +715,7 @@ function encerrarAtividadeNotasV3(id,motivo){
   notasAssert(reason.length>=3,'Informe o motivo do encerramento.');
   var p=PropertiesService.getScriptProperties(),lock=LockService.getScriptLock(),held=false;
   try{lock.waitLock(20000);held=true;
-    var book=notasReadBook(cfg,['Atividades']),sheet=book.sheets.Atividades,cat=notasCatalog(sheet);
+    var book=notasReadBook(cfg,['Atividades','Alunos']),sheet=book.sheets.Atividades,cat=notasCatalog(sheet);
     notasAssert(cat[id],'Atividade não cadastrada.');
     var rows=notasRows(sheet,0,id);notasAssert(rows.length===1,'Atividade ambígua.');
     notasAssert(sheet.columnCount>=8,'Atividades precisa de colunas G e H livres para encerramento.');
@@ -626,7 +724,7 @@ function encerrarAtividadeNotasV3(id,motivo){
     p.setProperty(key,JSON.stringify(stamp));
     var requests=[notasWrite(sheet,0,6,['Encerrada UTC','Motivo do encerramento']),
       notasWrite(sheet,rows[0],5,[false,stamp.at,stamp.reason])];
-    try{Sheets.Spreadsheets.batchUpdate({requests:requests},cfg.id);}
+    try{notasCommit_(book,requests,cfg,'catalog');}
     catch(e){p.setProperty('WEB_NOTAS_PROD_SUBMISSIONS_ENABLED','false');
       webFail('Bloqueio mantido; gravação de encerramento não confirmada. Execute o fechamento novamente antes de corrigir.');}
     var after=notasReadBook(cfg,['Atividades']);notasVerifyWrites(after,{requests:requests});
@@ -658,7 +756,7 @@ function verificarStatusWebV3(){
   console.log('WEB_V3_STATUS '+JSON.stringify(r));return r;
 }
 
-return Object.freeze({WEB_CFG:WEB_CFG,WEB_TASKS:WEB_TASKS,NOTAS_STATUS:NOTAS_STATUS,A_HEADERS:A_HEADERS,R_HEADERS:R_HEADERS,T_HEADERS:T_HEADERS,AU_HEADERS:AU_HEADERS,ACT_HEADERS:ACT_HEADERS,webFail:webFail,webText:webText,webCode:webCode,webSafe:webSafe,webNormalized:webNormalized,webEvidence:webEvidence,webHex:webHex,webSha256:webSha256,notasAssert:notasAssert,notasBlank:notasBlank,notasGrade:notasGrade,notasMax:notasMax,notasMean:notasMean,notasErr:notasErr,notasFullName:notasFullName,notasEnrollment:notasEnrollment,webIdentity:webIdentity,notasAverageFormula:notasAverageFormula,notasConfig:notasConfig,notasSecret:notasSecret,notasSign:notasSign,notasNoXpKeys:notasNoXpKeys,notasIdentityAllowed:notasIdentityAllowed,notasNormalize:notasNormalize,notasColName:notasColName,notasReadBook:notasReadBook,notasHeaders:notasHeaders,notasCatalog:notasCatalog,notasActivity:notasActivity,notasCell:notasCell,notasWrite:notasWrite,notasWriteFormula:notasWriteFormula,notasNewRow:notasNewRow,notasRows:notasRows,notasIndex:notasIndex,notasCheckCatalog:notasCheckCatalog,notasCheckIdentity:notasCheckIdentity,notasAuditSign:notasAuditSign,notasVerifyAudit:notasVerifyAudit,notasAuditEntry:notasAuditEntry,notasTeamKey:notasTeamKey,notasAuditWinner:notasAuditWinner,notasRecordIntegrity:notasRecordIntegrity,notasPlan:notasPlan,notasVerifyWrites:notasVerifyWrites,notasReceipt:notasReceipt,notasStore:notasStore,webReturn:webReturn,doGet:doGet,doPost:doPost,prepararIntegracaoNotasV3:prepararIntegracaoNotasV3,statusIntegracaoNotasV3:statusIntegracaoNotasV3,consultarConflitoDocenteV3:consultarConflitoDocenteV3,cadastrarAtividadeNotasV3:cadastrarAtividadeNotasV3,notasLegacyHoldV3:notasLegacyHoldV3,notasClosedKeyV3:notasClosedKeyV3,notasCheckOpenV3:notasCheckOpenV3,bloquearRecebimentoNotasV3:bloquearRecebimentoNotasV3,encerrarAtividadeNotasV3:encerrarAtividadeNotasV3,encerrarAula05ParaCorrecaoV3:encerrarAula05ParaCorrecaoV3,liberarRecebimentoQAWebV3:liberarRecebimentoQAWebV3,verificarStatusWebV3:verificarStatusWebV3});
+return Object.freeze({notasCommit_:notasCommit_,notasRosterIndex_:notasRosterIndex_,notasLookup_:notasLookup_,notasConfirmation_:notasConfirmation_,notasConfirmationStable_:notasConfirmationStable_,WEB_CFG:WEB_CFG,WEB_TASKS:WEB_TASKS,NOTAS_STATUS:NOTAS_STATUS,A_HEADERS:A_HEADERS,R_HEADERS:R_HEADERS,T_HEADERS:T_HEADERS,AU_HEADERS:AU_HEADERS,ACT_HEADERS:ACT_HEADERS,webFail:webFail,webText:webText,webCode:webCode,webSafe:webSafe,webNormalized:webNormalized,webEvidence:webEvidence,webHex:webHex,webSha256:webSha256,notasAssert:notasAssert,notasBlank:notasBlank,notasGrade:notasGrade,notasMax:notasMax,notasMean:notasMean,notasErr:notasErr,notasFullName:notasFullName,notasEnrollment:notasEnrollment,webIdentity:webIdentity,notasAverageFormula:notasAverageFormula,notasConfig:notasConfig,notasSecret:notasSecret,notasSign:notasSign,notasNoXpKeys:notasNoXpKeys,notasIdentityAllowed:notasIdentityAllowed,notasNormalize:notasNormalize,notasColName:notasColName,notasReadBook:notasReadBook,notasHeaders:notasHeaders,notasCatalog:notasCatalog,notasActivity:notasActivity,notasCell:notasCell,notasWrite:notasWrite,notasWriteFormula:notasWriteFormula,notasNewRow:notasNewRow,notasRows:notasRows,notasIndex:notasIndex,notasCheckCatalog:notasCheckCatalog,notasCheckIdentity:notasCheckIdentity,notasAuditSign:notasAuditSign,notasVerifyAudit:notasVerifyAudit,notasAuditEntry:notasAuditEntry,notasTeamKey:notasTeamKey,notasAuditWinner:notasAuditWinner,notasRecordIntegrity:notasRecordIntegrity,notasPlan:notasPlan,notasVerifyWrites:notasVerifyWrites,notasReceipt:notasReceipt,notasStore:notasStore,webReturn:webReturn,doGet:doGet,doPost:doPost,prepararIntegracaoNotasV3:prepararIntegracaoNotasV3,statusIntegracaoNotasV3:statusIntegracaoNotasV3,consultarConflitoDocenteV3:consultarConflitoDocenteV3,cadastrarAtividadeNotasV3:cadastrarAtividadeNotasV3,notasLegacyHoldV3:notasLegacyHoldV3,notasClosedKeyV3:notasClosedKeyV3,notasCheckOpenV3:notasCheckOpenV3,bloquearRecebimentoNotasV3:bloquearRecebimentoNotasV3,encerrarAtividadeNotasV3:encerrarAtividadeNotasV3,encerrarAula05ParaCorrecaoV3:encerrarAula05ParaCorrecaoV3,liberarRecebimentoQAWebV3:liberarRecebimentoQAWebV3,verificarStatusWebV3:verificarStatusWebV3});
 })();
 
 /** Nenhuma identidade efetiva isolada autoriza administração remota. */
@@ -694,7 +792,9 @@ function ativarProducaoWeb(){
       '1º Bimestre','2º Bimestre','3º Bimestre','4º Bimestre']);
     api.notasHeaders(book.sheets.Auditoria,api.AU_HEADERS);api.notasHeaders(book.sheets.Equipes,api.T_HEADERS);
     api.notasHeaders(book.sheets.Alunos,api.A_HEADERS);api.notasHeaders(book.sheets.Resultados,api.R_HEADERS);
-    api.notasCheckCatalog(book);
+    api.notasCheckCatalog(book);api.notasRosterIndex_(book);
+    var a05=api.notasCatalog(book.sheets.Atividades)[api.WEB_CFG.activity];
+    if(!a05||a05.contract!=='web-a05-submission-v3')throw new Error('CONTRATO_AULA05_PENDENTE: atualizar manualmente Atividades E3 para web-a05-submission-v3 antes da ativação.');
     var hasAudit=book.sheets.Auditoria.rows.some(function(r,i){return i>0&&r&&!api.notasBlank(r[7]);});
     var key=p.getProperty('WEB_NOTAS_PROD_HMAC_SECRET');
     if(!key){if(hasAudit)throw new Error('CHAVE_AUSENTE_COM_HISTORICO: não gerar outra chave.');
