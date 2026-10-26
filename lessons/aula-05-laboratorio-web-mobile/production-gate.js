@@ -18,7 +18,7 @@
       function receive(event){
         const d=event.data;
         if(!validOrigin(event.origin)||!d||d.channel!=='web-status-aula05'||d.nonce!==nonce)return;
-        if(d.ok!==true||d.mode!=='PROD'||d.version!=='web-notas-3.1.0'||d.activity!==config.activity)
+        if(d.ok!==true||d.mode!=='PROD'||d.version!==(config.requiredVersion||'web-notas-3.1.0')||d.activity!==config.activity)
           return done(Error('Recebimento da turma ainda não está configurado na versão de produção. Nenhum dado foi enviado.'));
         if(d.enabled!==true)return done(Error('O professor está com o recebimento bloqueado. Guarde seu PDF/JSON e tente quando a atividade for liberada.'));
         done();
