@@ -13,7 +13,7 @@
   const ACTIVITY = 'WEB-AULA05-2026';
   const CHANNEL = 'web-entrega-aula05';
   const validEndpoint = /^https:\/\/script\.google\.com\/macros\/s\/[\w-]+\/exec$/.test(ENDPOINT);
-  const activated = validEndpoint && config.activated === true && config.schema==='web-a05-submission-v2' && window.WebTeam?.onlineEnabled===true;
+  const activated = validEndpoint && config.activated === true && ['web-a05-submission-v2','web-a05-submission-v3'].includes(config.schema) && window.WebTeam?.onlineEnabled===true;
   // HtmlService cria sandbox em hosts no formato n-...-script.googleusercontent.com.
   // Não aceitar *.googleusercontent.com genericamente. O nonce/contrato é
   // validado adicionalmente em receive(), nunca pela origem isolada.
@@ -57,7 +57,8 @@
   function post(identity, evidence, hash) {
     const nonce = crypto.randomUUID();
     const payload = JSON.stringify({
-      schema:'web-a05-submission-v2',activity:ACTIVITY,identity,evidence,
+      schema:config.schema,activity:ACTIVITY,identity:config.schema==='web-a05-submission-v3'?window.WebTeam.submissionIdentity(identity):identity,evidence,
+      ...(config.schema==='web-a05-submission-v3'?{operation:'submitTeam'}:{}),
       ...(config.requiredMode==='PROD'?{environment:'PROD'}:{})
     });
     if (payload.length > 44000) return Promise.reject(Error('Arquivo muito grande para entrega online; exporte e consulte o professor.'));
@@ -91,6 +92,8 @@
           err.action=typeof d.action==='string'?d.action:'Revise os dados informados.';
           return end(err);
         }
+        if(config.schema==='web-a05-submission-v3'&&(d.version!=='web-notas-3.2.0'||!Array.isArray(d.members)||d.members.length!==identity.members.length||d.members.some((m,i)=>m.enrollment!==identity.members[i].enrollment||m.name!==identity.members[i].name)))
+          return end(Error('Recibo com identificação incompatível. Confira a entrega com o professor.'));
         if(d.ok!==true || d.activity!==ACTIVITY || d.instrument!=='laboratorio-vivo-tsx-equipe' ||
            d.codeSha256!==hash ||
            !Number.isFinite(d.gradeReceived) || d.gradeReceived<0 || d.gradeReceived>10 ||
@@ -133,7 +136,7 @@
     // Validação anterior ao PDF, ao JSON e a qualquer solicitação de rede.
     const identity=window.WebTeam?.requireIdentity?.({requireEnrollment:activated});
     if(!identity){
-      inform('ENVIO NÃO REALIZADO: informe equipe, nome completo e, para entrega online, matrícula de cada integrante. Nenhum dado foi enviado.','error');
+      inform('ENVIO NÃO REALIZADO: identifique a equipe, consulte cada matrícula e confirme o nome exibido. Nenhuma atividade foi enviada.','error');
       return;
     }
     if(!window.WebLabEvidence?.printPartial?.()){
@@ -185,7 +188,7 @@
       if(member && error?.field){
         const message='ENTREGA BLOQUEADA — '+String(error.code||'IDENTIDADE_CONFLITANTE')+'\n'+
           'Integrante '+(index+1)+'\n'+
-          'Nome informado: '+member.name+'\n'+
+          (config.schema==='web-a05-submission-v3'?'Nome cadastrado: ':'Nome informado: ')+member.name+'\n'+
           'Matrícula informada: '+member.enrollment+'\n'+
           'Problema: '+String(error.message||'Dados inconsistentes.')+'\n'+
           'Como resolver: '+String(error.action||'Procure o professor.')+'\n'+
