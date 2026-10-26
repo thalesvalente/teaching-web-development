@@ -1,9 +1,10 @@
 import {test,expect} from '@playwright/test';
+import {readFile} from 'node:fs/promises';
 
 const endpoint='https://script.google.com/macros/s/QA320_UI_FIXTURE_ONLY/exec';
 const enrollment='20999999.ITA9001';
 
-async function openWithMockedQa(page){
+async function openWithMockedQa(page,{stable=false}={}){
   await page.route('**/entrega-config.js*',route=>route.fulfill({
     status:200,contentType:'application/javascript; charset=utf-8',
     body:'window.WebEntregaConfig=Object.freeze('+JSON.stringify({
@@ -23,7 +24,7 @@ async function openWithMockedQa(page){
       :payload?.operation==='lookupStudent'&&payload.enrollment===enrollment
         ?{ok:true,channel:'web-roster-lookup-aula05',nonce,version:'web-notas-3.2.0',
           enrollmentCanonical:enrollment,name:'Estudante Teste Alfa',
-          confirmationToken:(Date.now()+15*60*1000)+'.'+'a'.repeat(64)}
+          confirmationToken:stable?'v2.'+'a'.repeat(64):(Date.now()+15*60*1000)+'.'+'a'.repeat(64)}
         :{ok:false,channel:'web-roster-lookup-aula05',nonce,
           code:'MATRICULA_NAO_DISPONIVEL',message:'Matrícula não encontrada ou indisponível.'};
     operations.push(payload?.operation||'health');
@@ -144,4 +145,54 @@ test('SITE-V3-04: própria ficha configura QA e consulta a matrícula digitada a
   expect(requests).toContain('lookupStudent');
   expect(requests).not.toContain('submitTeam');
   expect(await page.evaluate(()=>JSON.stringify(localStorage))).not.toContain('ROSTER_320_UI_LOCAL_FIXTURE');
+});
+
+test('SITE-V3-05: nome confirmado não expira durante a sessão se o cadastro não mudar',async({page})=>{
+  const ops=await openWithMockedQa(page,{stable:true});
+  await page.locator('#web-team').fill('Equipe Sintética QA');
+  await page.locator('#web-member-0-enrollment').fill(enrollment);
+  await page.locator('#web-member-0-lookup').click();
+  await expect(page.locator('#web-member-0-name')).toHaveText('Estudante Teste Alfa');
+  await page.locator('#web-member-0-confirm').check();
+  await page.evaluate(()=>{window.__originalTime=Date.now;Date.now=()=>window.__originalTime()+48*60*60*1000;});
+  await page.locator('#team-done').click();
+  await expect(page.locator('#team-dialog')).toBeHidden();
+  await page.locator('#team-open').click();
+  await expect(page.locator('#web-member-0-name')).toHaveText('Estudante Teste Alfa');
+  await expect(page.locator('#web-member-0-confirm')).toBeChecked();
+  expect(ops.filter(x=>x==='lookupStudent')).toHaveLength(1);
+  await page.evaluate(()=>{Date.now=window.__originalTime;delete window.__originalTime;});
+});
+test('SITE-V3-06: JSON da equipe pode ser baixado duas vezes sem enviar dados nem tokens',async({page})=>{
+  const ops=await openWithMockedQa(page,{stable:true});
+  await page.locator('#web-team').fill('Equipe Sintética QA');
+  await page.locator('#web-member-0-enrollment').fill(enrollment);
+  await page.locator('#web-member-0-lookup').click();
+  await page.locator('#web-member-0-confirm').check();
+  await page.locator('#team-done').click();
+  await page.locator('#evidence-open').click();
+  for(let attempt=0;attempt<2;attempt++){
+    const [download]=await Promise.all([page.waitForEvent('download'),page.locator('#download-team-json').click()]);
+    expect(download.suggestedFilename()).toBe('WEB_Aula05_Evidencia_Equipe.json');
+    const json=JSON.parse(await readFile(await download.path(),'utf8'));
+    expect(json.identity.members[0]).toEqual({enrollment,name:'Estudante Teste Alfa'});
+    expect(json.evidence.schema).toBe('ifma-web-aula05-lab-v4');
+    expect(JSON.stringify(json)).not.toContain('confirmationToken');
+  }
+  expect(ops.filter(x=>x==='lookupStudent')).toHaveLength(1);
+  expect(ops).not.toContain('submitTeam');
+});
+test('SITE-V3-07: clique em Gerar PDF e Enviar dispara backup JSON antes de HTTPS assíncrono',async({page})=>{
+  await openWithMockedQa(page,{stable:true});
+  await page.locator('#web-team').fill('Equipe Sintética QA');
+  await page.locator('#web-member-0-enrollment').fill(enrollment);
+  await page.locator('#web-member-0-lookup').click();
+  await page.locator('#web-member-0-confirm').check();
+  await page.locator('#team-done').click();
+  await page.locator('#evidence-open').click();
+  await page.evaluate(()=>{window.print=()=>{};});
+  const [download]=await Promise.all([page.waitForEvent('download'),page.locator('#web-submit').click()]);
+  expect(download.suggestedFilename()).toBe('WEB_Aula05_Evidencia_Equipe.json');
+  const json=JSON.parse(await readFile(await download.path(),'utf8'));
+  expect(json.identity.members[0].enrollment).toBe(enrollment);
 });

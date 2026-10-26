@@ -27,7 +27,9 @@
         if(!originOK(event.origin)||!d||d.channel!=='web-roster-lookup-aula05'||d.nonce!==nonce)return;
         if(d.ok===false){const error=Error(String(d.message||'Consulta recusada pelo servidor.'));error.code=d.code;return finish(error);}
         if(d.ok!==true||d.version!=='web-notas-3.2.0'||d.enrollmentCanonical!==key||typeof d.name!=='string'||!d.name.trim()||d.name.length>100||
-          typeof d.confirmationToken!=='string'||!/^\d{13}\.[a-f0-9]{64}$/.test(d.confirmationToken)||Number(d.confirmationToken.split('.')[0])<Date.now())
+          typeof d.confirmationToken!=='string'||
+          !(/^v2\.[a-f0-9]{64}$/.test(d.confirmationToken)||
+            (/^\d{13}\.[a-f0-9]{64}$/.test(d.confirmationToken)&&Number(d.confirmationToken.split('.')[0])>=Date.now())))
           return finish(Error('Resposta de identificação incompatível. Procure o professor.'));
         finish(null,{enrollment:key,name:d.name,confirmationToken:d.confirmationToken});
       }
