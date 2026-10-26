@@ -196,3 +196,105 @@ test('SITE-V3-07: clique em Gerar PDF e Enviar dispara backup JSON antes de HTTP
   const json=JSON.parse(await readFile(await download.path(),'utf8'));
   expect(json.identity.members[0].enrollment).toBe(enrollment);
 });
+
+
+test('SITE-V3-08: a única ação alterna consulta e nova consulta, sem botões redundantes',async({page})=>{
+  const calls=await openWithMockedQa(page,{stable:true});
+  const button=page.locator('#web-member-0-lookup');
+  await expect(button).toHaveText('Consultar matrícula');
+  await expect(button).toHaveAttribute('data-mode','lookup');
+  await expect(page.locator('#web-members .roster-reset, #web-members .roster-dispute')).toHaveCount(0);
+  await expect(page.locator('#web-members button:not(.team-remove-member)')).toHaveCount(1);
+  await page.locator('#web-team').fill('Equipe QA Consulta Única');
+  await page.locator('#web-member-0-enrollment').fill(enrollment);
+  await button.click();
+
+  await expect(page.locator('#web-member-0-name')).toHaveText('Estudante Teste Alfa');
+  await expect(button).toHaveText('Nova consulta');
+  await expect(button).toHaveAttribute('data-mode','renew');
+  const advice=page.locator('#web-member-0-name-advice');
+  await expect(advice).toHaveText(/Nome incorreto\? Não confirme\. Procure o professor/);
+  expect(await advice.evaluate(element=>element.tagName)).toBe('P');
+  await expect(page.locator('#web-members button:not(.team-remove-member)')).toHaveCount(1);
+  await expect(page.locator('#web-member-0-confirm')).toHaveAttribute(
+    'aria-describedby','web-member-0-name-advice web-member-0-confirm-hint');
+  await page.locator('#web-member-0-confirm').check();
+
+  await button.click();
+  await expect(page.locator('#web-member-0-enrollment')).toHaveValue(enrollment);
+  await expect(page.locator('#web-member-0-enrollment')).toBeFocused();
+  expect(await page.locator('#web-member-0-enrollment').evaluate(element=>element.readOnly)).toBe(false);
+  await expect(button).toHaveText('Consultar matrícula');
+  await expect(page.locator('#web-member-0-name')).toHaveText('Nome não consultado');
+  await expect(page.locator('#web-member-0-confirm')).toHaveCount(0);
+  await expect(advice).toHaveCount(0);
+  await page.locator('#team-done').click();
+  await expect(page.locator('#team-dialog')).toBeVisible();
+  await expect(page.locator('#team-feedback')).toContainText('Consulte a matrícula');
+
+  await button.click();
+  await expect(page.locator('#web-member-0-name')).toHaveText('Estudante Teste Alfa');
+  await expect(page.locator('#web-member-0-confirm')).not.toBeChecked();
+  expect(calls.filter(operation=>operation==='lookupStudent')).toHaveLength(2);
+  expect(calls).not.toContain('submitTeam');
+});
+
+test('SITE-V3-09: consulta primária e nova consulta respeitam tema, toque e foco no celular',async({page})=>{
+  await page.setViewportSize({width:320,height:700});
+  await openWithMockedQa(page,{stable:true});
+  const button=page.locator('#web-member-0-lookup');
+  await expect(button).toHaveCSS('background-color','rgb(8, 116, 67)');
+  await expect(button).toHaveCSS('color','rgb(255, 255, 255)');
+  const primary=await button.evaluate(el=>{
+    const a=el.getBoundingClientRect(),b=el.parentElement.getBoundingClientRect();
+    return {height:a.height,width:a.width,maxWidth:b.width};
+  });
+  expect(primary.height).toBeGreaterThanOrEqual(44);
+  expect(primary.width).toBeLessThanOrEqual(primary.maxWidth+1);
+  await page.locator('#web-member-0-enrollment').focus();
+  await page.keyboard.press('Tab');
+  await expect(button).toBeFocused();
+  const outline=await button.evaluate(el=>getComputedStyle(el).outlineWidth);
+  expect(parseFloat(outline)).toBeGreaterThanOrEqual(3);
+
+  await page.locator('#web-member-0-enrollment').fill(enrollment);
+  await button.click();
+  await expect(button).toHaveText('Nova consulta');
+  await expect(button).toHaveCSS('background-color','rgb(233, 245, 237)');
+  await expect(button).toHaveCSS('color','rgb(10, 93, 56)');
+  const advice=page.locator('#web-member-0-name-advice');
+  await expect(advice).toBeVisible();
+  const secondary=await button.boundingBox();
+  expect(secondary.height).toBeGreaterThanOrEqual(44);
+  // Codex P2: pressionar Espaço sem hover não pode gerar texto verde sobre verde escuro.
+  await page.mouse.move(1,1);
+  await button.focus();
+  await page.keyboard.down('Space');
+  await expect(button).toHaveCSS('background-color','rgb(198, 229, 208)');
+  await expect(button).toHaveCSS('color','rgb(10, 93, 56)');
+  await page.keyboard.up('Space');
+  // Ao soltar Espaço, o botão efetivamente inicia Nova consulta e limpa a identidade.
+  await expect(button).toHaveText('Consultar matrícula');
+  await expect(advice).toHaveCount(0);
+  await expect(page.locator('#web-member-0-name')).toHaveText('Nome não consultado');
+  await expect(page.locator('#web-member-0-enrollment')).toBeFocused();
+});
+
+test('SITE-V3-10: conflito remoto limpa nome e comprovante sem permitir correção cadastral local',async({page})=>{
+  await openWithMockedQa(page,{stable:true});
+  await page.locator('#web-team').fill('Equipe QA Conflito');
+  await page.locator('#web-member-0-enrollment').fill(enrollment);
+  await page.locator('#web-member-0-lookup').click();
+  await page.locator('#web-member-0-confirm').check();
+  await page.evaluate(()=>window.WebTeam.showRemoteConflict({
+    memberIndex:0,field:'enrollment',
+    message:'Cadastro atualizado pelo professor. Consulte a matrícula novamente.'
+  }));
+  await expect(page.locator('#web-member-0-name')).toHaveText('Nome não consultado');
+  await expect(page.locator('#web-member-0-confirm')).toHaveCount(0);
+  await expect(page.locator('#web-member-0-name-advice')).toHaveCount(0);
+  await expect(page.locator('#web-member-0-lookup')).toHaveText('Consultar matrícula');
+  await expect(page.locator('#web-member-0-lookup')).toBeEnabled();
+  await expect(page.locator('#web-member-0-enrollment')).toHaveValue(enrollment);
+  await expect(page.locator('#web-member-0-enrollment-error')).toContainText('Cadastro atualizado');
+});
