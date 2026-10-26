@@ -9,11 +9,11 @@
   const button = document.getElementById('web-submit');
   const quickButton = document.getElementById('quick-pdf');
   const status = document.getElementById('web-delivery-status');
-  const ENDPOINT = String(config.endpoint || '');
+  const ENDPOINT = () => String(config.endpoint || '');
   const ACTIVITY = 'WEB-AULA05-2026';
   const CHANNEL = 'web-entrega-aula05';
-  const validEndpoint = /^https:\/\/script\.google\.com\/macros\/s\/[\w-]+\/exec$/.test(ENDPOINT);
-  const activated = validEndpoint && config.activated === true && ['web-a05-submission-v2','web-a05-submission-v3'].includes(config.schema) && window.WebTeam?.onlineEnabled===true;
+  const validEndpoint = () => /^https:\/\/script\.google\.com\/macros\/s\/[\w-]+\/exec$/.test(ENDPOINT());
+  const activated = () => validEndpoint() && config.activated === true && ['web-a05-submission-v2','web-a05-submission-v3'].includes(config.schema) && window.WebTeam?.onlineEnabled===true;
   // HtmlService cria sandbox em hosts no formato n-...-script.googleusercontent.com.
   // Não aceitar *.googleusercontent.com genericamente. O nonce/contrato é
   // validado adicionalmente em receive(), nunca pela origem isolada.
@@ -24,13 +24,16 @@
   let busy = false;
   // A geração do PDF continua acessível mesmo com o POST bloqueado.
   button.disabled = false;
-  if (!validEndpoint) {
-    status.textContent = 'Recebimento online ainda não configurado pelo professor. JSON, Markdown e PDF continuam disponíveis localmente.';
-  } else if (!activated) {
-    status.textContent = 'O endereço Apps Script foi cadastrado, mas a entrega online segue em homologação. O professor precisa validar o POST real e ativar o recebimento. Exportações locais permanecem disponíveis.';
-  } else {
-    status.textContent = 'Formulário pronto para tentar o envio. A disponibilidade será confirmada pelo servidor; somente o recibo válido comprova o recebimento, ainda sujeito à conferência docente.';
+  function refreshStatus(){
+    if (!validEndpoint()) {
+      status.textContent = 'Recebimento online não habilitado. No modo QA, configure o receptor fictício na identificação da equipe. PDF e JSON locais continuam disponíveis.';
+    } else if (!activated()) {
+      status.textContent = 'O receptor foi informado, mas o recebimento ainda não está pronto. Confira a configuração QA.';
+    } else {
+      status.textContent = 'Recebimento QA preparado. Use apenas matrículas fictícias; a disponibilidade será conferida no servidor antes de qualquer envio.';
+    }
   }
+  refreshStatus();
   const inform = (text, kind = '') => {
     status.textContent = text;
     status.dataset.kind = kind;
@@ -67,7 +70,7 @@
       frame.hidden = true; frame.name = 'web-a05-' + nonce;
       frame.title = 'Confirmação de recebimento de evidências Web';
       const form = document.createElement('form');
-      form.hidden=true; form.method='POST'; form.target=frame.name; form.action=ENDPOINT;
+      form.hidden=true; form.method='POST'; form.target=frame.name; form.action=ENDPOINT();
       for (const [key,value] of Object.entries({nonce,payload})) {
         const field = document.createElement('input');
         field.name=key; field.value=value; form.appendChild(field);
@@ -122,7 +125,7 @@
   }
   async function generatePdfAndSend(){
     if(busy)return;
-    if(activated&&config.requiredMode==='PROD'){
+    if(activated()&&config.requiredMode==='PROD'){
       busy=true;button.disabled=true;quickButton.disabled=true;
       try{
         inform('Conferindo a disponibilidade da atividade. Seus dados ainda não foram enviados.');
@@ -134,7 +137,7 @@
       }finally{busy=false;button.disabled=false;quickButton.disabled=false;}
     }
     // Validação anterior ao PDF, ao JSON e a qualquer solicitação de rede.
-    const identity=window.WebTeam?.requireIdentity?.({requireEnrollment:activated});
+    const identity=window.WebTeam?.requireIdentity?.({requireEnrollment:activated()});
     if(!identity){
       inform('ENVIO NÃO REALIZADO: identifique a equipe, consulte cada matrícula e confirme o nome exibido. Nenhuma atividade foi enviada.','error');
       return;
@@ -144,7 +147,7 @@
       return;
     }
     // A geração local do PDF não representa envio nem prova que ele foi salvo.
-    if(!activated){
+    if(!activated()){
       inform('PDF preparado para salvar pela janela de impressão. ENVIO NÃO REALIZADO: o Apps Script da turma ainda está em homologação. Use o PDF/JSON localmente; nenhum dado foi transmitido.','error');
       showReceipt();
       return;
@@ -209,5 +212,5 @@
   }
   button.addEventListener('click',generatePdfAndSend);
   quickButton.addEventListener('click',generatePdfAndSend);
-  window.WebEntrega = Object.freeze({configurado:validEndpoint,ativado:activated,atividade:ACTIVITY,origemReciboPermitida:validOrigin});
+  window.WebEntrega = Object.freeze({get configurado(){return validEndpoint();},get ativado(){return activated();},refreshStatus,atividade:ACTIVITY,origemReciboPermitida:validOrigin});
 })();
