@@ -6,16 +6,16 @@
   <meta name="description" content="Aula 05: Laboratório Vivo com tutorial guiado, código React Native comentado, regras visíveis e duas prévias interativas Web e Mobile.">
   <meta name="theme-color" content="#10472e">
   <title>Aula 05 · Laboratório Vivo · Tutorial Web ↔ Mobile | IFMA</title>
-  <link rel="stylesheet" href="./style.css?v=web-roster-320">
-  <link rel="stylesheet" href="./identity-http.css?v=web-roster-320">
-  <script defer src="./entrega-config.js?v=web-roster-320"></script>
-  <script defer src="./report-print.js?v=web-roster-320"></script>
-  <script defer src="./roster-client.js?v=web-roster-320"></script>
-  <script defer src="./equipe-roster.js?v=web-roster-320"></script>
-  <script defer src="./equipe.js?v=web-roster-320"></script>
-  <script defer src="./lab.js?v=web-roster-320"></script>
-  <script defer src="./production-gate.js?v=web-roster-320"></script>
-  <script defer src="./entrega-appscript.js?v=web-roster-320"></script>
+  <link rel="stylesheet" href="./style.css?v=web-roster-321">
+  <link rel="stylesheet" href="./identity-http.css?v=web-roster-321">
+  <script defer src="./entrega-config.js?v=web-roster-321"></script>
+  <script defer src="./report-print.js?v=web-roster-321"></script>
+  <script defer src="./roster-client.js?v=web-roster-321"></script>
+  <script defer src="./equipe-roster.js?v=web-roster-321"></script>
+  <script defer src="./equipe.js?v=web-roster-321"></script>
+  <script defer src="./lab.js?v=web-roster-321"></script>
+  <script defer src="./production-gate.js?v=web-roster-321"></script>
+  <script defer src="./entrega-appscript.js?v=web-roster-321"></script>
 </head>
 <body>
   <a class="skip" href="#missao-atual">Pular para a missão atual</a>
@@ -128,6 +128,14 @@
         <div class="team-progress-track" role="progressbar" id="team-progress" aria-label="Identificação preenchida" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span id="team-progress-fill"></span></div>
       </header>
       <div class="team-panel-body">
+        <section id="qa-endpoint-section" class="qa-inline-setup" aria-labelledby="qa-endpoint-heading" hidden>
+          <h3 id="qa-endpoint-heading">Homologação QA — somente matrículas fictícias</h3>
+          <p>Configure o receptor isolado para consultar o nome pela matrícula diretamente neste formulário. Não informe matrículas reais.</p>
+          <label for="qa-appscript-url">URL /exec do Apps Script QA</label>
+          <input id="qa-appscript-url" type="url" placeholder="https://script.google.com/macros/s/.../exec" autocomplete="off" spellcheck="false" aria-describedby="qa-endpoint-status">
+          <button type="button" class="btn secondary" id="qa-endpoint-activate">Conectar consulta QA</button>
+          <p id="qa-endpoint-status" role="status" aria-live="polite">Cole a URL da implantação QA e clique em conectar.</p>
+        </section>
         <section class="team-section team-identity" aria-labelledby="team-identity-label">
           <div class="team-section-heading"><span class="team-step" aria-hidden="true">01</span><div><h3 id="team-identity-label">Nome da equipe</h3><p>Como sua equipe será identificada na atividade e no relatório.</p></div></div>
           <div class="team-core">
