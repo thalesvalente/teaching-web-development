@@ -1,5 +1,6 @@
 import {test,expect} from '@playwright/test';
 import {createRequire} from 'node:module';
+import {readFile} from 'node:fs/promises';
 const require=createRequire(import.meta.url),{fixture}=require('../../../tests/web-production/harness.cjs');
 const ENDPOINT='https://script.google.com/macros/s/ROSTER-320-SYNTHETIC/exec';
 const A='20999999.ITA9001',B='20999999.ITA9002';
@@ -85,5 +86,38 @@ test('ROSTER-23 nome ou matrícula novos requerem consulta própria sem alterar 
   await expect(page.locator('#web-member-1-confirm')).toHaveCount(0);
   await identify(page,1,B);
   expect(c.calls.filter(op=>op==='lookupStudent')).toHaveLength(2);
+  c.unchanged();
+});
+
+test('ROSTER-24 JSON da equipe pode ser baixado repetidamente sem esperar o POST',async({page})=>{
+  const c=await setup(page);await identify(page);
+  await page.locator('#team-done').click();
+  await page.locator('#evidence-open').click();
+  for(let attempt=1;attempt<=2;attempt++){
+    const [download]=await Promise.all([
+      page.waitForEvent('download'),
+      page.locator('#download-team-json').click()
+    ]);
+    expect(download.suggestedFilename()).toBe('WEB_Aula05_Evidencia_Equipe.json');
+    const json=JSON.parse(await readFile(await download.path(),'utf8'));
+    expect(json.identity.members[0]).toEqual({enrollment:A,name:'Estudante Teste Alfa'});
+    expect(json.evidence.schema).toBe('ifma-web-aula05-lab-v4');
+    expect(json.evidence.xp).toBe(0);
+    expect(JSON.stringify(json)).not.toContain('confirmationToken');
+  }
+  expect(c.calls.filter(op=>op==='lookupStudent')).toHaveLength(1);
+  c.unchanged();
+});
+test('ROSTER-25 envio dispara JSON antes do fluxo HTTP assíncrono e conserva recibo íntegro',async({page})=>{
+  const c=await setup(page);await identify(page);
+  await page.locator('#team-done').click();await page.locator('#evidence-open').click();
+  const [download]=await Promise.all([
+    page.waitForEvent('download'),
+    page.locator('#web-submit').click()
+  ]);
+  expect(download.suggestedFilename()).toBe('WEB_Aula05_Evidencia_Equipe.json');
+  const json=JSON.parse(await readFile(await download.path(),'utf8'));
+  expect(json.identity.members[0].name).toBe('Estudante Teste Alfa');
+  await expect(page.locator('#web-delivery-status')).toContainText('ENVIO CONFIRMADO');
   c.unchanged();
 });
