@@ -7,12 +7,33 @@
   const KEY='ifma-web-aula05-roster-v1',canonical=value=>String(value||'').trim().toUpperCase();
   const blank=()=>({uid:crypto.randomUUID(),enrollment:'',name:'',token:'',state:'empty',confirmed:false,error:'',revision:0});
   let group={teamId:crypto.randomUUID(),team:'',members:[blank()]},fromEvidence=false,returnFocus=null;
-  const onlineEnabled=cfg.activated===true&&/^https:\/\/script\.google\.com\/macros\/s\/[\w-]+\/exec$/.test(cfg.endpoint||'');
-  if(cfg.qaMode){
+  const onlineEnabled=()=>cfg.activated===true&&/^https:\/\/script\.google\.com\/macros\/s\/[\w-]+\/exec$/.test(cfg.endpoint||'');
+  function ensureQaNotice(){
+    if(!cfg.qaMode||$('qa-lab-notice'))return;
     const notice=document.createElement('p');notice.id='qa-lab-notice';notice.setAttribute('role','status');
     notice.textContent='HOMOLOGAÇÃO QA: somente matrículas fictícias. Nenhuma informação da turma deve ser enviada.';
-    notice.className='roster-qa-notice';
-    modal.querySelector('.team-panel-body')?.prepend(notice);
+    notice.className='roster-qa-notice';modal.querySelector('.team-panel-body')?.prepend(notice);
+  }
+  ensureQaNotice();
+  const qaSection=$('qa-endpoint-section');
+  if(qaSection&&cfg.qaRequested){
+    qaSection.hidden=false;
+    const urlInput=$('qa-appscript-url'),activate=$('qa-endpoint-activate'),notice=$('qa-endpoint-status');
+    activate.addEventListener('click',async()=>{
+      const candidate=urlInput.value;urlInput.value='';activate.disabled=true;
+      try{
+        if(!await cfg.configureQa(candidate)){
+          notice.textContent='URL recusada. Use somente o link /exec da implantação QA 3.2.0 autorizada.';
+          return;
+        }
+        notice.textContent='QA conectada. Informe uma matrícula fictícia e clique em Consultar matrícula.';
+        urlInput.disabled=true;activate.disabled=true;
+        ensureQaNotice();render();window.WebEntrega?.refreshStatus?.();
+        feedback('Recebimento QA conectado somente à planilha fictícia. Consulte a matrícula e confirme o nome.');
+      }catch(_){
+        notice.textContent='Não foi possível validar o endereço QA. Confira o link HTTPS e tente novamente.';
+      }finally{if(!onlineEnabled())activate.disabled=false;}
+    });
   }
   const text=(tag,content,cls)=>{const el=document.createElement(tag);el.textContent=content;if(cls)el.className=cls;return el;};
   function feedback(value,kind=''){ $('team-feedback').textContent=value;$('team-feedback').dataset.kind=kind; }
@@ -82,7 +103,7 @@
       const fields=text('div','','member-row-fields'),label=text('label','Matrícula completa · integrante '+(i+1));
       const input=document.createElement('input');input.type='text';input.inputMode='text';input.autocomplete='off';input.setAttribute('autocapitalize','characters');input.spellcheck=false;
       input.id='web-member-'+i+'-enrollment';input.maxLength=32;input.value=m.enrollment;input.readOnly=m.state==='found'||m.state==='loading'||m.state==='disputed';
-      input.setAttribute('aria-required',String(onlineEnabled));input.setAttribute('aria-describedby',input.id+'-hint '+input.id+'-error');label.htmlFor=input.id;
+      input.setAttribute('aria-required',String(onlineEnabled()));input.setAttribute('aria-describedby',input.id+'-hint '+input.id+'-error');label.htmlFor=input.id;
       const hint=text('small','Inclua o ponto, as letras ITA e todos os algarismos.');hint.id=input.id+'-hint';
       const error=text('small',m.error,'member-error');error.id=input.id+'-error';error.hidden=!m.error;error.setAttribute('role','status');
       if(m.error)input.setAttribute('aria-invalid','true');
@@ -125,10 +146,10 @@
   $('web-team').addEventListener('input',e=>{group.team=e.target.value;summary();persist();});
   $('team-open').addEventListener('click',()=>open('header'));$('team-open-evidence').addEventListener('click',()=>open('evidence'));
   $('web-add-member').addEventListener('click',()=>{if(group.members.length<MAX){group.members.push(blank());render('web-member-'+(group.members.length-1)+'-enrollment');persist();}});
-  $('team-done').addEventListener('click',()=>{if(requireIdentity({requireEnrollment:onlineEnabled})){persist();modal.close();}});
+  $('team-done').addEventListener('click',()=>{if(requireIdentity({requireEnrollment:onlineEnabled()})){persist();modal.close();}});
   modal.addEventListener('close',()=>{if(!fromEvidence)return;fromEvidence=false;if(!$('evidence-dialog').open)$('evidence-dialog').showModal();(returnFocus?.isConnected?returnFocus:$('team-open-evidence'))?.focus();});
   try{const saved=JSON.parse(localStorage.getItem(KEY)||'null');if(saved&&typeof saved.team==='string'&&/^[a-f0-9-]{36}$/i.test(saved.teamId)){group.team=saved.team.slice(0,80);group.teamId=saved.teamId;group.members=Array.from({length:Math.min(8,Math.max(1,Number(saved.count)||1))},blank);}}catch{}
   // Old localStorage could contain typed names from 3.1. Clear identity-only keys, not task progress.
   try{localStorage.removeItem('ifma-web-aula05-equipe-v3');localStorage.removeItem('ifma-web-aula05-equipe-v2');}catch{}
-  render();window.WebTeam=Object.freeze({snapshot,restore,validatePartial,getIdentity,requireIdentity,showRemoteConflict,submissionIdentity,onlineEnabled,maxMembers:MAX,rosterReadOnly:true});
+  render();window.WebTeam=Object.freeze({snapshot,restore,validatePartial,getIdentity,requireIdentity,showRemoteConflict,submissionIdentity,get onlineEnabled(){return onlineEnabled();},maxMembers:MAX,rosterReadOnly:true});
 })();

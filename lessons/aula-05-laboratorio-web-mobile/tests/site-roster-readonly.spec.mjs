@@ -84,3 +84,64 @@ test('SITE-V3-03: matrícula não cadastrada bloqueia confirmação, sem inserir
   await expect(page.locator('#web-member-0-name')).toHaveText('Nome não consultado');
   expect(ops).not.toContain('submitTeam');
 });
+
+
+test('SITE-V3-04: própria ficha configura QA e consulta a matrícula digitada após erro offline, sem recriar interface',async({page})=>{
+  // Use exactly the same configuration script, with official-origin guard and fingerprint
+  // replaced only in this local-browser fixture. Never contact a real Google endpoint.
+  const {readFile}=await import('node:fs/promises');
+  const {createHash}=await import('node:crypto');
+  const fixtureUrl='https://script.google.com/macros/s/ROSTER_320_UI_LOCAL_FIXTURE/exec';
+  const fingerprint=createHash('sha256').update(fixtureUrl,'utf8').digest('hex');
+  const source=await readFile(new URL('../entrega-config.js',import.meta.url),'utf8');
+  const fixture=source
+    .replace("window.location.origin==='https://thalesvalente.github.io'","window.location.origin===window.location.origin")
+    .replace(/QA_SHA256='[0-9a-f]{64}'/,"QA_SHA256='"+fingerprint+"'");
+  await page.route('**/entrega-config.js*',r=>r.fulfill({status:200,contentType:'application/javascript',body:fixture}));
+  const requests=[];
+  await page.route(fixtureUrl+'**',async route=>{
+    const req=route.request(),form=new URLSearchParams(req.method()==='GET'?new URL(req.url()).search:req.postData()||'');
+    const n=form.get('nonce'),payload=form.get('payload')?JSON.parse(form.get('payload')):null;
+    requests.push(payload?.operation||'health');
+    const d=payload?.operation==='lookupStudent'
+      ?{ok:true,channel:'web-roster-lookup-aula05',nonce:n,version:'web-notas-3.2.0',
+        name:'Estudante Teste Alfa',enrollmentCanonical:enrollment,
+        confirmationToken:String(Date.now()+15*60*1000)+'.'+'a'.repeat(64)}
+      :{ok:true,channel:'web-status-aula05',nonce:n,version:'web-notas-3.2.0',
+        mode:'PROD',enabled:true,activity:'WEB-AULA05-2026'};
+    await route.fulfill({status:200,contentType:'text/html; charset=utf-8',
+      body:'<!doctype html><meta charset="utf-8"><script>top.postMessage('+
+        JSON.stringify(d)+',"*");</script>'});
+  });
+  await page.goto('/index.html?qa=1');
+  await expect(page.locator('#compiler-status')).toContainText('Executado',{timeout:30000});
+  await page.locator('#team-open').click();
+  await expect(page.locator('#qa-endpoint-section')).toBeVisible();
+  await page.locator('#web-team').fill('Equipe Sintética QA');
+  await page.locator('#web-member-0-enrollment').fill(enrollment);
+  await page.locator('#web-member-0-lookup').click();
+  await expect(page.locator('#web-member-0-enrollment-error')).toContainText('offline');
+  await page.locator('#qa-appscript-url').fill('https://script.google.com/macros/s/UNAPPROVED_FIXTURE/exec');
+  await page.locator('#qa-endpoint-activate').click();
+  await expect(page.locator('#qa-endpoint-status')).toContainText('URL recusada');
+  await expect.poll(()=>page.evaluate(()=>window.WebEntregaConfig.activated)).toBe(false);
+  await page.locator('#qa-appscript-url').fill(fixtureUrl);
+  await page.locator('#qa-endpoint-activate').click();
+  await expect(page.locator('#qa-endpoint-status')).toContainText('QA conectada');
+  await expect(page.locator('#qa-lab-notice')).toContainText('somente matrículas fictícias');
+  await expect(page.locator('#qa-appscript-url')).toHaveValue('');
+  await expect(page.locator('#web-member-0-enrollment')).toHaveValue(enrollment);
+  expect(await page.evaluate(()=>window.WebEntregaConfig.qaMode)).toBe(true);
+  expect(await page.evaluate(()=>window.WebTeam.onlineEnabled)).toBe(true);
+  expect(await page.evaluate(()=>window.WebEntrega.ativado)).toBe(true);
+  await page.locator('#web-member-0-lookup').click();
+  await expect(page.locator('#web-member-0-name')).toHaveText('Estudante Teste Alfa');
+  await expect(page.locator('#web-member-0-confirm')).toBeVisible();
+  await page.locator('#web-member-0-confirm').check();
+  await page.locator('#team-done').click();
+  await expect(page.locator('#team-dialog')).toBeHidden();
+  expect(requests).toContain('health');
+  expect(requests).toContain('lookupStudent');
+  expect(requests).not.toContain('submitTeam');
+  expect(await page.evaluate(()=>JSON.stringify(localStorage))).not.toContain('ROSTER_320_UI_LOCAL_FIXTURE');
+});
