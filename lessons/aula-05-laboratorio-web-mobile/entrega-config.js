@@ -6,6 +6,7 @@
     activated:published,
     requiredMode:published?'PROD':null,
     activity:'WEB-AULA05-2026',
-    schema:'web-a05-submission-v2'
+    schema:'web-a05-submission-v3',
+    requiredVersion:'web-notas-3.2.0'
   });
 })();

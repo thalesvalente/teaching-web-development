@@ -1,5 +1,8 @@
 /** QA do laboratório v3: a missão, a execução e o resultado estão juntos. */
 import { test, expect } from '@playwright/test';
+
+// Historical v2 identity fixture. Roster 3.2 runs separately in roster-320.spec.mjs.
+test.beforeEach(async({page})=>{await page.route('**/entrega-config.js*',route=>route.fulfill({contentType:'application/javascript',body:"window.WebEntregaConfig=Object.freeze({endpoint:'',activated:false,schema:'web-a05-submission-v2',activity:'WEB-AULA05-2026'});"}));});
 import { readFile } from 'node:fs/promises';
 import { mkdtempSync, mkdirSync, writeFileSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';

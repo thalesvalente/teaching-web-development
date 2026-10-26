@@ -1,5 +1,14 @@
 /** QA Web: matrícula por integrante em homologação. */
 import { test, expect } from '@playwright/test';
+
+// Historical v2 identity fixture. Roster 3.2 runs separately in roster-320.spec.mjs.
+async function legacyIdentity(target){
+  await target.route('**/entrega-config.js*',route=>route.fulfill({
+    contentType:'application/javascript; charset=utf-8',
+    body:"window.WebEntregaConfig=Object.freeze({endpoint:'',activated:false,schema:'web-a05-submission-v2',activity:'WEB-AULA05-2026'});"
+  }));
+}
+test.beforeEach(async({page})=>{await legacyIdentity(page);});
 import crypto from 'node:crypto';
 import { readFile } from 'node:fs/promises';
 const fake='https://script.google.com/macros/s/WEB-QA-MOCK-2026/exec';
@@ -92,6 +101,7 @@ test('adicionar e remover membros mantém uma só equipe e não perde o primeiro
 });
 test('JSON de continuidade preserva equipe, nomes e XP em outro navegador',async({browser})=>{
   const one=await browser.newContext({acceptDownloads:true});
+  await legacyIdentity(one); // Custom contexts do not inherit the page fixture route.
   const p=await one.newPage();
   await enter(p);
   await fillTeam(p,['Ana Exemplo','Bia Exemplo']);
@@ -106,6 +116,7 @@ test('JSON de continuidade preserva equipe, nomes e XP em outro navegador',async
   expect(save.team).toEqual(firstIdentity);
   expect(save.xp).toBe(5);
   const two=await browser.newContext({acceptDownloads:true});
+  await legacyIdentity(two); // Custom contexts do not inherit the page fixture route.
   const next=await two.newPage();
   await next.goto('/index.html');
   await expect(next.locator('#compiler-status')).toContainText('Executado',{timeout:30000});
@@ -384,11 +395,11 @@ test('duplicidade com apostrofos tipograficos distintos bloqueia a equipe',async
 
 test('ativos de validação possuem versão para evitar cache anterior no GitHub Pages',async({page})=>{
   await page.goto('/index.html');
-  for(const name of ['equipe.js','report-print.js','entrega-appscript.js']) {
-    await expect(page.locator('script[src="./'+name+'?v=web-prod-310"]')).toHaveCount(1);
+  for(const name of ['equipe.js','equipe-roster.js','roster-client.js','production-gate.js','report-print.js','entrega-appscript.js']) {
+    await expect(page.locator('script[src="./'+name+'?v=web-roster-320"]')).toHaveCount(1);
   }
-  await expect(page.locator('script[src="./lab.js?v=web-prod-310"]')).toHaveCount(1);
-  await expect(page.locator('link[href="./style.css?v=web-prod-310"]')).toHaveCount(1);
+  await expect(page.locator('script[src="./lab.js?v=web-roster-320"]')).toHaveCount(1);
+  await expect(page.locator('link[href="./style.css?v=web-roster-320"]')).toHaveCount(1);
 });
 
 

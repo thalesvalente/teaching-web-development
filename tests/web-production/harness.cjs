@@ -74,9 +74,9 @@ function fixture(options={}){
     return {spreadsheetId:SOURCE_ID,replies:body.requests.map(()=>({}))};
   }
   const ctx=vm.createContext({console,Utilities:utilities,
+    CacheService:{getScriptCache:()=>({get:k=>cache.get(k)||null,put:(k,v)=>cache.set(k,v)})},
     Session:{getActiveUser:()=>({getEmail:()=>options.activeEmail===undefined?'owner@example.test':options.activeEmail}),
       getEffectiveUser:()=>({getEmail:()=>options.effectiveEmail===undefined?'owner@example.test':options.effectiveEmail})},
-    CacheService:{getScriptCache:()=>({get:k=>cache.get(k)||null,put:(k,v)=>cache.set(k,v)})},
     PropertiesService:{getScriptProperties:()=>({getProperty:k=>p.has(k)?p.get(k):null,setProperty:(k,v)=>p.set(k,v)})},
     LockService:{getScriptLock:()=>({waitLock(){if(failMode==='lock')throw Error('PRIVATE_LOCK');locks++;},releaseLock(){locks--;}})},
     HtmlService:{XFrameOptionsMode:{ALLOWALL:'ALLOWALL'},createHtmlOutput:html=>({html,setXFrameOptionsMode(){return this;}})},
@@ -94,20 +94,33 @@ function fixture(options={}){
   for(let n=1;n<=4;n++)add(n+'º Bimestre',100+n,[['Aluno','Matrícula','Equipe',...(n===3?['Aula 04 E3-I1 /10']:n===4?['Aula 05 /10']:[]),'Média /10']]);
   add('Auditoria',200,[Array.from(internal.AU_HEADERS)]);add('Equipes',201,[Array.from(internal.T_HEADERS)]);add('Alunos',203,[Array.from(internal.A_HEADERS)]);add('Resultados',204,[Array.from(internal.R_HEADERS)]);
   add('Atividades',202,[Array.from(internal.ACT_HEADERS),['WEB-AULA04-E3-I1-2026','Aula 04 E3-I1',3,'Aula 04 E3-I1 /10','manual',false],
-    ['WEB-AULA05-2026','Aula 05',4,'Aula 05 /10','web-a05-submission-v2',true]]);
-  const identity=()=>({team:'Equipe QA Alfa',teamId:TEAM_ID,members:[{name:'Ana Teste Ficticio',enrollment:'00001234'},{name:'Bruno Teste Ficticio',enrollment:'00005678'}]});
+    ['WEB-AULA05-2026','Aula 05',4,'Aula 05 /10','web-a05-submission-v3',true]]);
+  // Fixture data only; this is NOT a production roster writer/importer.
+  const roster=[['20999999.ITA9001','Estudante Teste Alfa'],['20999999.ITA9002','Estudante Teste Beta'],['20889999.ITA9001','Estudante Teste Gama']];
+  roster.forEach(([id,name],i)=>model.Alunos.cells.push([id,name,internal.webNormalized(name),'VALIDADO_DOCENTE','fixture','2026-10-01T00:00:00Z',false,''].map(v=>({userEnteredValue:typeof v==='boolean'?{boolValue:v}:{stringValue:v}}))));
+  const identity=()=>({team:'Equipe Horizonte',teamId:TEAM_ID,members:[{enrollment:roster[0][0]},{enrollment:roster[1][0]}]});
   const evidence=(approved=[])=>({schema:'ifma-web-aula05-lab-v4',tipo:'formativo-nao-e-nota',maximoXp:100,
     xp:TASKS.filter(t=>approved.includes(t[0])).reduce((a,t)=>a+t[1],0),exercicios:TASKS.map(([id,maximoXp])=>({id,maximoXp,xp:approved.includes(id)?maximoXp:0,estado:approved.includes(id)?'APROVADO':'PENDENTE',comentario:''})),
     observacao:'TESTE FICTÍCIO',testeNativoPendente:'',codigoFonteCompleto:'\n export default function App(){return null;}\n'});
-  function event(approved=[],ident=identity()) {return {parameter:{nonce:crypto.randomUUID(),payload:JSON.stringify({environment:'PROD',schema:'web-a05-submission-v2',activity:'WEB-AULA05-2026',identity:ident,evidence:evidence(approved)})}};}
+  function lookup(enrollment,teamId=TEAM_ID,activity='WEB-AULA05-2026'){
+    return receive({parameter:{nonce:crypto.randomUUID(),payload:JSON.stringify({operation:'lookupStudent',environment:'PROD',activity,teamId,enrollment})}});
+  }
+  function confirmed(ident=identity(),activity='WEB-AULA05-2026'){
+    return {...ident,members:ident.members.map(m=>{
+      const reply=lookup(m.enrollment,ident.teamId,activity);
+      if(!reply.ok)throw Error(JSON.stringify(reply));
+      return {enrollment:reply.enrollmentCanonical,confirmationToken:reply.confirmationToken,confirmed:true};
+    })};
+  }
+  function event(approved=[],ident=confirmed()) {return {parameter:{nonce:crypto.randomUUID(),payload:JSON.stringify({operation:'submitTeam',environment:'PROD',schema:'web-a05-submission-v3',activity:'WEB-AULA05-2026',identity:ident,evidence:evidence(approved)})}};}
   function parsed(event){return JSON.parse(event.parameter.payload);}
   function receive(e){const r=ctx.doPost(e);const m=r.html.match(/top\.postMessage\((\{.*\}),"https:\/\/thalesvalente.github.io"\)/);if(!m)throw Error(r.html);return JSON.parse(m[1]);}
   function value(title,r,c){return effective(model[title].cells[r-1]?.[c-1],r-1,model[title]).numberValue??effective(model[title].cells[r-1]?.[c-1],r-1,model[title]).stringValue??effective(model[title].cells[r-1]?.[c-1],r-1,model[title]).boolValue??'';}
   function set(title,r,c,v,formula=false){model[title].cells[r-1]??=[];model[title].cells[r-1][c-1]=formula?{userEnteredValue:{formulaValue:v}}:
     v===null?{}:{userEnteredValue:typeof v==='number'?{numberValue:v}:typeof v==='boolean'?{boolValue:v}:{stringValue:v}};}
   function configureY(bim=4){const spec={id:'WEB-ATIVIDADE-Y-2026',name:'Atividade Y',bim,header:'Atividade Y /10',contract:'web-notas-submission-v3',enabled:true};return ctx.cadastrarAtividadeNotasV3(spec);}
-  function eventY(grade,bim=4,ident=identity()){return {parameter:{nonce:crypto.randomUUID(),payload:JSON.stringify({environment:'PROD',schema:'web-notas-submission-v3',activity:'WEB-ATIVIDADE-Y-2026',identity:ident,evidence:{schema:'web-notas-evidencia-v3',nota:grade,maximoNota:10,observacao:'QA'}})}};}
-  return {ctx,props:p,cache,identity,evidence,event,receive,parsed,set,value,configureY,eventY,
+  function eventY(grade,bim=4,ident=identity()){return {parameter:{nonce:crypto.randomUUID(),payload:JSON.stringify({operation:'submitTeam',environment:'PROD',schema:'web-notas-submission-v3',activity:'WEB-ATIVIDADE-Y-2026',identity:ident,evidence:{schema:'web-notas-evidencia-v3',nota:grade,maximoNota:10,observacao:'QA'}})}};}
+  return {ctx,props:p,identity,evidence,event,receive,parsed,set,value,configureY,eventY,lookup,confirmed,cache,roster,
     state:()=>clone(model),snapshot:()=>JSON.stringify(model),batches:()=>batches,locks:()=>locks,reads:()=>reads,captured:()=>clone(captured),
     session:(active,effective)=>{options.activeEmail=active;options.effectiveEmail=effective;},mode:v=>{failMode=v},model:()=>model,add};
 }

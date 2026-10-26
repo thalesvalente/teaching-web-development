@@ -6,14 +6,16 @@
   <meta name="description" content="Aula 05: Laboratório Vivo com tutorial guiado, código React Native comentado, regras visíveis e duas prévias interativas Web e Mobile.">
   <meta name="theme-color" content="#10472e">
   <title>Aula 05 · Laboratório Vivo · Tutorial Web ↔ Mobile | IFMA</title>
-  <link rel="stylesheet" href="./style.css?v=web-prod-310">
-  <link rel="stylesheet" href="./identity-http.css?v=web-prod-310">
-  <script defer src="./entrega-config.js?v=web-prod-310"></script>
-  <script defer src="./report-print.js?v=web-prod-310"></script>
-  <script defer src="./equipe.js?v=web-prod-310"></script>
-  <script defer src="./lab.js?v=web-prod-310"></script>
-  <script defer src="./production-gate.js?v=web-prod-310"></script>
-  <script defer src="./entrega-appscript.js?v=web-prod-310"></script>
+  <link rel="stylesheet" href="./style.css?v=web-roster-320">
+  <link rel="stylesheet" href="./identity-http.css?v=web-roster-320">
+  <script defer src="./entrega-config.js?v=web-roster-320"></script>
+  <script defer src="./report-print.js?v=web-roster-320"></script>
+  <script defer src="./roster-client.js?v=web-roster-320"></script>
+  <script defer src="./equipe-roster.js?v=web-roster-320"></script>
+  <script defer src="./equipe.js?v=web-roster-320"></script>
+  <script defer src="./lab.js?v=web-roster-320"></script>
+  <script defer src="./production-gate.js?v=web-roster-320"></script>
+  <script defer src="./entrega-appscript.js?v=web-roster-320"></script>
 </head>
 <body>
   <a class="skip" href="#missao-atual">Pular para a missão atual</a>
@@ -31,7 +33,7 @@
         <button type="button" id="save-progress" class="header-action emphasis">Salvar progresso</button>
         <button type="button" id="review-xp" class="header-action" title="Rever as missões técnicas no código atual sem apagar XP conquistados">Conferir progresso</button>
         <button type="button" id="load-progress" class="header-action">Retomar arquivo</button>
-        <button type="button" id="quick-pdf" class="header-action" title="É obrigatório informar nome completo e matrícula para enviar online. O recebimento depende da liberação pelo professor.">Gerar PDF e Enviar</button>
+        <button type="button" id="quick-pdf" class="header-action" title="Consulte as matrículas e confirme os nomes antes de enviar online. O recebimento depende da liberação pelo professor.">Gerar PDF e Enviar</button>
         <button type="button" id="evidence-open" class="header-action">Evidências <span aria-hidden="true">↗</span></button>
         <input type="file" id="progress-file" accept=".json,application/json" hidden aria-label="Selecionar arquivo JSON de progresso">
       </nav>
@@ -117,10 +119,10 @@
         <button type="button" class="close-dialog team-close" data-close-dialog="team-dialog" aria-label="Fechar identificação da equipe">×</button>
         <div class="team-head-content">
           <div class="team-head-icon" aria-hidden="true"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
-          <div><p class="team-kicker">Seu grupo, sua entrega</p><h2 id="team-title">Identificação da equipe</h2><p id="team-intro">Sem login ou conta institucional: informe apenas o nome da equipe e, para cada integrante, nome completo e matrícula. O PDF local pode ser gerado sem matrícula.</p></div>
+          <div><p class="team-kicker">Seu grupo, sua entrega</p><h2 id="team-title">Identificação da equipe</h2><p id="team-intro">Sem login ou conta institucional: informe o nome da equipe e somente a matrícula de cada integrante. O nome completo será mostrado para conferência, sem campo para digitar ou editar. Somente o professor altera o cadastro.</p></div>
         </div>
         <div class="team-head-progress" aria-label="Progresso de identificação da equipe">
-          <span id="team-progress-caption">Preencha o nome da equipe e dos integrantes</span>
+          <span id="team-progress-caption">Informe a equipe e consulte as matrículas dos integrantes</span>
           <strong id="team-progress-label">Em preparação</strong>
         </div>
         <div class="team-progress-track" role="progressbar" id="team-progress" aria-label="Identificação preenchida" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span id="team-progress-fill"></span></div>
@@ -135,18 +137,18 @@
           </div>
         </section>
         <section class="team-section team-members-section" aria-labelledby="team-members-heading">
-          <div class="team-section-heading team-section-heading-members"><span class="team-step" aria-hidden="true">02</span><div><h3 id="team-members-heading">Integrantes <span id="team-members-count" class="team-members-pill">0/8</span></h3><p>Informe nome completo e matrícula para cada pessoa. A matrícula é obrigatória apenas para envio online e deve manter zeros iniciais.</p></div></div>
+          <div class="team-section-heading team-section-heading-members"><span class="team-step" aria-hidden="true">02</span><div><h3 id="team-members-heading">Integrantes <span id="team-members-count" class="team-members-pill">0/8</span></h3><p>Informe somente a matrícula completa, com ponto e letras ITA. O nome será consultado no cadastro do professor, sem opção de edição.</p></div></div>
           <div id="web-members" class="team-roster" aria-labelledby="team-members-heading"></div>
           <button type="button" id="web-add-member" class="team-add-member"><span class="team-add-icon" aria-hidden="true">+</span><span>Adicionar integrante</span><span id="team-remaining" class="team-add-remaining"></span></button>
         </section>
         <div class="team-summary-card" aria-live="polite" aria-atomic="true">
-          <div class="team-summary-symbol" aria-hidden="true">✓</div><div><strong id="team-summary-title">Identificação em andamento</strong><p id="team-summary-copy">Seus nomes e as matrículas preenchidas serão incluídos no PDF e no JSON de progresso.</p></div>
+          <div class="team-summary-symbol" aria-hidden="true">✓</div><div><strong id="team-summary-title">Identificação em andamento</strong><p id="team-summary-copy">Os nomes são consultados no cadastro docente. Confira cada nome antes da entrega; PDF e JSON gerados por você podem incluir os dados confirmados.</p></div>
         </div>
-        <p id="team-feedback" class="team-feedback" role="alert" aria-live="assertive">Preencha os dados para concluir a identificação. Você pode salvar o progresso parcial.</p>
-        <p class="team-privacy"><span aria-hidden="true">●</span> Matrículas não são salvas automaticamente neste navegador. PDF e JSON gerados por você podem conter esses dados: não publique os arquivos. Ao recarregar, preencha as matrículas novamente ou retome seu JSON.</p>
+        <p id="team-feedback" class="team-feedback" role="alert" aria-live="assertive">Informe somente a matrícula de cada integrante, consulte o nome cadastrado e confirme se está correto. Você também pode salvar o progresso parcial.</p>
+        <p class="team-privacy"><span aria-hidden="true">●</span> Nomes consultados e matrículas não são salvos automaticamente neste navegador. PDF e JSON gerados por você podem conter esses dados: não publique os arquivos. Ao recarregar, preencha as matrículas novamente ou retome seu JSON.</p>
       </div>
       <footer class="team-panel-footer">
-        <span class="team-footer-label">Nome completo + matrícula para enviar · 1 a 8 integrantes</span>
+        <span class="team-footer-label">Matrícula + confirmação do nome · 1 a 8 integrantes</span>
         <button type="button" id="team-done" class="btn run team-submit">Concluir identificação <span aria-hidden="true">→</span></button>
       </footer>
     </div>
@@ -211,7 +213,7 @@ app/lab05.tsx               ← importa o componente
     <div class="dialog-header"><h2 id="evidence-title">Evidências do laboratório</h2><button type="button" class="close-dialog" data-close-dialog="evidence-dialog" aria-label="Fechar evidências">×</button></div>
     <div class="dialog-body">
       <p><strong>Continue de onde parou:</strong> use <strong>Salvar progresso</strong> para baixar um JSON que guarda código, respostas, missão atual e XP formativos. Em outro momento ou dispositivo, clique em <strong>Retomar arquivo</strong>. O PDF segue o modelo institucional A4 do IFMA e pode conter missões pendentes. O botão <strong>Gerar PDF e Enviar</strong> abre a impressão (escolha Salvar como PDF) e tenta enviar <strong>as evidências JSON</strong> se o recebimento estiver habilitado. O PDF não é anexado. Somente o recibo confirma entrega. Para continuar editando, use o JSON.</p>
-      <p>Pode manter exercícios e reflexões <strong>pendentes</strong>, sem perder XP; para o PDF local, informe equipe e nomes completos; para envio online também são exigidas as matrículas dos integrantes.</p>
+      <p>Pode manter exercícios e reflexões <strong>pendentes</strong>, sem perder XP; o PDF local pode registrar integrantes ainda não conferidos; para envio online, consulte as matrículas e confirme todos os nomes.</p>
       <p id="progress-status" class="progress-status" role="status" aria-live="polite">Rascunho salvo automaticamente neste navegador quando disponível. Salve um JSON para levar a outro dispositivo.</p>
       <div class="evidence-actions priority-actions"><button type="button" id="dialog-save-progress" class="btn run">Salvar progresso (.json)</button><button type="button" id="dialog-load-progress" class="btn secondary">Retomar (.json)</button><button type="button" id="dialog-pdf" class="btn secondary">Gerar PDF parcial (A4)</button></div>
       <div class="evidence-score"><strong><span id="xp-evidence">0</span>/100 XP</strong><span id="evidence-count">0 concluídos · 14 pendentes</span></div>
@@ -226,12 +228,12 @@ app/lab05.tsx               ← importa o componente
       <textarea id="limite-real" rows="3" placeholder="Ex.: teclado e acessibilidade no Expo Go."></textarea>
       <fieldset class="web-submission-fields" id="web-submission-fields" aria-describedby="web-delivery-explanation">
         <legend>Entrega da equipe (Google Sheets)</legend>
-        <p><strong>Identificação simples:</strong> preencha nome da equipe, nome completo e matrícula de cada integrante. Não é necessário entrar no SUAP ou usar conta institucional.</p>
+        <p><strong>Identificação simples:</strong> preencha nome da equipe e matrícula de cada integrante e confirme o nome consultado. Não é necessário entrar no SUAP ou usar conta institucional.</p>
         <p id="web-team-summary" class="team-summary" role="status">Nenhuma equipe identificada. Use “Equipe e integrantes” no cabeçalho.</p>
         <button type="button" id="team-open-evidence" class="btn secondary">Preencher ou revisar integrantes</button>
         <p id="web-delivery-explanation" class="web-submission-explanation">
-          A equipe envia uma única atividade com nome completo e matrícula de cada integrante. O servidor converte a pontuação em <strong>nota de 0 a 10</strong>,
-          preserva a maior nota por estudante e atividade e atualiza a média. Os dados são informados pela própria equipe, sem autenticação institucional. A matrícula não comprova autoria; o professor pode conferir inconsistências e validar as notas.
+          A equipe envia uma única atividade com as matrículas confirmadas; os nomes são obtidos do cadastro docente. O servidor converte a pontuação em <strong>nota de 0 a 10</strong>,
+          preserva a maior nota por estudante e atividade e atualiza a média. O cadastro é informado pelo professor; a equipe confirma os nomes sem autenticação institucional. A matrícula não comprova autoria; o professor pode conferir inconsistências e validar as notas.
           Não inclua senhas, documentos pessoais ou informações sigilosas no código.
         </p>
         <button type="button" class="btn run" id="web-submit">
@@ -244,7 +246,7 @@ app/lab05.tsx               ← importa o componente
       </fieldset>
       <details><summary>Ver situação de cada exercício</summary><ul id="evidence-list" class="evidence-list"></ul></details>
       <div class="evidence-actions"><button type="button" id="export-json" class="btn secondary">Exportar evidências JSON</button><button type="button" id="export-md" class="btn secondary">Exportar Markdown</button><button type="button" id="print" class="btn secondary">Imprimir / salvar PDF A4</button></div>
-      <p class="privacy">Rascunho salvo somente neste navegador, se o armazenamento estiver disponível. Quando o envio estiver habilitado, clicar em “Gerar PDF e Enviar” transmite os nomes, as matrículas, o código e as evidências ao Apps Script. Os dados serão usados pelo professor para registrar a entrega e as notas. Não informe CPF, senha ou dados sensíveis nas respostas. Para correções, procure o professor. Os dados podem ser gravados mesmo se o recibo não chegar; somente um recibo válido confirma o recebimento nesta tela. XP já conquistados são preservados; a conferência do código atual pode ser repetida quando desejar.</p>
+      <p class="privacy">Rascunho salvo somente neste navegador, se o armazenamento estiver disponível. Quando o envio estiver habilitado, clicar em “Gerar PDF e Enviar” transmite as matrículas confirmadas, o código e as evidências ao Apps Script; o servidor obtém os nomes do cadastro docente. Os dados serão usados pelo professor para registrar a entrega e as notas. Não informe CPF, senha ou dados sensíveis nas respostas. Para correções, procure o professor. Os dados podem ser gravados mesmo se o recibo não chegar; somente um recibo válido confirma o recebimento nesta tela. XP já conquistados são preservados; a conferência do código atual pode ser repetida quando desejar.</p>
       <p id="evidence-status" role="status" aria-live="polite"></p>
     </div>
   </dialog>
