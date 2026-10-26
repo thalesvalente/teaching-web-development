@@ -18,7 +18,38 @@
 .roster-member .roster-confirm{display:flex;align-items:flex-start;gap:10px;font-size:14px;line-height:1.5;max-width:100%}
 .roster-member .roster-confirm input{flex:0 0 24px;width:24px;min-height:24px;margin:0;accent-color:#14532d}
 .roster-member button{min-height:44px;max-width:100%;white-space:normal;overflow-wrap:anywhere}
-.roster-member .roster-lookup,.roster-member .roster-reset,.roster-member .roster-dispute{display:block;margin-top:8px;width:100%;font-size:14px}
+/* Ação única da matrícula: mesma paleta, foco e proporções do CTA da equipe. */
+.team-dialog .roster-member .roster-lookup{
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  width:100%;min-height:48px;max-width:100%;margin:10px 0 4px;
+  padding:11px 16px;border:1px solid #0c7242;border-radius:10px;
+  background:#087443;color:#fff;font-size:14px;line-height:1.35;
+  font-weight:800;text-align:center;cursor:pointer;
+  transition:background-color 140ms ease,border-color 140ms ease;
+}
+.team-dialog .roster-member .roster-lookup:hover:not(:disabled){background:#07633b;border-color:#075d38;filter:none}
+.team-dialog .roster-member .roster-lookup:active:not(:disabled){background:#054c2d}
+.team-dialog .roster-member .roster-lookup:focus-visible{outline:3px solid #d9ae42;outline-offset:3px}
+.team-dialog .roster-member .roster-lookup[data-mode="renew"]{
+  background:#e9f5ed;color:#0a5d38;border-color:#a0cab0;
+}
+.team-dialog .roster-member .roster-lookup[data-mode="renew"]:hover:not(:disabled){
+  background:#d8ecdf;border-color:#278056;
+}
+.team-dialog .roster-member .roster-lookup:disabled{
+  background:#e7f0e9;color:#466554;border-color:#c3d7c9;
+  cursor:not-allowed;filter:none;
+}
+/* Nome divergente é uma orientação de leitura, nunca uma ação que edita Alunos. */
+.roster-member .roster-name-advice{
+  margin:7px 0 9px;padding:10px 12px;
+  background:#fff8eb;border-left:3px solid #b98828;border-radius:8px;
+  color:#5c431e;font-size:12px;line-height:1.55;overflow-wrap:anywhere;
+}
+.roster-member .roster-name-advice strong{font-weight:800}
+@media(prefers-reduced-motion:reduce){
+  .team-dialog .roster-member .roster-lookup{transition:none}
+}
 .roster-member input[readonly]{background:#f1f5f2}
 
 /* Identificação V3.2: destaque do nome obtido do cadastro, nunca um campo editável. */
