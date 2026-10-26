@@ -67,18 +67,23 @@ test('ROSTER-21 nome consultado aparece como texto somente leitura, sem campo de
   await expect(page.locator('#web-members input[id$="-name"]')).toHaveCount(0);
   c.unchanged();
 });
-test('ROSTER-22 confirmação expirada oferece nova consulta sem apagar matrícula nem alterar cadastro',async({page})=>{
+test('ROSTER-22 confirmação assinada v2 permanece válida após 24 horas sem nova consulta',async({page})=>{
   const c=await setup(page);await identify(page);
-  await page.evaluate(()=>{window.__qaNativeNow=Date.now;Date.now=()=>window.__qaNativeNow()+16*60*1000;});
+  await page.evaluate(()=>{window.__qaNativeNow=Date.now;Date.now=()=>window.__qaNativeNow()+24*60*60*1000;});
   await page.locator('#team-done').click();
-  await expect(page.locator('#team-dialog')).toBeVisible();
-  await expect(page.locator('#web-member-0-enrollment')).toHaveValue(A);
-  await expect(page.locator('#web-member-0-lookup')).toHaveText('Consultar novamente');
-  await expect(page.locator('#web-member-0-name')).toHaveText('Nome não consultado');
-  await expect(page.locator('#web-member-0-confirm')).toHaveCount(0);
-  await page.evaluate(()=>{Date.now=window.__qaNativeNow;delete window.__qaNativeNow;});
-  await page.locator('#web-member-0-lookup').click();
+  await expect(page.locator('#team-dialog')).toBeHidden();
+  await page.locator('#team-open').click();
   await expect(page.locator('#web-member-0-name')).toHaveText('Estudante Teste Alfa');
-  await expect(page.locator('#web-member-0-confirm')).toBeVisible();
+  await expect(page.locator('#web-member-0-confirm')).toBeChecked();
+  expect(c.calls.filter(op=>op==='lookupStudent')).toHaveLength(1);
+  await page.evaluate(()=>{Date.now=window.__qaNativeNow;delete window.__qaNativeNow;});
+  c.unchanged();
+});
+test('ROSTER-23 nome ou matrícula novos requerem consulta própria sem alterar Alunos',async({page})=>{
+  const c=await setup(page);await identify(page);
+  await page.locator('#web-add-member').click();
+  await expect(page.locator('#web-member-1-confirm')).toHaveCount(0);
+  await identify(page,1,B);
+  expect(c.calls.filter(op=>op==='lookupStudent')).toHaveLength(2);
   c.unchanged();
 });
