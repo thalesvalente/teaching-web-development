@@ -262,6 +262,13 @@ test('SITE-V3-09: consulta primária e nova consulta respeitam tema, toque e foc
   await expect(button).toHaveText('Nova consulta');
   await expect(button).toHaveCSS('background-color','rgb(233, 245, 237)');
   await expect(button).toHaveCSS('color','rgb(10, 93, 56)');
+  // Codex P2: pressionar Espaço sem hover não pode gerar texto verde sobre verde escuro.
+  await page.mouse.move(1,1);
+  await button.focus();
+  await page.keyboard.down('Space');
+  await expect(button).toHaveCSS('background-color','rgb(198, 229, 208)');
+  await expect(button).toHaveCSS('color','rgb(10, 93, 56)');
+  await page.keyboard.up('Space');
   const secondary=await button.boundingBox();
   expect(secondary.height).toBeGreaterThanOrEqual(44);
   await expect(page.locator('#web-member-0-name-advice')).toBeVisible();
