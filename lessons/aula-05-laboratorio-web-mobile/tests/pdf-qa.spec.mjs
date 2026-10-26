@@ -1,5 +1,8 @@
 /** QA do PDF real: HTML A4, texto selecionável e nada além dos XP atuais. */
 import { test, expect } from '@playwright/test';
+
+// Historical v2 identity fixture. Roster 3.2 runs separately in roster-320.spec.mjs.
+test.beforeEach(async({page})=>{await page.route('**/entrega-config.js*',route=>route.fulfill({contentType:'application/javascript',body:"window.WebEntregaConfig=Object.freeze({endpoint:'',activated:false,schema:'web-a05-submission-v2',activity:'WEB-AULA05-2026'});"}));});
 import { execFileSync } from 'node:child_process';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
