@@ -188,7 +188,7 @@
       if(member && error?.field){
         const message='ENTREGA BLOQUEADA — '+String(error.code||'IDENTIDADE_CONFLITANTE')+'\n'+
           'Integrante '+(index+1)+'\n'+
-          'Nome informado: '+member.name+'\n'+
+          'Nome cadastrado: '+member.name+'\n'+
           'Matrícula informada: '+member.enrollment+'\n'+
           'Problema: '+String(error.message||'Dados inconsistentes.')+'\n'+
           'Como resolver: '+String(error.action||'Procure o professor.')+'\n'+
