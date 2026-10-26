@@ -158,7 +158,7 @@ function webIdentity(input) {
     var key=notasEnrollment(m.enrollment,i);
     if(seen[key])notasErr('MATRICULA_DUPLICADA_EQUIPE',i,'enrollment','Matrícula repetida na equipe.','Cada integrante deve ser incluído uma única vez.');
     seen[key]=true;
-    if(m.confirmed!==true||typeof m.confirmationToken!=='string'||!/^\d{13}\.[a-f0-9]{64}$/.test(m.confirmationToken))
+    if(m.confirmed!==true||typeof m.confirmationToken!=='string'||!(/^(?:\d{13}|v2)\.[a-f0-9]{64}$/.test(m.confirmationToken)))
       notasErr('CONFIRMACAO_OBRIGATORIA',i,'enrollment','Consulte a matrícula e confirme o nome exibido.','Reinicie a identificação local e consulte novamente.');
     return {enrollment:key,confirmationToken:m.confirmationToken,confirmed:true};
   });
@@ -254,16 +254,30 @@ function notasStudent_(index,key,i){
   return saved;
 }
 function notasConfirmation_(saved,teamId,activity,expires){
-  // Fingerprint opaque: binds the displayed record/version, not student authentication.
+  // Compatibilidade com confirmações temporárias 3.2.0 ainda válidas.
   var row=[];for(var i=0;i<8;i++)row.push(saved.row[i]===undefined?'':saved.row[i]);
   return String(expires)+'.'+notasSign(JSON.stringify(['roster-v1',teamId,activity,row,String(expires)]));
+}
+function notasConfirmationStable_(saved,teamId,activity){
+  // Comprovante de confirmação pessoal de uso da página: sem relógio,
+  // assinado sobre a linha docente completa, equipe e atividade.
+  // Mudança de matrícula, nome, estado ou metadado invalida automaticamente.
+  var row=[];for(var i=0;i<8;i++)row.push(saved.row[i]===undefined?'':saved.row[i]);
+  return 'v2.'+notasSign(JSON.stringify(['roster-v2',teamId,activity,row]));
 }
 function notasHydrate_(book,n){
   var index=notasRosterIndex_(book);
   n.identity.members=n.identity.members.map(function(m,i){
-    var saved=notasStudent_(index,m.enrollment,i),expires=Number(m.confirmationToken.split('.')[0]);
-    if(expires<Date.now()||expires>Date.now()+20*60000||notasConfirmation_(saved,n.identity.teamId,n.activity,expires)!==m.confirmationToken)
-      notasErr('CONFIRMACAO_DESATUALIZADA',i,'enrollment','A confirmação expirou ou o professor atualizou o cadastro.','Consulte a matrícula novamente e confira o nome. Nenhum cadastro foi alterado pelo sistema.');
+    var saved=notasStudent_(index,m.enrollment,i),token=m.confirmationToken;
+    if(token.indexOf('v2.')===0){
+      // Validação por assinatura e cadastro atual, sem expiração cronológica.
+      if(notasConfirmationStable_(saved,n.identity.teamId,n.activity)!==token)
+        notasErr('CONFIRMACAO_DESATUALIZADA',i,'enrollment','O cadastro foi alterado desde a confirmação.','Consulte a matrícula novamente e confira o nome atualizado.');
+    }else{
+      var expires=Number(token.split('.')[0]);
+      if(expires<Date.now()||expires>Date.now()+20*60000||notasConfirmation_(saved,n.identity.teamId,n.activity,expires)!==token)
+        notasErr('CONFIRMACAO_DESATUALIZADA',i,'enrollment','A confirmação anterior expirou ou o cadastro mudou.','Consulte a matrícula novamente e confira o nome.');
+    }
     return {name:saved.row[1],enrollment:m.enrollment};
   });
 }
@@ -276,9 +290,9 @@ function notasLookup_(payload,nonce,config){
   var book=notasReadBook(config,['Alunos','Atividades']),a=notasCatalog(book.sheets.Atividades)[payload.activity];
   notasAssert(a&&['web-a05-submission-v3','web-notas-submission-v3'].includes(a.contract),'Atividade indisponível.');
   notasCheckOpenV3(a,payload.activity,a.contract);
-  var saved=notasStudent_(notasRosterIndex_(book),key,0),expires=Date.now()+15*60000;
+  var saved=notasStudent_(notasRosterIndex_(book),key,0);
   return {ok:true,channel:'web-roster-lookup-aula05',nonce:nonce,version:WEB_CFG.version,
-    name:saved.row[1],enrollmentCanonical:key,confirmationToken:notasConfirmation_(saved,teamId,payload.activity,expires)};
+    name:saved.row[1],enrollmentCanonical:key,confirmationToken:notasConfirmationStable_(saved,teamId,payload.activity)};
 }
 function notasLookupLimit_(teamId,key){
   var cache=CacheService.getScriptCache(),minute=Math.floor(Date.now()/60000);
@@ -742,7 +756,7 @@ function verificarStatusWebV3(){
   console.log('WEB_V3_STATUS '+JSON.stringify(r));return r;
 }
 
-return Object.freeze({notasCommit_:notasCommit_,notasRosterIndex_:notasRosterIndex_,notasLookup_:notasLookup_,notasConfirmation_:notasConfirmation_,WEB_CFG:WEB_CFG,WEB_TASKS:WEB_TASKS,NOTAS_STATUS:NOTAS_STATUS,A_HEADERS:A_HEADERS,R_HEADERS:R_HEADERS,T_HEADERS:T_HEADERS,AU_HEADERS:AU_HEADERS,ACT_HEADERS:ACT_HEADERS,webFail:webFail,webText:webText,webCode:webCode,webSafe:webSafe,webNormalized:webNormalized,webEvidence:webEvidence,webHex:webHex,webSha256:webSha256,notasAssert:notasAssert,notasBlank:notasBlank,notasGrade:notasGrade,notasMax:notasMax,notasMean:notasMean,notasErr:notasErr,notasFullName:notasFullName,notasEnrollment:notasEnrollment,webIdentity:webIdentity,notasAverageFormula:notasAverageFormula,notasConfig:notasConfig,notasSecret:notasSecret,notasSign:notasSign,notasNoXpKeys:notasNoXpKeys,notasIdentityAllowed:notasIdentityAllowed,notasNormalize:notasNormalize,notasColName:notasColName,notasReadBook:notasReadBook,notasHeaders:notasHeaders,notasCatalog:notasCatalog,notasActivity:notasActivity,notasCell:notasCell,notasWrite:notasWrite,notasWriteFormula:notasWriteFormula,notasNewRow:notasNewRow,notasRows:notasRows,notasIndex:notasIndex,notasCheckCatalog:notasCheckCatalog,notasCheckIdentity:notasCheckIdentity,notasAuditSign:notasAuditSign,notasVerifyAudit:notasVerifyAudit,notasAuditEntry:notasAuditEntry,notasTeamKey:notasTeamKey,notasAuditWinner:notasAuditWinner,notasRecordIntegrity:notasRecordIntegrity,notasPlan:notasPlan,notasVerifyWrites:notasVerifyWrites,notasReceipt:notasReceipt,notasStore:notasStore,webReturn:webReturn,doGet:doGet,doPost:doPost,prepararIntegracaoNotasV3:prepararIntegracaoNotasV3,statusIntegracaoNotasV3:statusIntegracaoNotasV3,consultarConflitoDocenteV3:consultarConflitoDocenteV3,cadastrarAtividadeNotasV3:cadastrarAtividadeNotasV3,notasLegacyHoldV3:notasLegacyHoldV3,notasClosedKeyV3:notasClosedKeyV3,notasCheckOpenV3:notasCheckOpenV3,bloquearRecebimentoNotasV3:bloquearRecebimentoNotasV3,encerrarAtividadeNotasV3:encerrarAtividadeNotasV3,encerrarAula05ParaCorrecaoV3:encerrarAula05ParaCorrecaoV3,liberarRecebimentoQAWebV3:liberarRecebimentoQAWebV3,verificarStatusWebV3:verificarStatusWebV3});
+return Object.freeze({notasCommit_:notasCommit_,notasRosterIndex_:notasRosterIndex_,notasLookup_:notasLookup_,notasConfirmation_:notasConfirmation_,notasConfirmationStable_:notasConfirmationStable_,WEB_CFG:WEB_CFG,WEB_TASKS:WEB_TASKS,NOTAS_STATUS:NOTAS_STATUS,A_HEADERS:A_HEADERS,R_HEADERS:R_HEADERS,T_HEADERS:T_HEADERS,AU_HEADERS:AU_HEADERS,ACT_HEADERS:ACT_HEADERS,webFail:webFail,webText:webText,webCode:webCode,webSafe:webSafe,webNormalized:webNormalized,webEvidence:webEvidence,webHex:webHex,webSha256:webSha256,notasAssert:notasAssert,notasBlank:notasBlank,notasGrade:notasGrade,notasMax:notasMax,notasMean:notasMean,notasErr:notasErr,notasFullName:notasFullName,notasEnrollment:notasEnrollment,webIdentity:webIdentity,notasAverageFormula:notasAverageFormula,notasConfig:notasConfig,notasSecret:notasSecret,notasSign:notasSign,notasNoXpKeys:notasNoXpKeys,notasIdentityAllowed:notasIdentityAllowed,notasNormalize:notasNormalize,notasColName:notasColName,notasReadBook:notasReadBook,notasHeaders:notasHeaders,notasCatalog:notasCatalog,notasActivity:notasActivity,notasCell:notasCell,notasWrite:notasWrite,notasWriteFormula:notasWriteFormula,notasNewRow:notasNewRow,notasRows:notasRows,notasIndex:notasIndex,notasCheckCatalog:notasCheckCatalog,notasCheckIdentity:notasCheckIdentity,notasAuditSign:notasAuditSign,notasVerifyAudit:notasVerifyAudit,notasAuditEntry:notasAuditEntry,notasTeamKey:notasTeamKey,notasAuditWinner:notasAuditWinner,notasRecordIntegrity:notasRecordIntegrity,notasPlan:notasPlan,notasVerifyWrites:notasVerifyWrites,notasReceipt:notasReceipt,notasStore:notasStore,webReturn:webReturn,doGet:doGet,doPost:doPost,prepararIntegracaoNotasV3:prepararIntegracaoNotasV3,statusIntegracaoNotasV3:statusIntegracaoNotasV3,consultarConflitoDocenteV3:consultarConflitoDocenteV3,cadastrarAtividadeNotasV3:cadastrarAtividadeNotasV3,notasLegacyHoldV3:notasLegacyHoldV3,notasClosedKeyV3:notasClosedKeyV3,notasCheckOpenV3:notasCheckOpenV3,bloquearRecebimentoNotasV3:bloquearRecebimentoNotasV3,encerrarAtividadeNotasV3:encerrarAtividadeNotasV3,encerrarAula05ParaCorrecaoV3:encerrarAula05ParaCorrecaoV3,liberarRecebimentoQAWebV3:liberarRecebimentoQAWebV3,verificarStatusWebV3:verificarStatusWebV3});
 })();
 
 /** Nenhuma identidade efetiva isolada autoriza administração remota. */
