@@ -123,8 +123,26 @@
     if(dialog && !dialog.open)dialog.showModal();
     status.focus({preventScroll:true});
   }
+  function downloadTeamJson(){
+    if(!window.WebLabEvidence||typeof window.WebLabEvidence.snapshot!=='function')
+      throw Error('Laboratório ainda não preparado. Atualize a página.');
+    const identity=window.WebTeam?.getIdentity?.({requireEnrollment:false});
+    if(!identity)throw Error('Informe o nome da equipe antes de exportar o JSON.');
+    const evidence=window.WebLabEvidence.snapshot();
+    if(evidence.schema!=='ifma-web-aula05-lab-v4'||evidence.maximoXp!==100||
+       !Array.isArray(evidence.exercicios)||evidence.exercicios.length!==14)
+      throw Error('Evidências incompatíveis; confira o laboratório.');
+    saveJson({identity,evidence},'WEB_Aula05_Evidencia_Equipe.json');
+  }
+  const downloadTeamButton=document.getElementById('download-team-json');
+  downloadTeamButton?.addEventListener('click',()=>{
+    try{downloadTeamJson();inform('JSON da equipe preparado. Guarde o arquivo; ele não é comprovante de entrega.','success');}
+    catch(error){inform('Não foi possível baixar o JSON: '+String(error.message||error),'error');}
+  });
   async function generatePdfAndSend(){
     if(busy)return;
+    // Baixar o JSON no clique original, antes de quaisquer awaits ou impressão.
+    try{downloadTeamJson();}catch(_){/* Botão manual permanece disponível. */}
     if(activated()&&config.requiredMode==='PROD'){
       busy=true;button.disabled=true;quickButton.disabled=true;
       try{
@@ -169,7 +187,6 @@
       if(!code || code.length>30000)throw Error('Código TSX inválido ou muito longo.');
       const hash=await bytesHash(new TextEncoder().encode(code));
       // Exportação auditável antes da tentativa de envio: não é comprovante de recepção.
-      saveJson({identity:checked,evidence},'WEB_Aula05_Evidencia_Equipe.json');
       inform('PDF preparado. Enviando as evidências e aguardando recibo do Apps Script...');
       showReceipt();
       const receipt=await post(checked,evidence,hash);
