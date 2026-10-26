@@ -28,7 +28,7 @@ async function receiptRoute(page,mutate=''){
 }
 test('UI-01 default não referencia receptor legado e não ativa POST',async({page})=>{
   await page.goto('/index.html');
-  expect(await page.evaluate(()=>window.WebEntregaConfig)).toMatchObject({endpoint:'',activated:false,schema:'web-a05-submission-v2'});
+  expect(await page.evaluate(()=>window.WebEntregaConfig)).toMatchObject({endpoint:'',activated:false,schema:'web-a05-submission-v3'});
   expect(await page.evaluate(()=>window.WebEntrega.ativado)).toBe(false);
 });
 test('UI-02 restauração inicial online exige matrícula mesmo antes de WebEntrega inicializar',async({page})=>{

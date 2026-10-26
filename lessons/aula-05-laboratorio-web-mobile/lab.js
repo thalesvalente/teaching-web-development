@@ -398,7 +398,7 @@ function registrar() {
         note: byId('observacao').value, nativeNote: byId('limite-real').value,
         // Matrículas NÃO entram no salvamento AUTOMÁTICO do navegador.
         team: (() => {const data=window.WebTeam?.snapshot?.();return data?
-          {...data,members:data.members.map(m=>({name:m.name}))}:null;})(),
+          {...data,members:data.members.map(m=>window.WebTeam?.rosterReadOnly?({}):({name:m.name}))}:null;})(),
         completed: tasks.filter(t => passed[t.id]).map(t => t.id),
         details: Object.fromEntries(tasks.filter(t => passed[t.id]).map(t => [t.id, completedDetail[t.id] || 'Concluído em sessão anterior'])),
       }));
@@ -966,7 +966,7 @@ function registrar() {
   function printPartial() {
     const identity=window.WebTeam?.requireIdentity?.({requireEnrollment:false});
     if(!identity){
-      progressMessage('Para gerar o PDF, informe nome da equipe e nome e sobrenome de todos os integrantes.',true);
+      progressMessage('Para gerar o PDF, identifique a equipe. Integrantes não consultados serão indicados como não conferidos.',true);
       return false;
     }
     try {

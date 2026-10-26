@@ -6,6 +6,7 @@
  */
 (() => {
   'use strict';
+  if(window.WebEntregaConfig?.schema==='web-a05-submission-v3')return; // 3.2 uses read-only roster module
   const el=id=>document.getElementById(id);
   const KEY='ifma-web-aula05-equipe-v3';
   const LEGACY_KEY='ifma-web-aula05-equipe-v2';
