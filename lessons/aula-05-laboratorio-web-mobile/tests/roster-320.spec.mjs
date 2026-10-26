@@ -52,3 +52,33 @@ test('ROSTER-17 resposta antiga após reset é descartada',async({page})=>{let d
 test('ROSTER-18 resposta de outra matrícula não é aceita',async({page})=>{const c=await setup(page,{mutateReply:(d,p)=>p?.operation==='lookupStudent'?{...d,enrollmentCanonical:B}:d});await page.locator('#web-member-0-enrollment').fill(A);await page.locator('#web-member-0-lookup').click();await expect(page.locator('#web-member-0-enrollment-error')).toContainText('incompatível');await expect(page.locator('#web-member-0-name')).toHaveText('Nome não consultado');c.unchanged();});
 test('ROSTER-19 nome com marcação nunca executa HTML no navegador',async({page})=>{await setup(page,{mutateReply:(d,p)=>p?.operation==='lookupStudent'?{...d,name:'<img src=x onerror="window.bad=1">'}:d});await page.locator('#web-member-0-enrollment').fill(A);await page.locator('#web-member-0-lookup').click();await expect(page.locator('#web-member-0-name')).toContainText('<img');expect(await page.evaluate(()=>window.bad)).toBeUndefined();expect(await page.locator('#web-member-0-name img').count()).toBe(0);});
 for(const width of [320,360,390,768,1024,1440])test('ROSTER-20 confirmação acessível sem overflow em '+width,async({page},info)=>{await page.setViewportSize({width,height:900});await setup(page);await identify(page);const d=await page.locator('#team-dialog').evaluate(e=>({sw:e.scrollWidth,cw:e.clientWidth}));expect(d.sw).toBeLessThanOrEqual(d.cw+1);await expect(page.locator('#web-member-0-confirm')).toHaveAccessibleName('Confirmo que o nome exibido corresponde à matrícula informada.');if(width===320)await page.screenshot({path:info.outputPath('roster-320.png')});});
+
+test('ROSTER-21 nome consultado aparece como texto somente leitura, sem campo de nome para 1 ou 2 integrantes',async({page})=>{
+  const c=await setup(page);await page.locator('#web-member-0-enrollment').fill(A);
+  await page.locator('#web-member-0-lookup').click();
+  await expect(page.locator('#web-member-0-name')).toHaveText('Estudante Teste Alfa');
+  expect(await page.locator('#web-member-0-name').evaluate(el=>el.tagName)).toBe('P');
+  await expect(page.getByText('Nome cadastrado (somente leitura)',{exact:true})).toBeVisible();
+  await expect(page.locator('#web-members input[type="text"]')).toHaveCount(1);
+  await expect(page.locator('#web-member-0-confirm')).not.toBeChecked();
+  await expect(page.locator('#web-member-0-confirm')).toHaveAccessibleName('Confirmo que o nome exibido corresponde à matrícula informada.');
+  await page.locator('#web-add-member').click();
+  await expect(page.locator('#web-members input[type="text"]')).toHaveCount(2);
+  await expect(page.locator('#web-members input[id$="-name"]')).toHaveCount(0);
+  c.unchanged();
+});
+test('ROSTER-22 confirmação expirada oferece nova consulta sem apagar matrícula nem alterar cadastro',async({page})=>{
+  const c=await setup(page);await identify(page);
+  await page.evaluate(()=>{window.__qaNativeNow=Date.now;Date.now=()=>window.__qaNativeNow()+16*60*1000;});
+  await page.locator('#team-done').click();
+  await expect(page.locator('#team-dialog')).toBeVisible();
+  await expect(page.locator('#web-member-0-enrollment')).toHaveValue(A);
+  await expect(page.locator('#web-member-0-lookup')).toHaveText('Consultar novamente');
+  await expect(page.locator('#web-member-0-name')).toHaveText('Nome não consultado');
+  await expect(page.locator('#web-member-0-confirm')).toHaveCount(0);
+  await page.evaluate(()=>{Date.now=window.__qaNativeNow;delete window.__qaNativeNow;});
+  await page.locator('#web-member-0-lookup').click();
+  await expect(page.locator('#web-member-0-name')).toHaveText('Estudante Teste Alfa');
+  await expect(page.locator('#web-member-0-confirm')).toBeVisible();
+  c.unchanged();
+});
