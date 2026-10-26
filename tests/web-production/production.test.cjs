@@ -138,3 +138,5 @@ test('confirmação v2 não pode ser forjada, usada em outra equipe ou reaprovei
     assert.equal(f.batches(),batches);
   }
 });
+
+// QA-CI-GATE: execução técnica isolada do protocolo de confirmação v2. Não integrar esta PR.
