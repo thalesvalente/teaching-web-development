@@ -119,10 +119,10 @@
         <button type="button" class="close-dialog team-close" data-close-dialog="team-dialog" aria-label="Fechar identificação da equipe">×</button>
         <div class="team-head-content">
           <div class="team-head-icon" aria-hidden="true"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
-          <div><p class="team-kicker">Seu grupo, sua entrega</p><h2 id="team-title">Identificação da equipe</h2><p id="team-intro">Sem login ou conta institucional: informe o nome da equipe e a matrícula completa de cada integrante. Consulte e confirme o nome cadastrado. Somente o professor altera o cadastro na planilha.</p></div>
+          <div><p class="team-kicker">Seu grupo, sua entrega</p><h2 id="team-title">Identificação da equipe</h2><p id="team-intro">Sem login institucional: informe o nome da equipe e somente a matrícula de cada integrante. O nome completo será mostrado para conferência, sem campo para digitar ou editar. Somente o professor altera o cadastro.</p></div>
         </div>
         <div class="team-head-progress" aria-label="Progresso de identificação da equipe">
-          <span id="team-progress-caption">Preencha o nome da equipe e dos integrantes</span>
+          <span id="team-progress-caption">Informe a equipe e consulte as matrículas dos integrantes</span>
           <strong id="team-progress-label">Em preparação</strong>
         </div>
         <div class="team-progress-track" role="progressbar" id="team-progress" aria-label="Identificação preenchida" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span id="team-progress-fill"></span></div>
@@ -142,9 +142,9 @@
           <button type="button" id="web-add-member" class="team-add-member"><span class="team-add-icon" aria-hidden="true">+</span><span>Adicionar integrante</span><span id="team-remaining" class="team-add-remaining"></span></button>
         </section>
         <div class="team-summary-card" aria-live="polite" aria-atomic="true">
-          <div class="team-summary-symbol" aria-hidden="true">✓</div><div><strong id="team-summary-title">Identificação em andamento</strong><p id="team-summary-copy">Seus nomes e as matrículas preenchidas serão incluídos no PDF e no JSON de progresso.</p></div>
+          <div class="team-summary-symbol" aria-hidden="true">✓</div><div><strong id="team-summary-title">Identificação em andamento</strong><p id="team-summary-copy">Os nomes são consultados no cadastro docente. Confira cada nome antes da entrega; PDF e JSON gerados por você podem incluir os dados confirmados.</p></div>
         </div>
-        <p id="team-feedback" class="team-feedback" role="alert" aria-live="assertive">Preencha os dados para concluir a identificação. Você pode salvar o progresso parcial.</p>
+        <p id="team-feedback" class="team-feedback" role="alert" aria-live="assertive">Informe somente a matrícula de cada integrante, consulte o nome cadastrado e confirme se está correto. Você também pode salvar o progresso parcial.</p>
         <p class="team-privacy"><span aria-hidden="true">●</span> Nomes consultados e matrículas não são salvos automaticamente neste navegador. PDF e JSON gerados por você podem conter esses dados: não publique os arquivos. Ao recarregar, preencha as matrículas novamente ou retome seu JSON.</p>
       </div>
       <footer class="team-panel-footer">
@@ -246,7 +246,7 @@ app/lab05.tsx               ← importa o componente
       </fieldset>
       <details><summary>Ver situação de cada exercício</summary><ul id="evidence-list" class="evidence-list"></ul></details>
       <div class="evidence-actions"><button type="button" id="export-json" class="btn secondary">Exportar evidências JSON</button><button type="button" id="export-md" class="btn secondary">Exportar Markdown</button><button type="button" id="print" class="btn secondary">Imprimir / salvar PDF A4</button></div>
-      <p class="privacy">Rascunho salvo somente neste navegador, se o armazenamento estiver disponível. Quando o envio estiver habilitado, clicar em “Gerar PDF e Enviar” transmite os nomes, as matrículas, o código e as evidências ao Apps Script. Os dados serão usados pelo professor para registrar a entrega e as notas. Não informe CPF, senha ou dados sensíveis nas respostas. Para correções, procure o professor. Os dados podem ser gravados mesmo se o recibo não chegar; somente um recibo válido confirma o recebimento nesta tela. XP já conquistados são preservados; a conferência do código atual pode ser repetida quando desejar.</p>
+      <p class="privacy">Rascunho salvo somente neste navegador, se o armazenamento estiver disponível. Quando o envio estiver habilitado, clicar em “Gerar PDF e Enviar” transmite as matrículas confirmadas, o código e as evidências ao Apps Script; o servidor obtém os nomes do cadastro docente. Os dados serão usados pelo professor para registrar a entrega e as notas. Não informe CPF, senha ou dados sensíveis nas respostas. Para correções, procure o professor. Os dados podem ser gravados mesmo se o recibo não chegar; somente um recibo válido confirma o recebimento nesta tela. XP já conquistados são preservados; a conferência do código atual pode ser repetida quando desejar.</p>
       <p id="evidence-status" role="status" aria-live="polite"></p>
     </div>
   </dialog>
