@@ -20,3 +20,9 @@
 .roster-member button{min-height:44px;max-width:100%;white-space:normal;overflow-wrap:anywhere}
 .roster-member .roster-lookup,.roster-member .roster-reset,.roster-member .roster-dispute{display:block;margin-top:8px;width:100%;font-size:14px}
 .roster-member input[readonly]{background:#f1f5f2}
+
+/* Identificação V3.2: destaque do nome obtido do cadastro, nunca um campo editável. */
+.roster-member .roster-identity-card{margin-top:12px;padding:12px 14px;min-width:0;border:1px solid #a8d0b6;border-radius:12px;background:#f1f7f2}
+.roster-member .roster-identity-caption{display:block;font-size:12px;line-height:1.5;font-weight:700;color:#26573c}
+.roster-member .roster-identity-card .roster-name{margin:4px 0 0;font-size:17px;line-height:1.5}
+.roster-member .roster-confirm-hint{display:block;margin:4px 0 0;font-size:12px;line-height:1.5;color:#365843;overflow-wrap:anywhere}
