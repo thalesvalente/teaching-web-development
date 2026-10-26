@@ -36,6 +36,9 @@
 .team-dialog .roster-member .roster-lookup[data-mode="renew"]:hover:not(:disabled){
   background:#d8ecdf;border-color:#278056;
 }
+.team-dialog .roster-member .roster-lookup[data-mode="renew"]:active:not(:disabled){
+  background:#c6e5d0;color:#0a5d38;border-color:#278056;
+}
 .team-dialog .roster-member .roster-lookup:disabled{
   background:#e7f0e9;color:#466554;border-color:#c3d7c9;
   cursor:not-allowed;filter:none;
