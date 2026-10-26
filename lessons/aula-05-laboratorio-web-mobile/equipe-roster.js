@@ -23,6 +23,17 @@
   }
   function snapshot(){return {teamId:group.teamId,team:group.team,members:group.members.map(m=>({enrollment:m.enrollment,name:m.confirmed?m.name:''}))};}
   function restore(obj){const partial=validatePartial(obj);group={...partial,members:partial.members.map(m=>({...blank(),enrollment:m.enrollment}))};render();persist();feedback('Rascunho restaurado. Consulte e confirme novamente cada matrícula.');}
+  function expireConfirmations(){
+    let changed=false;
+    group.members.forEach(m=>{
+      if(m.state==='found'&&m.token&&Number(m.token.split('.')[0])<=Date.now()){
+        m.name='';m.token='';m.confirmed=false;m.state='expired';
+        m.error='A confirmação expirou. Consulte novamente a matrícula.';
+        m.revision++;changed=true;
+      }
+    });
+    return changed;
+  }
   function ready(m){return m.state==='found'&&m.confirmed&&m.name&&m.token&&Number(m.token.split('.')[0])>Date.now();}
   function issues(requireEnrollment){
     const errors=[],seen=new Map();
@@ -43,7 +54,7 @@
     return {team:current.team,teamId:group.teamId,members:group.members.map(m=>({enrollment:m.enrollment,confirmationToken:m.token,confirmed:true}))};
   }
   function open(source){fromEvidence=source==='evidence';returnFocus=document.activeElement;if(fromEvidence&&$('evidence-dialog').open)$('evidence-dialog').close();if(!modal.open)modal.showModal();$('web-team').focus();}
-  function requireIdentity(options={}){try{return getIdentity(options);}catch(error){if(!modal.open)open($('evidence-dialog').open?'evidence':'header');feedback(error.message,'error');for(const issue of error.issues||[])$(issue.field)?.setAttribute('aria-invalid','true');const target=$(error.issues?.[0]?.field);target?.focus();target?.scrollIntoView({block:'nearest'});return null;}}
+  function requireIdentity(options={}){if(expireConfirmations())render();try{return getIdentity(options);}catch(error){if(!modal.open)open($('evidence-dialog').open?'evidence':'header');feedback(error.message,'error');for(const issue of error.issues||[])$(issue.field)?.setAttribute('aria-invalid','true');const target=$(error.issues?.[0]?.field);target?.focus();target?.scrollIntoView({block:'nearest'});return null;}}
   function summary(){
     const count=group.members.filter(ready).length,pct=Math.round((count+(group.team.trim().length>=3?1:0))/(group.members.length+1)*100);
     $('team-progress').setAttribute('aria-valuenow',String(pct));$('team-progress-fill').style.width=pct+'%';
@@ -70,13 +81,21 @@
       const error=text('small',m.error,'member-error');error.id=input.id+'-error';error.hidden=!m.error;error.setAttribute('role','status');
       if(m.error)input.setAttribute('aria-invalid','true');
       input.oninput=()=>{m.enrollment=canonical(input.value);m.name='';m.token='';m.confirmed=false;m.error='';m.state='empty';m.revision++;input.removeAttribute('aria-invalid');error.hidden=true;summary();};
-      const lookup=text('button',m.state==='loading'?'Consultando…':'Consultar matrícula','btn roster-lookup');lookup.type='button';lookup.id='web-member-'+i+'-lookup';
+      const lookup=text('button',m.state==='loading'?'Consultando…':m.state==='expired'?'Consultar novamente':'Consultar matrícula','btn roster-lookup');lookup.type='button';lookup.id='web-member-'+i+'-lookup';
       lookup.disabled=['loading','found','disputed'].includes(m.state);lookup.onclick=()=>lookupMember(m,i);
       const result=text('p',m.name||'Nome não consultado','roster-name');result.id='web-member-'+i+'-name';result.setAttribute('role','status');result.setAttribute('aria-live','polite');
-      fields.append(label,input,hint,error,lookup,result);
+      fields.append(label,input,hint,error,lookup);
+      if(m.name){
+        const card=text('div','','roster-identity-card');
+        card.append(text('strong','Nome cadastrado (somente leitura)','roster-identity-caption'),result);
+        fields.append(card);
+      }else fields.append(result);
       if(m.name){
         const row=text('label','','roster-confirm'),checkbox=document.createElement('input');checkbox.type='checkbox';checkbox.id='web-member-'+i+'-confirm';checkbox.checked=m.confirmed;checkbox.disabled=m.state==='disputed';
-        checkbox.onchange=()=>{m.confirmed=checkbox.checked;summary();};row.append(checkbox,text('span','Confirmo que o nome exibido corresponde à matrícula informada.'));fields.append(row);
+        checkbox.onchange=()=>{m.confirmed=checkbox.checked;summary();};
+        const confirmHint=text('small','Esta confirmação não modifica o cadastro e vale por 15 minutos.','roster-confirm-hint');
+        confirmHint.id='web-member-'+i+'-confirm-hint';checkbox.setAttribute('aria-describedby',confirmHint.id);
+        row.append(checkbox,text('span','Confirmo que o nome exibido corresponde à matrícula informada.'));fields.append(row,confirmHint);
         const wrong=text('button','Nome incorreto — procurar o professor','btn roster-dispute');wrong.type='button';wrong.onclick=()=>{m.confirmed=false;m.token='';m.state='disputed';m.error='Somente o professor pode corrigir o cadastro diretamente na planilha. Esta entrega fica bloqueada.';render();feedback(m.error,'error');};fields.append(wrong);
       }
       if(m.state!=='empty'||m.enrollment){const reset=text('button','Reiniciar identificação local','btn roster-reset');reset.type='button';reset.onclick=()=>{const revision=m.revision+1;Object.assign(m,blank(),{revision});render('web-member-'+i+'-enrollment');feedback('Consulta local descartada. Nenhum cadastro foi alterado.');};fields.append(reset);}
