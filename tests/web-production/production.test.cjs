@@ -108,3 +108,33 @@ test('matrícula numérica não pode ser introduzida em recibo novo 3.2.0',()=>{
   row[9]=f.ctx.notasAuditSign(row);
   assert.throws(()=>f.ctx.notasVerifyAudit(book.sheets.Auditoria,1),/Matrículas da auditoria inválidas/);
 });
+
+test('confirmação v2 assinada continua válida após 24h com cadastro intacto, sem nova consulta',()=>{
+  const f=fixture(),ident=f.confirmed(single(f));
+  const token=ident.members[0].confirmationToken,readsBefore=f.reads(),rosterBefore=roster(f);
+  assert.match(token,/^v2\.[a-f0-9]{64}$/);
+  const e=f.event(['run'],ident);
+  vm.runInContext('Date.now=()=>'+(Date.now()+24*60*60000),f.ctx);
+  const d=readonly(f,()=>f.receive(e));
+  assert.equal(d.ok,true,JSON.stringify(d));
+  assert.equal(d.gradeReceived,.5);
+  assert.equal(roster(f),rosterBefore);
+  assert.ok(f.reads()>=readsBefore);
+  assert.equal(f.value('Resultados',2,3),.5);
+});
+test('confirmação v2 não pode ser forjada, usada em outra equipe ou reaproveitada após mudança docente',()=>{
+  for(const change of ['forged','team','name','state','metadata','newMember']){
+    const f=fixture(),ident=f.confirmed(single(f)),before=roster(f);
+    if(change==='forged')ident.members[0].confirmationToken='v2.'+'0'.repeat(64);
+    if(change==='team')ident.teamId='99991111-bbbb-4444-8888-cccc11112222';
+    if(change==='name'){f.set('Alunos',2,2,'Estudante Teste Modificado');f.set('Alunos',2,3,'estudante teste modificado');}
+    if(change==='state')f.set('Alunos',2,4,'BLOQUEADO');
+    if(change==='metadata')f.set('Alunos',2,8,'revisao do professor');
+    if(change==='newMember')ident.members.push({enrollment:f.roster[1][0],confirmationToken:'v2.'+'0'.repeat(64),confirmed:true});
+    const current=roster(f),batches=f.batches();
+    const d=readonly(f,()=>f.receive(f.event([],ident)));
+    assert.equal(d.ok,false,change);
+    assert.equal(roster(f),current);
+    assert.equal(f.batches(),batches);
+  }
+});
