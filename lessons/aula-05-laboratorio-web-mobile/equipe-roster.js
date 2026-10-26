@@ -26,7 +26,7 @@
   function expireConfirmations(){
     let changed=false;
     group.members.forEach(m=>{
-      if(m.state==='found'&&m.token&&Number(m.token.split('.')[0])<=Date.now()){
+      if(m.state==='found'&&/^\d{13}\.[a-f0-9]{64}$/.test(m.token)&&Number(m.token.split('.')[0])<=Date.now()){
         m.name='';m.token='';m.confirmed=false;m.state='expired';
         m.error='A confirmação expirou. Consulte novamente a matrícula.';
         m.revision++;changed=true;
@@ -34,7 +34,7 @@
     });
     return changed;
   }
-  function ready(m){return m.state==='found'&&m.confirmed&&m.name&&m.token&&Number(m.token.split('.')[0])>Date.now();}
+  function ready(m){return m.state==='found'&&m.confirmed&&m.name&&(/^v2\.[a-f0-9]{64}$/.test(m.token)||(/^\d{13}\.[a-f0-9]{64}$/.test(m.token)&&Number(m.token.split('.')[0])>Date.now()));}
   function issues(requireEnrollment){
     const errors=[],seen=new Map();
     if(group.team.trim().length<3)errors.push({field:'web-team',message:'Informe o nome da equipe com pelo menos 3 caracteres.'});
@@ -93,7 +93,7 @@
       if(m.name){
         const row=text('label','','roster-confirm'),checkbox=document.createElement('input');checkbox.type='checkbox';checkbox.id='web-member-'+i+'-confirm';checkbox.checked=m.confirmed;checkbox.disabled=m.state==='disputed';
         checkbox.onchange=()=>{m.confirmed=checkbox.checked;summary();};
-        const confirmHint=text('small','Esta confirmação não modifica o cadastro e vale por 15 minutos.','roster-confirm-hint');
+        const confirmHint=text('small','Esta confirmação vale nesta sessão enquanto a matrícula e o cadastro docente permanecerem iguais. Uma alteração cadastral será verificada pelo servidor na entrega.','roster-confirm-hint');
         confirmHint.id='web-member-'+i+'-confirm-hint';checkbox.setAttribute('aria-describedby',confirmHint.id);
         row.append(checkbox,text('span','Confirmo que o nome exibido corresponde à matrícula informada.'));fields.append(row,confirmHint);
         const wrong=text('button','Nome incorreto — procurar o professor','btn roster-dispute');wrong.type='button';wrong.onclick=()=>{m.confirmed=false;m.token='';m.state='disputed';m.error='Somente o professor pode corrigir o cadastro diretamente na planilha. Esta entrega fica bloqueada.';render();feedback(m.error,'error');};fields.append(wrong);
