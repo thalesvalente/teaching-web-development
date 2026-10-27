@@ -35,7 +35,7 @@ test('prévia desliga Apps Script inclusive em ?qa=1',()=>{
 });
 
 test('snapshot corresponde à versão mobile candidata, sem dependência de URLs de produção',()=>{
-  assert.match(read('PREVIEW_README.md'),/60256b0d6bbc51ffbb67f43837df9bc704cc41ff/);
+  assert.match(read('PREVIEW_README.md'),/8229a2b198ae9f3059bce7374d42c347402dc66d/);
   assert.match(read('style.css'),/MOBILE-STAGE-2026-10-27/);
   assert.match(read('style.css'),/MOBILE-CODE-FOCUS-02/);
   assert.match(read('index.html'),/id="mobile-editor-focus"/);
