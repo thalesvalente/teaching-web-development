@@ -67,3 +67,32 @@ test('MOBILE-AUDIT: medir MISSÃO, CÓDIGO, RESULTADO e prévias sem dados reais
     await page.screenshot({path:join('test-artifacts','mobile-new-'+name+'-preview-mobile.png')});
   }
 });
+
+
+test('MOBILE-AUDIT-OLD-DRAFT: medir editor normal e ampliado com rascunho antigo',async({page})=>{
+  for(const {width,height,name} of [sizes[0],sizes[2]]){
+    await page.setViewportSize({width,height});
+    await page.addInitScript(()=>{
+      localStorage.setItem('ifma-web-aula05-lab-v2',JSON.stringify({
+        code:'// Exemplo de código antigo.\nexport const MINIMO_CARACTERES = 9;'
+      }));
+    });
+    await page.goto('/index.html');
+    await expect(page.locator('#compiler-status')).toContainText('Executado',{timeout:30000});
+    await page.locator('#mobile-tab-code').click();
+    await expect(page.locator('#migration-note')).toHaveCount(0);
+    await expect(page.locator('#legacy-export')).not.toBeVisible();
+    const normal=await page.locator('#code').evaluate(el=>Math.round(el.getBoundingClientRect().height));
+    const layout=await page.locator('.toolbar-buttons').evaluate(el=>({
+      buttons:[...el.querySelectorAll('button:visible')].length,
+      height:Math.round(el.getBoundingClientRect().height)
+    }));
+    await page.screenshot({path:join('test-artifacts','mobile-ux02-'+name+'-editor.png')});
+    await page.locator('#mobile-editor-focus').click();
+    const expanded=await page.locator('#code').evaluate(el=>Math.round(el.getBoundingClientRect().height));
+    await page.screenshot({path:join('test-artifacts','mobile-ux02-'+name+'-editor-expanded.png')});
+    expect(normal).toBeGreaterThanOrEqual(300);
+    expect(expanded).toBeGreaterThan(normal+30);
+    console.log('MOBILE_EDITOR_V2_METRICS '+JSON.stringify({name,normal,expanded,toolbar:layout}));
+  }
+});
