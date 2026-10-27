@@ -465,7 +465,7 @@ function registrar() {
   }
   // Na tela estreita a mesma área é dedicada à MISSÃO, CÓDIGO ou RESULTADO.
   // Nenhum componente é desmontado: código, XP e estado das duas prévias ficam intactos.
-  const phoneView=window.matchMedia('(max-width:710px)');
+  const phoneView=window.matchMedia('(max-width:710px), (pointer:coarse) and (max-width:1100px)');
   function isPhone(){return phoneView.matches;}
   function setPane(which) {
     const pane = which === 'preview' ? 'preview' : 'code';
