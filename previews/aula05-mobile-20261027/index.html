@@ -6,16 +6,16 @@
   <meta name="description" content="Aula 05: Laboratório Vivo com tutorial guiado, código React Native comentado, regras visíveis e duas prévias interativas Web e Mobile.">
   <meta name="theme-color" content="#10472e">
   <title>[PRÉVIA DE TESTE] Aula 05 · Laboratório Vivo · Tutorial Web ↔ Mobile | IFMA</title>
-  <link rel="stylesheet" href="./style.css?v=web-mobile-ux-01">
-  <link rel="stylesheet" href="./identity-http.css?v=web-mobile-ux-01">
-  <script defer src="./entrega-config.js?v=web-mobile-ux-01"></script>
-  <script defer src="./report-print.js?v=web-mobile-ux-01"></script>
-  <script defer src="./roster-client.js?v=web-mobile-ux-01"></script>
-  <script defer src="./equipe-roster.js?v=web-mobile-ux-01"></script>
-  <script defer src="./equipe.js?v=web-mobile-ux-01"></script>
-  <script defer src="./lab.js?v=web-mobile-ux-01"></script>
-  <script defer src="./production-gate.js?v=web-mobile-ux-01"></script>
-  <script defer src="./entrega-appscript.js?v=web-mobile-ux-01"></script>
+  <link rel="stylesheet" href="./style.css?v=web-mobile-editor-03">
+  <link rel="stylesheet" href="./identity-http.css?v=web-mobile-editor-03">
+  <script defer src="./entrega-config.js?v=web-mobile-editor-03"></script>
+  <script defer src="./report-print.js?v=web-mobile-editor-03"></script>
+  <script defer src="./roster-client.js?v=web-mobile-editor-03"></script>
+  <script defer src="./equipe-roster.js?v=web-mobile-editor-03"></script>
+  <script defer src="./equipe.js?v=web-mobile-editor-03"></script>
+  <script defer src="./lab.js?v=web-mobile-editor-03"></script>
+  <script defer src="./production-gate.js?v=web-mobile-editor-03"></script>
+  <script defer src="./entrega-appscript.js?v=web-mobile-editor-03"></script>
   <meta name="robots" content="noindex,nofollow">
 </head>
 <body>
@@ -102,7 +102,19 @@
             <button type="button" role="tab" data-pane="code" aria-selected="true" aria-controls="code-panel" id="view-code">Código</button>
             <button type="button" role="tab" data-pane="preview" aria-selected="false" aria-controls="result-panel" id="view-preview">Resultado</button>
           </div>
-          <div class="toolbar-buttons"><button type="button" class="mobile-run-code" id="mobile-run-code"><span aria-hidden="true">▶</span> Executar</button><button type="button" class="text-button" id="reset">Restaurar código</button><button type="button" class="text-button" id="download-code">Baixar .tsx</button><button type="button" class="text-button legacy" id="legacy-export" hidden>Baixar meu código anterior</button></div>
+          <div class="toolbar-buttons">
+            <button type="button" class="mobile-run-code" id="mobile-run-code"><span aria-hidden="true">▶</span> Executar</button>
+            <button type="button" class="mobile-editor-focus" id="mobile-editor-focus" aria-controls="editor-source" aria-label="Ampliar área de edição" aria-pressed="false">Ampliar</button>
+            <details class="mobile-editor-actions" id="mobile-editor-actions">
+              <summary aria-label="Opções do editor">Opções</summary>
+              <div class="mobile-editor-action-list">
+                <button type="button" data-editor-action="reset">Restaurar código original</button>
+                <button type="button" data-editor-action="download-code">Baixar código atual (.tsx)</button>
+              </div>
+            </details>
+            <button type="button" class="text-button" id="reset">Restaurar código</button>
+            <button type="button" class="text-button" id="download-code">Baixar .tsx</button>
+          </div>
         </div>
         <div class="workspace-panes">
           <section class="code-panel" id="code-panel" role="tabpanel" aria-labelledby="view-code">
@@ -113,13 +125,12 @@
               <button type="button" role="tab" aria-selected="false" aria-controls="editor-source" id="tab-vue" data-file="vue">Comparar Vue</button>
             </div>
             <p id="editor-context" class="editor-context">Código completo: localize as seções [01] a [07]; a execução atualiza as duas prévias.</p>
-            <p id="migration-note" class="migration-note" role="status" hidden>Seu código anterior foi preservado. Esta versão abre com a orientação visual corrigida; use “Baixar meu código anterior” para recuperar sua versão anterior sem sobrescrevê-la.</p>
             <div class="source-container" id="editor-source" role="tabpanel" aria-labelledby="tab-shared">
               <label for="code" class="sr-only">Edite o código completo do componente React Native</label>
               <textarea id="code" spellcheck="false" autocomplete="off" autocapitalize="off" autocorrect="off" wrap="off" aria-describedby="code-help"></textarea>
               <pre id="readonly-code" hidden class="readonly-source" tabindex="0"></pre>
             </div>
-            <p id="code-help" class="sr-only">Use o botão Localizar linha, edite e clique Executar na missão à esquerda. Este é o arquivo completo. O placeholder é um exemplo; o accessibilityHint é para tecnologia assistiva; a regra visual aparece em um Text.</p>
+            <p id="code-help" class="sr-only">No celular, use a aba Código e o botão Executar logo acima do editor. Você pode ampliar a edição pelo botão Ampliar e salvar a versão atual em Opções. O placeholder é um exemplo; o accessibilityHint é para tecnologia assistiva; a regra visual aparece em um Text.</p>
           </section>
           <section class="result-panel" id="result-panel" role="tabpanel" aria-labelledby="view-preview">
             <div class="panel-caption"><span class="status-dot blue" aria-hidden="true"></span><strong>Resultado vivo · Web e prévia móvel</strong><span class="preview-kind">Web + largura móvel</span><button type="button" id="expand-preview" class="expand-preview" aria-pressed="false">Ampliar prévias</button></div>
@@ -236,6 +247,11 @@ app/lab05.tsx               ← importa o componente
       <p>Pode manter exercícios e reflexões <strong>pendentes</strong>, sem perder XP; o PDF local pode registrar integrantes ainda não conferidos; para envio online, consulte as matrículas e confirme todos os nomes.</p>
       <p id="progress-status" class="progress-status" role="status" aria-live="polite">Rascunho salvo automaticamente neste navegador quando disponível. Salve um JSON para levar a outro dispositivo.</p>
       <div class="evidence-actions priority-actions"><button type="button" id="dialog-save-progress" class="btn run">Salvar progresso (.json)</button><button type="button" id="dialog-load-progress" class="btn secondary">Retomar (.json)</button><button type="button" id="dialog-pdf" class="btn secondary">Gerar PDF parcial (A4)</button><button type="button" id="download-team-json" class="btn secondary">Baixar JSON da equipe (.json)</button></div>
+      <details id="legacy-recovery" class="legacy-recovery" hidden>
+        <summary>Recuperar um rascunho de versão antiga (opcional)</summary>
+        <p>Encontramos um código salvo neste navegador por uma versão anterior do laboratório. Ele não foi inserido nem substituiu seu trabalho atual. Só baixe essa cópia se quiser consultar algo que escreveu naquela versão. Não é uma etapa da atividade e o arquivo .tsx não restaura XP.</p>
+        <button type="button" id="legacy-export" class="btn secondary" hidden>Baixar cópia antiga (.tsx)</button>
+      </details>
       <div class="evidence-score"><strong><span id="xp-evidence">0</span>/100 XP</strong><span id="evidence-count">0 concluídos · 14 pendentes</span></div>
       <p class="xp-explanation">Os XP são <strong>acumulativos</strong>: cada missão aprovada credita pontos uma vez. Alterar o código ou testar outra missão não reduz esses pontos. Conferências novas informam se o código atual atende aos critérios.</p>
       <div class="review-controls">
