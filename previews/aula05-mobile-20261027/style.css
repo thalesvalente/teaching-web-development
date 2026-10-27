@@ -650,3 +650,98 @@
   .lab-grid .mission-panel h1{font-size:19px}
   .lab-grid .mission-actions .btn{font-size:10px}
 }
+
+
+/* MOBILE-CODE-FOCUS-02 — priorizar a edição; opções raras ficam recolhidas. */
+.mobile-editor-focus,.mobile-editor-actions{display:none}
+.legacy-recovery{
+  margin:10px 0 14px;padding:11px 13px;
+  border:1px solid #cbdcce;border-radius:10px;
+  background:#f6faf6;color:#244a33;font-size:12px;line-height:1.5;
+}
+.legacy-recovery[hidden]{display:none!important}
+.legacy-recovery>summary{
+  min-height:44px;display:flex;align-items:center;
+  font-weight:800;color:#164a32;cursor:pointer;
+  padding:9px 5px;
+}
+.legacy-recovery>summary:focus-visible{outline:3px solid #d9a12a;outline-offset:2px}
+.legacy-recovery>p{margin:8px 0 10px}
+.legacy-recovery .btn{min-height:44px;max-width:100%}
+@media screen and (max-width:710px){
+  /* Três ações em uma linha: Executar | Ampliar | Opções. */
+  .lab-grid .workspace-toolbar{
+    position:relative;z-index:10;
+    min-height:52px;flex:0 0 auto;padding:4px 8px;
+  }
+  .lab-grid .workspace-toolbar .toolbar-buttons{
+    display:grid;grid-template-columns:repeat(3,minmax(0,1fr));
+    width:100%;gap:6px;margin:0;align-items:stretch;
+  }
+  .lab-grid .workspace-toolbar #reset,
+  .lab-grid .workspace-toolbar #download-code{display:none!important}
+  .lab-grid .workspace-toolbar #mobile-run-code,
+  .lab-grid .workspace-toolbar #mobile-editor-focus,
+  .lab-grid .workspace-toolbar .mobile-editor-actions>summary{
+    min-height:44px;width:100%;min-width:0;
+    border-radius:9px;padding:7px 4px;font-size:12px;line-height:1.25;
+    display:flex;align-items:center;justify-content:center;
+    text-align:center;font-weight:800;
+  }
+  .lab-grid .workspace-toolbar #mobile-editor-focus{
+    background:#e8f4ec;border:1px solid #84af93;color:#0b5337;
+  }
+  .lab-grid .workspace-toolbar #mobile-editor-focus[aria-pressed="true"]{
+    background:#174e35;border-color:#174e35;color:#fff;
+  }
+  .lab-grid .workspace-toolbar #mobile-editor-focus:focus-visible{
+    outline:3px solid #d9a12a;outline-offset:2px;
+  }
+  .lab-grid .workspace-toolbar .mobile-editor-actions{
+    display:block;position:relative;min-width:0;
+  }
+  .lab-grid .workspace-toolbar .mobile-editor-actions>summary{
+    border:1px solid #b2ceb9;color:#174f35;background:white;
+    cursor:pointer;list-style:none;
+  }
+  .lab-grid .workspace-toolbar .mobile-editor-actions>summary::-webkit-details-marker{display:none}
+  .lab-grid .workspace-toolbar .mobile-editor-actions[open]>summary{background:#e6f3e9}
+  .lab-grid .workspace-toolbar .mobile-editor-actions>summary:focus-visible{
+    outline:3px solid #d9a12a;outline-offset:2px;
+  }
+  .lab-grid .workspace-toolbar .mobile-editor-action-list{
+    position:absolute;right:0;top:calc(100% + 5px);z-index:30;
+    display:grid;gap:6px;padding:8px;width:min(258px,calc(100vw - 20px));
+    background:#fff;border:1px solid #b2ceb9;border-radius:10px;
+    box-shadow:0 10px 28px #071c1440;
+  }
+  .lab-grid .workspace-toolbar .mobile-editor-action-list button{
+    width:100%;min-height:44px;text-align:left;
+    justify-content:flex-start;padding:10px 12px;
+    border:1px solid #d0e3d5;border-radius:7px;
+    color:#194d35;background:#f5faf6;font-size:13px;font-weight:750;
+  }
+  .lab-grid .workspace-toolbar .mobile-editor-action-list button:focus-visible{
+    outline:3px solid #d9a12a;outline-offset:2px;
+  }
+
+  /* O nome do arquivo já aparece na aba: remover faixas textuais redundantes. */
+  .lab-grid .code-panel>.panel-caption,
+  .lab-grid .code-panel>.editor-context{display:none!important}
+  .lab-grid .code-panel>.file-tabs button{
+    min-height:42px;padding:7px 4px;
+  }
+  .lab-grid[data-mobile-stage="code"][data-editor-focus="true"] .code-panel>.file-tabs{
+    display:none!important;
+  }
+  .lab-grid .code-panel .source-container{flex:1 1 auto;min-height:0}
+  .lab-grid .code-panel .source-container textarea,
+  .lab-grid .code-panel .readonly-source{
+    width:100%;height:100%;min-height:0;padding:11px 13px;
+    font-size:16px;line-height:1.5;
+    overflow:auto;overscroll-behavior:contain;
+  }
+}
+@media print{
+  .legacy-recovery,.mobile-editor-actions,.mobile-editor-focus{display:none!important}
+}
