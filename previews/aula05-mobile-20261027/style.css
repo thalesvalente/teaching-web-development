@@ -750,6 +750,29 @@
     padding:9px 10px;
   }
 }
+/* Smartphone em navegador com viewport lógico de computador.
+   Não afeta desktop, tablet ou smartphone com viewport normal. */
+@media screen and (pointer:coarse) and (min-width:711px) and (max-width:1100px){
+  html.a05-touch-desktop-viewport .app-shell{
+    width:var(--a05-touch-width)!important;
+    height:var(--a05-touch-height)!important;
+    max-width:none;
+    transform:scale(var(--a05-touch-scale));
+    transform-origin:top left;
+  }
+  /* Diálogos vivem fora de .app-shell: precisam da mesma escala. */
+  html.a05-touch-desktop-viewport dialog[open]{
+    position:fixed!important;
+    margin:0!important;
+    top:0!important;
+    left:0!important;
+    width:var(--a05-touch-width)!important;
+    max-width:var(--a05-touch-width)!important;
+    max-height:var(--a05-touch-height)!important;
+    transform:scale(var(--a05-touch-scale));
+    transform-origin:top left;
+  }
+}
 @media print{
   .legacy-recovery,.mobile-editor-actions,.mobile-editor-focus{display:none!important}
 }
