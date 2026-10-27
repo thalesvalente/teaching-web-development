@@ -539,6 +539,9 @@ function registrar() {
   editorActions?.querySelectorAll('[data-editor-action]').forEach(button=>{
     button.addEventListener('click',()=>{
       editorActions.open=false;
+      // O item some ao fechar o menu; manter o foco visível antes
+      // de encaminhar o comando ao botão original oculto no celular.
+      editorActions.querySelector('summary')?.focus({preventScroll:true});
       const action=byId(button.dataset.editorAction);
       if(action)action.click();
     });
