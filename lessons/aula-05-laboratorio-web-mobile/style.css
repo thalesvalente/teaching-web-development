@@ -460,3 +460,193 @@
 @media(prefers-reduced-motion:reduce){
   .team-dialog .member-row-fields input{scroll-behavior:auto}
 }
+
+
+/* MOBILE-STAGE-2026-10-27 — Uma tarefa por tela: Missão | Código | Resultado.
+   Desktop (>=711px) preserva a bancada dupla existente. */
+.mobile-stage-nav,.mobile-tools-menu,.mobile-run-code{display:none}
+@media screen and (max-width:710px){
+  /* Header de duas linhas, sem faixa de 8 atalhos em rolagem horizontal. */
+  .app-shell{
+    display:grid;grid-template-rows:auto 50px minmax(0,1fr);
+    width:100%;height:100dvh;min-height:0;overflow:hidden;
+  }
+  .app-header{
+    display:grid;grid-template-columns:minmax(0,1fr) auto;
+    grid-template-areas:"brand menu" "progress progress";
+    gap:5px 10px;align-items:center;min-width:0;
+    min-height:0;padding:6px 10px 7px;position:relative;z-index:30;
+    border-top-width:4px;overflow:visible;
+  }
+  .app-header .brand{grid-area:brand;max-width:100%;min-width:0;gap:7px;font-size:12px}
+  .app-header .brand strong{font-size:11px;flex:none;padding:6px 7px}
+  .app-header .brand span{max-width:none;font-size:12px;line-height:1.2;white-space:normal}
+  .app-header .overall{grid-area:progress;min-width:0;max-width:none;width:100%;flex:none}
+  .app-header .overall-caption{font-size:11px}
+  .app-header .overall-caption span{display:inline}
+  .app-header .overall-caption strong{font-size:12px}
+  .app-header .progress{height:6px;margin-top:2px}
+  .app-header .header-tools{display:none!important}
+  .mobile-tools-menu{display:block;grid-area:menu;position:relative;justify-self:end;min-width:0}
+  .mobile-tools-menu>summary{
+    display:flex;align-items:center;justify-content:center;gap:6px;
+    min-height:44px;min-width:82px;padding:9px 12px;
+    border:1px solid #0b603c;border-radius:10px;
+    background:#eaf4ed;color:#12482e;cursor:pointer;
+    font-size:13px;font-weight:800;list-style:none;
+  }
+  .mobile-tools-menu>summary::-webkit-details-marker{display:none}
+  .mobile-tools-menu>summary:focus-visible{outline:3px solid #d9a12a;outline-offset:2px}
+  .mobile-tools-menu[open]>summary{background:#0b6040;color:#fff}
+  .mobile-tools-panel{
+    position:absolute;right:0;top:calc(100% + 6px);
+    z-index:40;width:min(306px,calc(100vw - 20px));max-height:min(65dvh,500px);
+    overflow-y:auto;overscroll-behavior:contain;
+    display:grid;gap:4px;padding:8px;border-radius:12px;
+    border:1px solid #b5d0be;background:#fff;
+    box-shadow:0 16px 48px #062d1f38;
+  }
+  .mobile-tools-panel button{
+    width:100%;min-height:44px;padding:10px 12px;
+    border:1px solid transparent;border-radius:8px;
+    background:#f2f8f4;color:#145338;text-align:left;
+    font-size:13px;font-weight:750;
+  }
+  .mobile-tools-panel button:hover:not(:disabled),
+  .mobile-tools-panel button:focus-visible{background:#e2f2e8;border-color:#87b698}
+  .mobile-tools-panel button:focus-visible{outline:3px solid #d9a12a;outline-offset:1px}
+
+  /* Navegação persistente com alvos de toque acessíveis. */
+  .mobile-stage-nav{
+    display:grid;grid-template-columns:repeat(3,minmax(0,1fr));
+    gap:6px;align-items:center;min-width:0;padding:3px 10px;
+    background:#f5faf6;border-bottom:1px solid #c8decf;
+    position:relative;z-index:5;
+  }
+  .mobile-stage-nav button{
+    min-width:0;min-height:44px;display:flex;align-items:center;
+    justify-content:center;gap:6px;padding:7px 4px;
+    border:1px solid transparent;border-radius:9px;
+    background:transparent;color:#315741;
+    font-size:12px;font-weight:800;
+  }
+  .mobile-stage-nav button span{font-size:10px;opacity:.8}
+  .mobile-stage-nav button[aria-selected="true"]{
+    color:#fff;border-color:#0c6844;background:#0d6a44;
+  }
+  .mobile-stage-nav button:focus-visible{outline:3px solid #d9a12a;outline-offset:1px}
+  .mobile-stage-nav button:not([aria-selected="true"]):hover{background:#e5f1e8}
+
+  /* Descartar a divisão vertical permanente (antiga: 260-335px + editor minúsculo).
+     Somente o estágio escolhido ocupa a área de trabalho. */
+  .lab-grid{
+    display:flex;flex-direction:column;min-width:0;min-height:0;
+    height:100%;overflow:hidden;
+  }
+  .lab-grid>.mission-panel,.lab-grid>.workspace{
+    flex:1 1 auto;min-height:0;max-height:100%;height:100%;
+  }
+  .lab-grid>.mission-panel{border:0;overflow:hidden}
+  .lab-grid>.workspace{min-width:0;overflow:hidden}
+  .lab-grid[data-mobile-stage="mission"]>.workspace{display:none!important}
+  .lab-grid[data-mobile-stage="code"]>.mission-panel,
+  .lab-grid[data-mobile-stage="preview"]>.mission-panel{display:none!important}
+  .lab-grid[data-mobile-stage="code"] .result-panel{display:none!important}
+  .lab-grid[data-mobile-stage="preview"] .code-panel{display:none!important}
+  .lab-grid[data-mobile-stage="preview"] .workspace-toolbar{display:none}
+  .lab-grid .mission-copy{
+    min-height:0;flex:1 1 auto;overflow-y:auto;overscroll-behavior:contain;
+    padding:16px 16px 22px;-webkit-overflow-scrolling:touch;
+  }
+  .lab-grid .mission-panel h1{font-size:21px;line-height:1.25;margin:10px 0}
+  .lab-grid .mission-intro{display:block;font-size:12px;margin:5px 0 12px}
+  .lab-grid .mission-directions{gap:10px}
+  .lab-grid .direction{padding:11px 12px}
+  .lab-grid .direction h2{font-size:13px}
+  .lab-grid .direction p{font-size:13px;line-height:1.5}
+  .lab-grid .mission-test{font-size:13px;line-height:1.5}
+  .lab-grid .mission-footer{
+    flex:0 0 auto;padding:9px 11px calc(9px + env(safe-area-inset-bottom));
+    background:#f8fbf8;border-top:1px solid #cddfd2;
+    box-shadow:0 -4px 14px #082a1a0a;
+  }
+  .lab-grid .mission-feedback{
+    font-size:12px;line-height:1.4;min-height:28px;padding:6px 8px;margin:0 0 8px;
+  }
+  .lab-grid .mission-actions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+  .lab-grid .mission-actions .btn{
+    min-width:0;min-height:44px;margin:0;padding:8px 5px;
+    font-size:11px;font-weight:800;line-height:1.24;
+    white-space:normal;grid-column:auto;
+  }
+  .lab-grid .mission-nav{
+    display:grid;grid-template-columns:minmax(0,1fr);gap:6px;
+    margin-top:8px;padding-top:8px;
+  }
+  .lab-grid .mission-nav select{
+    width:100%;min-width:0;min-height:44px;font-size:13px;padding:8px 10px;
+  }
+  .lab-grid .mission-next{margin:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+  .lab-grid .mission-next button{min-height:44px;font-size:12px;padding:8px}
+  .lab-grid .mission-next span{display:none}
+
+  /* Editor verdadeiramente utilizável na tela inteira, com execução direta. */
+  .lab-grid .workspace{display:flex;flex-direction:column}
+  .lab-grid .workspace-toolbar{
+    display:flex;flex:0 0 auto;min-height:52px;padding:5px 8px;
+    justify-content:stretch;
+  }
+  .lab-grid .workspace-toolbar .pane-switch{display:none!important}
+  .lab-grid .workspace-toolbar .toolbar-buttons{
+    margin:0;width:100%;display:grid;
+    grid-template-columns:minmax(0,1.1fr) repeat(2,minmax(0,1fr));
+    align-items:center;gap:6px;
+  }
+  .lab-grid .workspace-toolbar .toolbar-buttons button{
+    min-width:0;min-height:44px;margin:0;padding:7px 5px;
+    font-size:12px;border-radius:9px;white-space:normal;
+  }
+  .lab-grid .workspace-toolbar #mobile-run-code{
+    display:flex;justify-content:center;align-items:center;gap:5px;
+    background:#0c6844;border:1px solid #0b603c;
+    color:#fff;font-weight:850;
+  }
+  .lab-grid .workspace-toolbar #mobile-run-code:hover:not(:disabled){background:#084d33}
+  .lab-grid .workspace-toolbar #mobile-run-code:focus-visible{outline:3px solid #d9a12a;outline-offset:2px}
+  .lab-grid .workspace-toolbar #download-code{display:inline-flex!important;justify-content:center}
+  .lab-grid .workspace-toolbar .legacy[hidden]{display:none!important}
+  .lab-grid .workspace-panes{flex:1 1 auto;min-height:0;display:flex;overflow:hidden}
+  .lab-grid .workspace-panes>.code-panel,.lab-grid .workspace-panes>.result-panel{
+    flex:1 1 100%;width:100%;min-height:0;
+  }
+  .lab-grid .panel-caption{
+    min-height:33px;padding:7px 10px;font-size:11px;
+  }
+  .lab-grid .file-tabs{flex:0 0 auto;display:flex}
+  .lab-grid .file-tabs button{
+    flex:1 1 0;min-width:0;min-height:44px;
+    padding:8px 4px;font-size:11px;line-height:1.3;
+    white-space:normal;overflow-wrap:anywhere;
+  }
+  .lab-grid .editor-context{
+    min-height:28px;font-size:11px;line-height:1.35;
+    padding:7px 10px;
+  }
+  .lab-grid .source-container{flex:1 1 auto;min-height:0;overflow:hidden}
+  .lab-grid .source-container textarea,.lab-grid .readonly-source{
+    min-height:100%;font-size:16px;line-height:1.5;
+    padding:12px;white-space:pre-wrap;overflow-wrap:anywhere;
+    overflow:auto;-webkit-overflow-scrolling:touch;
+  }
+  .lab-grid .result-panel iframe{
+    width:100%;height:100%;min-height:0;flex:1 1 auto;
+    border:0;background:#eef4ef;
+  }
+  .lab-grid .preview-caveat{font-size:11px;padding:8px 12px}
+  .lab-grid .compiler-status{min-height:33px;font-size:11px;padding:6px 9px}
+}
+@media screen and (max-width:350px){
+  .app-header .brand span{font-size:11px}
+  .lab-grid .mission-panel h1{font-size:19px}
+  .lab-grid .mission-actions .btn{font-size:10px}
+}
