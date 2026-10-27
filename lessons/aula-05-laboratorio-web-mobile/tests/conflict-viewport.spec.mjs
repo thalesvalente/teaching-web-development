@@ -12,10 +12,18 @@ for(const size of [{width:320,height:650},{width:1440,height:900}]){
   });
   await page.goto('/index.html');await expect(page.locator('#compiler-status')).toContainText('Executado',{timeout:30000});
   await page.evaluate(names=>window.WebTeam.restore({teamId:'aaaa1111-bbbb-4444-8888-cccc11112222',team:'Equipe QA Visibilidade',members:names.map((name,i)=>({name,enrollment:String(1000+i).padStart(8,'0')}))}),names);
-  await page.locator('#team-open').click();await page.locator('.team-panel-body').evaluate(el=>{el.scrollTop=0;});
+  if(size.width<=710){
+    await page.locator('#mobile-tools-menu > summary').click();
+    await page.locator('[data-forward-action="team-open"]').click();
+  }else await page.locator('#team-open').click();
+  await page.locator('.team-panel-body').evaluate(el=>{el.scrollTop=0;});
   await page.locator('[data-close-dialog="team-dialog"]').click();
   await page.evaluate(()=>{window.print=()=>{};});
-  await page.locator('#evidence-open').click();await page.locator('#web-submit').click();
+  if(size.width<=710){
+    await page.locator('#mobile-tools-menu > summary').click();
+    await page.locator('[data-forward-action="evidence-open"]').click();
+  }else await page.locator('#evidence-open').click();
+  await page.locator('#web-submit').click();
   const field=page.locator('#web-member-7-enrollment');
   await expect(field).toBeFocused();await expect(field).toHaveAttribute('aria-invalid','true');
   await expect.poll(()=>field.evaluate(el=>{
