@@ -100,11 +100,15 @@ test('regra visual e accessibilityHint reutilizam literalmente a mesma orientaç
 
 test('Laboratório Vivo contextualiza conceitos, ações e testes sem descartar rascunhos', () => {
   assert.match(html, /Laboratório Vivo/);
-  for (const id of ['guide-concept', 'guide-test', 'migration-note']) assert.ok(html.includes('id="' + id + '"'));
+  for (const id of ['guide-concept','guide-test','legacy-recovery','mobile-editor-focus','mobile-editor-actions']) {
+    assert.ok(html.includes('id="' + id + '"'),id+' ausente');
+  }
+  assert.doesNotMatch(html, /id="migration-note"/);
   assert.match(ui, /const tutorial = \{/);
   assert.match(ui, /ifma-web-aula05-lab-v4/);
   assert.match(ui, /ifma-web-aula05-lab-v2/);
-  assert.match(ui, /Baixar meu código anterior/);
+  assert.match(ui, /byId\('legacy-recovery'\)\.hidden = false/);
+  assert.match(html, /Recuperar um rascunho de versão antiga \(opcional\)/);
   assert.match(html, /accessibilityHint/);
   assert.match(css, /\.key-concept\{/);
   assert.match(css, /\.mission-test\{/);
