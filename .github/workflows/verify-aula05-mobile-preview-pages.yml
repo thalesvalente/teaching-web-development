@@ -1,0 +1,62 @@
+name: Publicação | Prévia mobile Aula 05 (isolada)
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'previews/aula05-mobile-20261027/**'
+      - '.github/workflows/verify-aula05-mobile-preview-pages.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  remote-preview-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+      - name: Conferir publicação separada (HTTP + SHA, sem POST)
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import hashlib, time, urllib.request
+          from pathlib import Path
+
+          rel='previews/aula05-mobile-20261027/'
+          host='https://thalesvalente.github.io/teaching-web-development/'
+          paths=[
+            'index.html','preview.html','style.css','identity-http.css',
+            'lab.js','entrega-config.js','preview.js','shared/ProjetoUniversal.tsx',
+            'docs/GUIA_ALUNO.md'
+          ]
+          local=Path(rel+'entrega-config.js').read_text(encoding='utf-8')
+          assert 'activated:false' in local and "endpoint:''" in local
+          assert 'qaRequested:false' in local
+          assert 'https://script.google.com/macros/' not in local
+
+          def fetch(url):
+            req=urllib.request.Request(url+'?verify='+str(time.time_ns()),
+                   headers={'User-Agent':'IFMA-Aula05-Preview-QA','Cache-Control':'no-cache'})
+            with urllib.request.urlopen(req,timeout=20) as response:
+              assert response.status==200,(url,response.status)
+              return response.read(5000000)
+
+          last=None
+          for attempt in range(1,11):
+            try:
+              for name in paths:
+                expected=hashlib.sha256(Path(rel+name).read_bytes()).hexdigest()
+                actual=hashlib.sha256(fetch(host+rel+name)).hexdigest()
+                assert actual==expected,'SHA-256 diverge: '+name
+              vendor='lessons/aula-05-laboratorio-web-mobile/assets/vendor.js'
+              expected=hashlib.sha256(Path(vendor).read_bytes()).hexdigest()
+              assert hashlib.sha256(fetch(host+vendor)).hexdigest()==expected,'Vendor ausente/divergente'
+              last=None
+              break
+            except Exception as error:
+              last=error
+              print(f'Tentativa {attempt}/10: {error}',flush=True)
+              if attempt<10:time.sleep(12)
+          if last:
+            raise SystemExit('PREVIEW PAGES NOT READY: '+str(last))
+          print('AULA05_MOBILE_PREVIEW_PAGES_PASS',flush=True)
+          PY
