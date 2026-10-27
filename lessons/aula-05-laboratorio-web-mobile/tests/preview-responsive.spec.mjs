@@ -12,7 +12,7 @@ for (const target of [
   { name: '390x844', width: 390, height: 844 },
   { name: '430x932', width: 430, height: 932 },
   // Emula browser touch que solicita layout de desktop, como nas capturas.
-  { name: 'touch-desktop-980', width: 980, height: 740 }
+  { name: 'touch-desktop-980', width: 980, height: 1960 }
 ]) {
   test('mobile focado em ' + target.name, async ({ browser }) => {
     const context = await browser.newContext({
@@ -47,6 +47,17 @@ for (const target of [
         };
       });
       expect(editor.width, JSON.stringify(editor)).toBeGreaterThan(editor.viewportWidth * 0.88);
+      if(target.name==='touch-desktop-980'){
+        const viewportFix=await page.evaluate(()=>({
+          active:document.documentElement.classList.contains('a05-touch-desktop-viewport'),
+          scale:Number(getComputedStyle(document.documentElement).getPropertyValue('--a05-touch-scale')),
+          shellWidth:document.querySelector('.app-shell').getBoundingClientRect().width,
+          screenWidth:screen.width
+        }));
+        expect(viewportFix.active).toBe(true);
+        expect(viewportFix.scale).toBeGreaterThan(2.0);
+        expect(viewportFix.shellWidth).toBeGreaterThan(editor.viewportWidth*0.96);
+      }
       expect(editor.height, JSON.stringify(editor)).toBeGreaterThan(editor.viewportHeight * 0.40);
       expect(editor.horizontalScroll, JSON.stringify(editor)).toBeLessThanOrEqual(2);
       expect(parseFloat(editor.fontSize)).toBeLessThanOrEqual(14);
