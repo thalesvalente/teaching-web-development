@@ -467,6 +467,30 @@ function registrar() {
   // Nenhum componente é desmontado: código, XP e estado das duas prévias ficam intactos.
   const phoneView=window.matchMedia('(max-width:710px), (pointer:coarse) and (max-width:1100px)');
   function isPhone(){return phoneView.matches;}
+  // Android em "Versão para computador" pode usar viewport CSS de ~980px.
+  // Readequar só smartphones touch quando screen.width revela a largura real.
+  // Não modificar meta viewport ou escalonamento do navegador do usuário.
+  function syncTouchDesktopViewport(){
+    const root=document.documentElement;
+    const viewportWidth=root.clientWidth||window.innerWidth;
+    const physicalWidth=Math.min(window.screen.width,window.screen.height);
+    const compact=window.matchMedia('(pointer:coarse)').matches
+      &&viewportWidth>710&&viewportWidth<=1100
+      &&physicalWidth>=280&&physicalWidth<=600
+      &&viewportWidth/physicalWidth>1.35;
+    root.classList.toggle('a05-touch-desktop-viewport',compact);
+    if(compact){
+      const scale=viewportWidth/physicalWidth;
+      root.style.setProperty('--a05-touch-scale',String(scale));
+      root.style.setProperty('--a05-touch-width',physicalWidth+'px');
+      root.style.setProperty('--a05-touch-height',(window.innerHeight/scale)+'px');
+    }else{
+      for(const name of ['--a05-touch-scale','--a05-touch-width','--a05-touch-height'])
+        root.style.removeProperty(name);
+    }
+  }
+  syncTouchDesktopViewport();
+  window.addEventListener('resize',syncTouchDesktopViewport,{passive:true});
   function setPane(which) {
     const pane = which === 'preview' ? 'preview' : 'code';
     byId('conteudo').dataset.pane = pane;
