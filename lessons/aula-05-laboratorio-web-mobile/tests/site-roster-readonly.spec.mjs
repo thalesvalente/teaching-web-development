@@ -36,7 +36,12 @@ async function openWithMockedQa(page,{stable=false}={}){
   });
   await page.goto('/index.html');
   await expect(page.locator('#compiler-status')).toContainText('Executado',{timeout:30000});
-  await page.locator('#team-open').click();
+  if(await page.locator('#team-open').isVisible()){
+    await page.locator('#team-open').click();
+  }else{
+    await page.locator('#mobile-tools-menu > summary').click();
+    await page.locator('[data-forward-action="team-open"]').click();
+  }
   return operations;
 }
 
