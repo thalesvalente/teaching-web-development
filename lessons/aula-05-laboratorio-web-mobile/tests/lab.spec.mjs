@@ -545,3 +545,44 @@ test('salvar e restaurar progresso preserva código e respostas sem obrigar a co
   await expect(page.locator('#mission-select')).toHaveValue('limit');
   await expect(page.locator('#evidence-count')).toContainText('12 pendentes');
 });
+
+
+test('mobile editor: uma ação primária e opções secundárias sem perder editor',async({page})=>{
+  await page.setViewportSize({width:360,height:740});
+  await open(page);
+  await page.locator('#mobile-tab-code').click();
+  await expect(page.locator('#mobile-run-code')).toBeVisible();
+  await expect(page.locator('#reset')).toBeHidden();
+  await expect(page.locator('#download-code')).toBeHidden();
+  await expect(page.locator('.code-panel .panel-caption')).toBeHidden();
+  await expect(page.locator('.code-panel .editor-context')).toBeHidden();
+  const editor=await page.locator('#code').boundingBox();
+  expect(editor.height).toBeGreaterThanOrEqual(280);
+  await page.locator('#mobile-editor-tools > summary').click();
+  const menu=page.locator('#mobile-editor-tools');
+  await expect(menu).toHaveAttribute('open','');
+  await expect(menu.locator('[data-editor-action="download-code"]')).toBeVisible();
+  await expect(menu.locator('[data-editor-action="reset"]')).toBeVisible();
+  await expect(menu.locator('[data-editor-action="legacy-export"]')).toBeHidden();
+  await page.keyboard.press('Escape');
+  await expect(menu).not.toHaveAttribute('open','');
+});
+
+test('mobile editor: backup antigo é opcional e não sobrescreve código atual',async({page})=>{
+  await page.setViewportSize({width:360,height:740});
+  await page.addInitScript(()=>{
+    localStorage.setItem('ifma-web-aula05-lab-v2',JSON.stringify({code:'// BACKUP LEGADO QA'}));
+  });
+  await open(page);
+  await page.locator('#mobile-tab-code').click();
+  const current=await page.locator('#code').inputValue();
+  const note=page.locator('#migration-note');
+  await expect(note).toBeVisible();
+  await expect(note).not.toHaveAttribute('open','');
+  await note.locator('summary').click();
+  await expect(note).toContainText('não precisa baixá-lo para continuar');
+  await page.locator('#mobile-editor-tools > summary').click();
+  await expect(page.locator('#mobile-legacy-export')).toBeVisible();
+  await page.locator('#mobile-legacy-export').click();
+  await expect(page.locator('#code')).toHaveValue(current);
+});
