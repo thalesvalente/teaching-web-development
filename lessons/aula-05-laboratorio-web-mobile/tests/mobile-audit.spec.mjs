@@ -9,13 +9,13 @@ const sizes=[
   {width:390,height:844,name:'390x844'},
   {width:430,height:932,name:'430x932'}
 ];
-const rect=el=>{
-  if(!el)return null;
-  const r=el.getBoundingClientRect(),s=getComputedStyle(el);
-  return {x:Math.round(r.x),y:Math.round(r.y),w:Math.round(r.width),h:Math.round(r.height),
-    scrollH:el.scrollHeight,clientH:el.clientHeight,overflow:s.overflowY,display:s.display};
-};
 const metrics=()=>{
+  const rect=el=>{
+    if(!el)return null;
+    const r=el.getBoundingClientRect(),s=getComputedStyle(el);
+    return {x:Math.round(r.x),y:Math.round(r.y),w:Math.round(r.width),h:Math.round(r.height),
+      scrollH:el.scrollHeight,clientH:el.clientHeight,overflow:s.overflowY,display:s.display};
+  };
   const $=s=>document.querySelector(s);
   return {
     innerHeight,innerWidth,documentHeight:document.documentElement.scrollHeight,
