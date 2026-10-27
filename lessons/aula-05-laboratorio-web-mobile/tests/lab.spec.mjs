@@ -260,7 +260,8 @@ test('smartphone: MISSÃO, CÓDIGO e RESULTADO usam áreas inteiras sem esmagar 
     expect(code.height,'Editor muito baixo em '+size.width+'×'+size.height).toBeGreaterThanOrEqual(210);
     const run=await page.locator('#mobile-run-code').boundingBox();
     expect(run.height).toBeGreaterThanOrEqual(44);
-    await expect(page.locator('#download-code')).toBeVisible();
+    await expect(page.locator('#mobile-editor-actions > summary')).toBeVisible();
+    await expect(page.locator('#download-code')).toBeHidden();
     await page.locator('#mobile-tab-preview').click();
     await expect(page.locator('#result-panel')).toBeVisible();
     await expect(page.locator('#code-panel')).toBeHidden();
@@ -319,6 +320,64 @@ test('smartphone: restaurar JSON enquanto Resultado está aberto exibe Código e
   await expect(page.locator('#result-panel')).toBeHidden();
   await expect(page.locator('#progress-status')).toContainText('Progresso retomado');
   expect(await page.locator('#code').inputValue()).toBe(original);
+});
+
+
+test('smartphone: barra compacta deixa espaço para editar mesmo com rascunho de versão antiga',async({page})=>{
+  await page.setViewportSize({width:320,height:640});
+  await page.addInitScript(()=>{
+    localStorage.setItem('ifma-web-aula05-lab-v2',JSON.stringify({code:'// cópia de versão anterior\nexport const MINIMO_CARACTERES = 9;'}));
+  });
+  await open(page);
+  await page.locator('#mobile-tab-code').click();
+  await expect(page.locator('#migration-note')).toHaveCount(0);
+  const buttons=['#mobile-run-code','#mobile-editor-focus','#mobile-editor-actions > summary'];
+  const positions=[];
+  for(const selector of buttons){
+    const box=await page.locator(selector).boundingBox();
+    expect(box.height,selector).toBeGreaterThanOrEqual(44);
+    positions.push(box.y);
+  }
+  expect(Math.max(...positions)-Math.min(...positions)).toBeLessThanOrEqual(2);
+  await expect(page.locator('#legacy-export')).not.toBeVisible();
+  await expect(page.locator('#code-panel > .panel-caption')).toBeHidden();
+  await expect(page.locator('#editor-context')).toBeHidden();
+  const editor=page.locator('#code');
+  const normal=(await editor.boundingBox()).height;
+  expect(normal).toBeGreaterThanOrEqual(300);
+  await page.locator('#mobile-editor-focus').click();
+  await expect(page.locator('#mobile-editor-focus')).toHaveAttribute('aria-pressed','true');
+  await expect(page.locator('#code-panel .file-tabs')).toBeHidden();
+  const focused=(await editor.boundingBox()).height;
+  expect(focused).toBeGreaterThan(normal+30);
+  await page.locator('#mobile-editor-focus').click();
+  await expect(page.locator('#mobile-editor-focus')).toHaveAttribute('aria-pressed','false');
+  await expect(page.locator('#code-panel .file-tabs')).toBeVisible();
+  expect((await editor.boundingBox()).height).toBeGreaterThanOrEqual(normal-2);
+  await page.locator('#mobile-editor-actions > summary').click();
+  const [download]=await Promise.all([
+    page.waitForEvent('download'),
+    page.locator('[data-editor-action="download-code"]').click()
+  ]);
+  expect(download.suggestedFilename()).toBe('ProjetoUniversal.tsx');
+  const src=await editor.inputValue();
+  expect(await readFile(await download.path(),'utf8')).toBe(src);
+});
+
+test('smartphone: backup de versão antiga não aparece para quem não tem rascunho legado',async({page})=>{
+  await page.setViewportSize({width:390,height:844});
+  await open(page);
+  await page.locator('#mobile-tab-code').click();
+  await expect(page.locator('#legacy-export')).not.toBeVisible();
+  await page.locator('#mobile-editor-actions > summary').click();
+  const reset=page.locator('[data-editor-action="reset"]');
+  await expect(reset).toBeVisible();
+  await page.locator('#mobile-editor-actions > summary').click();
+  await page.locator('#mobile-tab-mission').click();
+  await page.locator('#mobile-tools-menu > summary').click();
+  await page.locator('[data-forward-action="evidence-open"]').click();
+  await expect(page.locator('#evidence-dialog')).toBeVisible();
+  await expect(page.locator('#legacy-recovery')).toBeHidden();
 });
 
 test('smartphone: menu de ferramentas mantém acesso a equipe, evidências e ajuda',async({page})=>{
@@ -429,10 +488,18 @@ test('novo tutorial preserva e permite exportar rascunho v3 sem substituí-lo au
     localStorage.setItem('ifma-web-aula05-lab-v2', JSON.stringify({code:text}));
   },prior);
   await open(page);
-  await expect(page.locator('#migration-note')).toBeVisible();
+  // A área de código fica limpa; a cópia antiga só aparece em Recuperação
+  // opcional dentro de Evidências e nunca substitui o TSX atual.
+  await expect(page.locator('#migration-note')).toHaveCount(0);
   const editor=await page.locator('#code').inputValue();
   expect(editor).toContain('testID="ajuda-titulo"');
   expect(editor).not.toContain('MINIMO_CARACTERES = 9');
+  await page.locator('#evidence-open').click();
+  const recovery=page.locator('#legacy-recovery');
+  await expect(recovery).toBeVisible();
+  await expect(recovery).not.toHaveAttribute('open','');
+  await recovery.locator('summary').click();
+  await expect(recovery).toContainText('Só baixe essa cópia se quiser');
   const [download]=await Promise.all([page.waitForEvent('download'),page.locator('#legacy-export').click()]);
   expect(download.suggestedFilename()).toBe('Aula05_Rascunho_v3_Backup.tsx');
   expect(await readFile(await download.path(),'utf8')).toBe(prior);
