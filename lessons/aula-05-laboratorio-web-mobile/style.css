@@ -650,3 +650,56 @@
   .lab-grid .mission-panel h1{font-size:19px}
   .lab-grid .mission-actions .btn{font-size:10px}
 }
+
+
+/* MOBILE-EDITOR-FOCUS-2026-10-27: minimizar controles, maximizar área editável. */
+.mobile-editor-tools{display:none}
+@media screen and (max-width:710px){
+  .lab-grid[data-mobile-stage="code"] .workspace-toolbar{min-height:48px;padding:2px 8px}
+  .lab-grid .workspace-toolbar .toolbar-buttons{
+    display:grid;grid-template-columns:minmax(0,1fr) 104px;gap:8px;
+  }
+  .lab-grid .workspace-toolbar #mobile-run-code{min-height:44px}
+  .lab-grid .workspace-toolbar #reset,
+  .lab-grid .workspace-toolbar #download-code,
+  .lab-grid .workspace-toolbar #legacy-export{display:none!important}
+  .lab-grid .mobile-editor-tools{display:block;position:relative;min-width:0}
+  .lab-grid .mobile-editor-tools>summary{
+    display:flex;align-items:center;justify-content:center;
+    min-height:44px;padding:8px 9px;list-style:none;cursor:pointer;
+    border:1px solid #9bbba7;border-radius:9px;
+    color:#174e34;background:#f5faf6;font-weight:800;font-size:12px;
+  }
+  .lab-grid .mobile-editor-tools>summary::-webkit-details-marker{display:none}
+  .lab-grid .mobile-editor-tools>summary:focus-visible{
+    outline:3px solid #d9a12a;outline-offset:2px;
+  }
+  .lab-grid .mobile-editor-tools-list{
+    position:absolute;z-index:40;right:0;top:calc(100% + 5px);
+    width:min(290px,calc(100vw - 20px));padding:7px;
+    display:grid;gap:5px;background:#fff;border:1px solid #c2d8c8;
+    border-radius:10px;box-shadow:0 12px 32px #092c1b38;
+  }
+  .lab-grid .mobile-editor-tools-list button{
+    display:block;width:100%;min-height:44px;padding:10px;
+    border:1px solid #d1e1d5;border-radius:7px;
+    background:#f5faf6;color:#184d33;text-align:left;font-size:12px;
+  }
+  .lab-grid .mobile-editor-tools-list button[hidden]{display:none!important}
+  .lab-grid .code-panel>.panel-caption{display:none}
+  .lab-grid .code-panel>.editor-context{display:none}
+  .lab-grid .code-panel>.migration-note{
+    flex:0 0 auto;margin:0;padding:0 9px;
+    font-size:11px;line-height:1.4;background:#fff9e9;color:#684b16;
+  }
+  .lab-grid .code-panel>.migration-note:not([open]){max-height:32px;overflow:hidden}
+  .lab-grid .code-panel>.migration-note>summary{
+    display:block;min-height:32px;padding:7px 4px;
+    cursor:pointer;font-weight:700;
+  }
+  .lab-grid .code-panel>.migration-note>p{padding:6px 4px 12px;margin:0}
+  .lab-grid .file-tabs button{min-height:44px}
+  .lab-grid .source-container textarea,
+  .lab-grid .readonly-source{padding:8px 10px;line-height:1.45}
+  .lab-grid .compiler-status{min-height:27px;padding:4px 8px;line-height:1.35}
+}
