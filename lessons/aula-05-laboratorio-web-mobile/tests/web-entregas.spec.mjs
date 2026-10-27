@@ -225,7 +225,10 @@ test('painel visual: hierarquia, contagem dinâmica, foco e CTA em desktop e mob
     // participantes da resolução testada antes.
     await page.evaluate(()=>localStorage.removeItem('ifma-web-aula05-equipe-v3'));
     await page.reload();
-    await page.locator('#team-open').click();
+    if(size.width<=710){
+      await page.locator('#mobile-tools-menu > summary').click();
+      await page.locator('[data-forward-action="team-open"]').click();
+    }else await page.locator('#team-open').click();
     await expect(page.locator('#team-dialog')).toBeVisible();
     await expect(page.locator('#team-title')).toHaveText('Identificação da equipe');
     await expect(page.locator('#team-members-count')).toHaveText('0/8');
@@ -263,7 +266,8 @@ test('painel visual: hierarquia, contagem dinâmica, foco e CTA em desktop e mob
 test('painel compacto acomoda matrícula e preserva remoção confirmada',async({page})=>{
   await page.setViewportSize({width:375,height:667});
   await page.goto('/index.html');
-  await page.locator('#team-open').click();
+  await page.locator('#mobile-tools-menu > summary').click();
+  await page.locator('[data-forward-action="team-open"]').click();
   await page.locator('#web-team').fill('Equipe Bacuri');
   await page.locator('#web-member-0-name').fill('Ana Exemplo');
   await page.locator('#web-member-0-enrollment').fill('00001000');
