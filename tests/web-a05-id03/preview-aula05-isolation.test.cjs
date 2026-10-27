@@ -65,9 +65,22 @@ test('código da prévia usa fonte compacta sem modificar a tipografia das instr
   ].join(String.fromCharCode(10));
   assert.ok(css.includes(mobile),'regra móvel de 14px não encontrada');
   assert.ok(css.includes(narrow),'regra móvel estreita de 13px não encontrada');
-  assert.ok(html.includes('./style.css?v=web-mobile-editor-04'),'CSS sem atualização de cache');
+  assert.ok(html.includes('./style.css?v=web-mobile-layout-05'),'CSS sem atualização de cache');
   assert.match(html,/id="code"/);
   assert.match(html,/id="readonly-code"/);
   assert.match(html,/id="legacy-recovery"/);
   assert.match(read('lab.js'),/ifma-web-aula05-lab-v4/);
+});
+
+test('bancada e resultado usam mesma media query para toque e viewport amplo',()=>{
+  const css=read('style.css');
+  const preview=read('preview.html');
+  const lab=read('lab.js');
+  const query='screen and (pointer:coarse) and (max-width:1100px)';
+  assert.equal(css.split(query).length-1,2,'ambos os blocos mobile da bancada');
+  assert.match(preview,/pointer:coarse/);
+  assert.ok(lab.includes("(pointer:coarse) and (max-width:1100px)"),'JS deve concordar com CSS');
+  assert.ok(read('index.html').includes('./lab.js?v=web-mobile-layout-05'));
+  assert.ok(read('index.html').includes('./preview.html?v=web-mobile-layout-05'));
+  assert.match(read('entrega-config.js'),/activated:false/);
 });
