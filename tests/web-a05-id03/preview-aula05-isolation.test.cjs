@@ -35,8 +35,15 @@ test('prévia desliga Apps Script inclusive em ?qa=1',()=>{
 });
 
 test('snapshot corresponde à versão mobile candidata, sem dependência de URLs de produção',()=>{
-  assert.match(read('PREVIEW_README.md'),/421c4cd673c6eed79e09d7b7273899450c5e9b69/);
+  assert.match(read('PREVIEW_README.md'),/8229a2b198ae9f3059bce7374d42c347402dc66d/);
   assert.match(read('style.css'),/MOBILE-STAGE-2026-10-27/);
   assert.match(read('preview.html'),/data-active-preview="web"/);
   assert.ok(!read('index.html').includes('https://script.google.com/macros/'));
+  assert.match(read('index.html'),/id="mobile-editor-focus"/);
+  assert.match(read('index.html'),/id="mobile-editor-actions"/);
+  assert.match(read('index.html'),/id="legacy-recovery"/);
+  assert.doesNotMatch(read('index.html'),/id="migration-note"/);
+  assert.match(read('style.css'),/mobile-editor-focus/);
+  assert.match(read('lab.js'),/mobile-editor-focus/);
+  assert.match(read('index.html'),/web-mobile-editor-03/);
 });
