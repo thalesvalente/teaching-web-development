@@ -111,7 +111,10 @@ test('UI-09 mensagem de nonce errado não encerra envio pendente nem duplica POS
 for(const width of [320,360,390,768,1024,1440]){
   test('UI-08 campos e controles sem overflow horizontal em '+width+'px',async({page},testInfo)=>{
     await page.setViewportSize({width,height:800});await open(page);await fill(page);
-    await page.locator('#team-open').click();
+    if(width<=710){
+      await page.locator('#mobile-tools-menu > summary').click();
+      await page.locator('[data-forward-action="team-open"]').click();
+    }else await page.locator('#team-open').click();
     const dimensions=await page.locator('#team-dialog').evaluate(el=>({scroll:el.scrollWidth,client:el.clientWidth}));
     expect(dimensions.scroll).toBeLessThanOrEqual(dimensions.client+1);
     if(width===320)await page.screenshot({path:testInfo.outputPath('matricula-320.png')});
