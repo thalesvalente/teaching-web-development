@@ -753,8 +753,16 @@ function registrar() {
         startReview();
       }
       if (lastCompiled && revealPreviewAfterExplicitRun && window.matchMedia('(max-width: 1040px)').matches) {
+        const active=document.activeElement;
+        const movingFromHiddenContent=Boolean(isPhone()&&active&&(
+          byId('missao-atual').contains(active)||
+          byId('code-panel').contains(active)||
+          byId('laboratorio').querySelector('.workspace-toolbar')?.contains(active)
+        ));
         setPane('preview');
-        if(isPhone())setMobileStage('preview');
+        // Compilar oculta editor, botão Executar ou missão no smartphone.
+        // Focar a aba visível somente se o foco anterior ficaria invisível.
+        if(isPhone())setMobileStage('preview',{focusTab:movingFromHiddenContent});
       }
       revealPreviewAfterExplicitRun = false;
     } else if (data.type === 'CHECKED' && data.stage === pending) {
@@ -981,6 +989,9 @@ function registrar() {
     const selected = isCheckpoint ? data.activeTask : data.progressoTutorial?.activeTask;
     activeIndex = Math.max(0, tasks.findIndex(t=>t.id===selected));
     showFile('shared');
+    // Restauração reabre o Código: sincronizar o estágio e data-pane,
+    // evitando que a prévia e o editor fiquem simultaneamente ocultos.
+    if(isPhone())setMobileStage('code',{focusTab:true});
     render();save();
     run({initial:true});
     progressMessage('Progresso retomado: '+computed+'/100 XP formativos. Código e respostas restaurados; quizzes sem respostas verificáveis ficam pendentes.');
