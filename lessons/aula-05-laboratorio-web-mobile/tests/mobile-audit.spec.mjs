@@ -84,7 +84,7 @@ test('MOBILE-AUDIT-OLD-DRAFT: medir editor normal e ampliado com rascunho antigo
     await expect(page.locator('#legacy-export')).not.toBeVisible();
     const normal=await page.locator('#code').evaluate(el=>Math.round(el.getBoundingClientRect().height));
     const layout=await page.locator('.toolbar-buttons').evaluate(el=>({
-      buttons:[...el.querySelectorAll('button:visible')].length,
+      buttons:[...el.querySelectorAll('button')].filter(button=>getComputedStyle(button).display!=='none').length,
       height:Math.round(el.getBoundingClientRect().height)
     }));
     await page.screenshot({path:join('test-artifacts','mobile-ux02-'+name+'-editor.png')});
