@@ -9,13 +9,13 @@ const sizes=[
   {width:390,height:844,name:'390x844'},
   {width:430,height:932,name:'430x932'}
 ];
-const rect=el=>{
-  if(!el)return null;
-  const r=el.getBoundingClientRect(),s=getComputedStyle(el);
-  return {x:Math.round(r.x),y:Math.round(r.y),w:Math.round(r.width),h:Math.round(r.height),
-    scrollH:el.scrollHeight,clientH:el.clientHeight,overflow:s.overflowY,display:s.display};
-};
 const metrics=()=>{
+  const rect=el=>{
+    if(!el)return null;
+    const r=el.getBoundingClientRect(),s=getComputedStyle(el);
+    return {x:Math.round(r.x),y:Math.round(r.y),w:Math.round(r.width),h:Math.round(r.height),
+      scrollH:el.scrollHeight,clientH:el.clientHeight,overflow:s.overflowY,display:s.display};
+  };
   const $=s=>document.querySelector(s);
   return {
     innerHeight,innerWidth,documentHeight:document.documentElement.scrollHeight,
@@ -36,24 +36,34 @@ const metrics=()=>{
       .map(selector=>({selector,box:rect($(selector))}))
   };
 };
-test('MOBILE-AUDIT: medir a bancada em dimensões reais e guardar capturas',async({page})=>{
+test('MOBILE-AUDIT: medir MISSÃO, CÓDIGO, RESULTADO e prévias sem dados reais',async({page})=>{
+  test.setTimeout(120000);
   mkdirSync('test-artifacts',{recursive:true});
   for(const {width,height,name} of sizes){
     await page.setViewportSize({width,height});
     await page.goto('/index.html');
     await expect(page.locator('#compiler-status')).toContainText('Executado',{timeout:30000});
     const before=await page.evaluate(metrics);
-    console.log('MOBILE_AUDIT_MISSION '+JSON.stringify({name,...before}));
-    await page.screenshot({path:join('test-artifacts','mobile-audit-'+name+'-mission.png')});
-    await page.locator('#view-preview').click();
+    console.log('MOBILE_AUDIT_AFTER_MISSION '+JSON.stringify({name,...before}));
+    await page.screenshot({path:join('test-artifacts','mobile-new-'+name+'-mission.png')});
+    await page.locator('#mobile-tab-code').click();
+    const code=await page.evaluate(metrics);
+    console.log('MOBILE_AUDIT_AFTER_CODE '+JSON.stringify({name,...code}));
+    await page.screenshot({path:join('test-artifacts','mobile-new-'+name+'-code.png')});
+    await page.locator('#mobile-tab-preview').click();
     const after=await page.evaluate(metrics);
     const frame=page.frameLocator('#preview');
     const preview=await frame.locator('body').evaluate(body=>{
-      const boxes=[...body.querySelectorAll('.display')].map(el=>{const r=el.getBoundingClientRect();return {x:r.x,y:r.y,w:r.width,h:r.height}});
+      const panels=[...body.querySelectorAll('.display')].map(el=>{
+        const r=el.getBoundingClientRect();return {x:Math.round(r.x),y:Math.round(r.y),
+          w:Math.round(r.width),h:Math.round(r.height),display:getComputedStyle(el).display};
+      });
       return {viewport:{w:innerWidth,h:innerHeight},scrollH:document.documentElement.scrollHeight,
-        scrollW:document.documentElement.scrollWidth,panels:boxes};
+        scrollW:document.documentElement.scrollWidth,panels};
     });
-    console.log('MOBILE_AUDIT_PREVIEW '+JSON.stringify({name,...after,preview}));
-    await page.screenshot({path:join('test-artifacts','mobile-audit-'+name+'-preview.png')});
+    console.log('MOBILE_AUDIT_AFTER_PREVIEW '+JSON.stringify({name,...after,preview}));
+    await page.screenshot({path:join('test-artifacts','mobile-new-'+name+'-preview-web.png')});
+    await frame.locator('#preview-device-mobile').click();
+    await page.screenshot({path:join('test-artifacts','mobile-new-'+name+'-preview-mobile.png')});
   }
 });
