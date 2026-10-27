@@ -1,6 +1,6 @@
 # Aula 05 — Prévia mobile isolada
 
-- Snapshot da PR #32: `60256b0d6bbc51ffbb67f43837df9bc704cc41ff`.
+- Snapshot da PR #32: `8229a2b198ae9f3059bce7374d42c347402dc66d`.
 - Publicado em caminho separado; laboratório oficial não foi alterado.
 - **Sem endpoint de Apps Script**: consulta de matrícula e entrega de notas ficam desativadas.
 - Assets grandes de React Native Web são carregados do artefato público estático oficial `../../lessons/aula-05-laboratorio-web-mobile/assets/vendor.js`, que é compartilhado somente para exibição.
