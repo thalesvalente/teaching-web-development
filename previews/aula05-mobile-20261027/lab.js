@@ -438,9 +438,10 @@ function registrar() {
     } catch { /* ignorar rascunho inválido */ }
   }
   if (legacy) {
+    // Apenas uma recuperação opcional: nunca exibir banners sobre o editor
+    // nem forçar o estudante a baixar arquivos para continuar a atividade.
+    byId('legacy-recovery').hidden = false;
     byId('legacy-export').hidden = false;
-    byId('legacy-export').textContent = 'Baixar meu código anterior';
-    byId('migration-note').hidden = false;
   }
   render();
 
@@ -524,6 +525,33 @@ function registrar() {
     });
   }
   byId('mobile-run-code')?.addEventListener('click',()=>run());
+  const editorFocusButton=byId('mobile-editor-focus');
+  const editorActions=byId('mobile-editor-actions');
+  editorFocusButton?.addEventListener('click',()=>{
+    const lab=byId('conteudo');
+    const expanded=lab.dataset.editorFocus!=='true';
+    lab.dataset.editorFocus=String(expanded);
+    editorFocusButton.setAttribute('aria-pressed',String(expanded));
+    editorFocusButton.setAttribute('aria-label',expanded?'Voltar à edição normal':'Ampliar área de edição');
+    editorFocusButton.textContent=expanded?'Voltar':'Ampliar';
+    if(editorActions)editorActions.open=false;
+  });
+  editorActions?.querySelectorAll('[data-editor-action]').forEach(button=>{
+    button.addEventListener('click',()=>{
+      editorActions.open=false;
+      const action=byId(button.dataset.editorAction);
+      if(action)action.click();
+    });
+  });
+  editorActions?.addEventListener('keydown',event=>{
+    if(event.key==='Escape'&&editorActions.open){
+      event.preventDefault();editorActions.open=false;
+      editorActions.querySelector('summary')?.focus({preventScroll:true});
+    }
+  });
+  document.addEventListener('pointerdown',event=>{
+    if(editorActions?.open&&!editorActions.contains(event.target))editorActions.open=false;
+  });
   const expandButton = byId('expand-preview');
   expandButton.addEventListener('click', () => {
     const workspace = byId('laboratorio');
