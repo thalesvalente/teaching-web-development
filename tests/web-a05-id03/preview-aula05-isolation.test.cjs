@@ -47,3 +47,17 @@ test('snapshot corresponde à versão mobile candidata, sem dependência de URLs
   assert.match(read('lab.js'),/mobile-editor-focus/);
   assert.match(read('index.html'),/web-mobile-editor-03/);
 });
+
+test('código da prévia usa fonte compacta sem modificar a tipografia das instruções',()=>{
+  const css=read('style.css');
+  const html=read('index.html');
+  // Regra móvel: textarea editável e fontes somente leitura recebem a mesma tipografia.
+  assert.match(css,/\\.lab-grid \\.code-panel \\.source-container textarea,\\s*\\.lab-grid \\.code-panel \\.readonly-source\\{\\s*width:100%;height:100%;min-height:0;padding:11px 13px;\\s*font-size:14px;line-height:1\\.45;/);
+  // Até 365px, a fonte cai para 13px sem afetar os botões e o texto da missão.
+  assert.match(css,/@media screen and \\(max-width:365px\\)\\{\\s*\\.lab-grid \\.code-panel \\.source-container textarea,\\s*\\.lab-grid \\.code-panel \\.readonly-source\\{\\s*font-size:13px;/);
+  assert.match(html,/\\.\\/style\\.css\\?v=web-mobile-editor-04/);
+  assert.match(html,/id="code"/);
+  assert.match(html,/id="readonly-code"/);
+  assert.match(html,/id="legacy-recovery"/);
+  assert.match(read('lab.js'),/const key = 'ifma-web-aula05-lab-v4'/);
+});
