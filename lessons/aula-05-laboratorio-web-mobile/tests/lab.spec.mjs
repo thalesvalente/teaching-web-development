@@ -360,6 +360,11 @@ test('smartphone: barra compacta deixa espaço para editar mesmo com rascunho de
     page.locator('[data-editor-action="download-code"]').click()
   ]);
   expect(download.suggestedFilename()).toBe('ProjetoUniversal.tsx');
+  await expect(page.locator('#mobile-editor-actions > summary')).toBeFocused();
+  for(const tab of ['#tab-shared','#tab-route','#tab-vue']){
+    const box=await page.locator(tab).boundingBox();
+    expect(box.height,tab+' deve ser tocável').toBeGreaterThanOrEqual(44);
+  }
   const src=await editor.inputValue();
   expect(await readFile(await download.path(),'utf8')).toBe(src);
 });
