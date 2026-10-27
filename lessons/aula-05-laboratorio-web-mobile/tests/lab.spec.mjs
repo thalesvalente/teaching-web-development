@@ -229,28 +229,96 @@ test('notebook 1024 permite alternar Código/Resultado sem perder a missão',asy
   expect(await page.evaluate(()=>document.scrollingElement.scrollTop)).toBe(0);
 });
 
-test('smartphone: missão e ações sempre próximas, sem rolagem vertical da página',async({page})=>{
-  for(const width of [360,390,430]){
-    await page.setViewportSize({width,height:844});
-    await open(page);
+test('smartphone: MISSÃO, CÓDIGO e RESULTADO usam áreas inteiras sem esmagar a edição',async({page})=>{
+  test.setTimeout(120000);
+  for(const size of [{width:320,height:640},{width:360,height:740},
+                     {width:390,height:844},{width:430,height:932}]){
+    await page.setViewportSize(size);
+    const frame=await open(page);
     await mission(page,'limit');
-    for(const id of ['#guide-title','#run','#guide-check','#mission-select','#view-code','#view-preview']){
-      const r=await page.locator(id).boundingBox();
-      expect(r,`Sem retângulo: ${id} em ${width}`).not.toBeNull();
-      expect(r.y+r.height,`${id} fora da tela em ${width}`).toBeLessThanOrEqual(845);
+    const nav=page.locator('.mobile-stage-nav');
+    await expect(nav).toBeVisible();
+    for(const button of ['#mobile-tab-mission','#mobile-tab-code','#mobile-tab-preview']){
+      const box=await page.locator(button).boundingBox();
+      expect(box.height,button).toBeGreaterThanOrEqual(44);
     }
-    const dims=await page.evaluate(()=>({scrollY:document.scrollingElement.scrollHeight,clientY:innerHeight,scrollX:document.documentElement.scrollWidth,clientX:innerWidth}));
-    expect(dims.scrollY,`Rolagem vertical da página em ${width}`).toBeLessThanOrEqual(dims.clientY+1);
-    expect(dims.scrollX,`Rolagem horizontal da página em ${width}`).toBeLessThanOrEqual(dims.clientX+1);
-    await page.locator('#view-code').click();
-    await expect(page.locator('#code-panel')).toBeVisible();
-    await page.locator('#guide-locate').click();
-    const selected=await page.locator('#code').evaluate(el=>el.value.slice(el.selectionStart,el.selectionEnd));
-    expect(selected).toBe('export const MINIMO_CARACTERES');
-    await page.locator('#view-preview').click();
+    await expect(page.locator('#missao-atual')).toBeVisible();
+    await expect(page.locator('#laboratorio')).toBeHidden();
+    await expect(page.locator('#mobile-tab-mission')).toHaveAttribute('aria-selected','true');
+    const copy=await page.locator('#mission-copy').boundingBox();
+    expect(copy.height,'Missão comprimida em '+size.width+'×'+size.height).toBeGreaterThanOrEqual(190);
+    const dims=await page.evaluate(()=>({
+      width:document.documentElement.scrollWidth,height:document.documentElement.scrollHeight,
+      viewportW:innerWidth,viewportH:innerHeight
+    }));
+    expect(dims.width).toBeLessThanOrEqual(dims.viewportW+1);
+    expect(dims.height).toBeLessThanOrEqual(dims.viewportH+1);
+    await page.locator('#mobile-tab-code').click();
+    await expect(page.locator('#missao-atual')).toBeHidden();
+    await expect(page.locator('#code')).toBeVisible();
+    const code=await page.locator('#code').boundingBox();
+    expect(code.height,'Editor muito baixo em '+size.width+'×'+size.height).toBeGreaterThanOrEqual(210);
+    const run=await page.locator('#mobile-run-code').boundingBox();
+    expect(run.height).toBeGreaterThanOrEqual(44);
+    await expect(page.locator('#download-code')).toBeVisible();
+    await page.locator('#mobile-tab-preview').click();
     await expect(page.locator('#result-panel')).toBeVisible();
-    await expect(page.locator('#guide-title')).toContainText('limite mínimo');
+    await expect(page.locator('#code-panel')).toBeHidden();
+    const preview=await page.locator('#preview').boundingBox();
+    expect(preview.height,'Prévia muito baixa em '+size.width+'×'+size.height).toBeGreaterThanOrEqual(260);
+    await expect(frame.locator('#preview-device-web')).toBeVisible();
+    await expect(frame.locator('#web-display')).toBeVisible();
+    await expect(frame.locator('#mobile-display')).toBeHidden();
+    await frame.locator('#preview-device-mobile').click();
+    await expect(frame.locator('#mobile-display')).toBeVisible();
+    await expect(frame.locator('#web-display')).toBeHidden();
+    await expect(frame.locator('#web-root [data-testid="app-universal"]')).toHaveCount(1);
+    await expect(frame.locator('#mobile-root [data-testid="app-universal"]')).toHaveCount(1);
   }
+});
+
+test('smartphone: localizar linha abre CÓDIGO, executar abre RESULTADO sem apagar fonte e XP',async({page})=>{
+  await page.setViewportSize({width:390,height:844});
+  await open(page);
+  await mission(page,'limit');
+  await page.locator('#guide-locate').click();
+  await expect(page.locator('#mobile-tab-code')).toHaveAttribute('aria-selected','true');
+  await expect(page.locator('#code')).toBeVisible();
+  const before=await page.locator('#code').inputValue();
+  expect(before).toContain('export const MINIMO_CARACTERES');
+  await page.locator('#mobile-run-code').click();
+  await expect(page.locator('#compiler-status')).toContainText('Executado',{timeout:30000});
+  await expect(page.locator('#mobile-tab-preview')).toHaveAttribute('aria-selected','true');
+  await expect(page.locator('#preview')).toBeVisible();
+  await page.locator('#mobile-tab-code').click();
+  expect(await page.locator('#code').inputValue()).toBe(before);
+  await expect(page.locator('#xp-top')).toHaveText('0');
+});
+
+test('smartphone: menu de ferramentas mantém acesso a equipe, evidências e ajuda',async({page})=>{
+  await page.setViewportSize({width:320,height:640});
+  await open(page);
+  await expect(page.locator('#team-open')).toBeHidden();
+  const menu=page.locator('#mobile-tools-menu');
+  const trigger=menu.locator('summary');
+  await trigger.click();
+  await expect(menu).toHaveAttribute('open','');
+  for(const item of ['team-open','save-progress','load-progress','evidence-open',
+                     'review-xp','quick-pdf','component-open','help-open']){
+    const btn=menu.locator('[data-forward-action="'+item+'"]');
+    const rect=await btn.boundingBox();
+    expect(rect.height,item).toBeGreaterThanOrEqual(44);
+  }
+  await menu.locator('[data-forward-action="team-open"]').click();
+  await expect(page.locator('#team-dialog')).toBeVisible();
+  await page.keyboard.press('Escape');
+  await trigger.click();
+  await menu.locator('[data-forward-action="evidence-open"]').click();
+  await expect(page.locator('#evidence-dialog')).toBeVisible();
+  await page.keyboard.press('Escape');
+  await trigger.click();
+  await menu.locator('[data-forward-action="help-open"]').click();
+  await expect(page.locator('#help-dialog')).toBeVisible();
 });
 
 test('acessibilidade estrutural: foco, nome de campo, diálogo, contraste de avisos e redução de movimento',async({page})=>{
