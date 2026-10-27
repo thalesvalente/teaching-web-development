@@ -729,7 +729,7 @@
   .lab-grid .code-panel>.panel-caption,
   .lab-grid .code-panel>.editor-context{display:none!important}
   .lab-grid .code-panel>.file-tabs button{
-    min-height:42px;padding:7px 4px;
+    min-height:44px;padding:7px 4px;
   }
   .lab-grid[data-mobile-stage="code"][data-editor-focus="true"] .code-panel>.file-tabs{
     display:none!important;
