@@ -16,6 +16,7 @@ for (const target of [
 ]) {
   test('mobile focado em ' + target.name, async ({ browser }) => {
     const context = await browser.newContext({
+      baseURL: 'http://127.0.0.1:8766',
       viewport: { width: target.width, height: target.height },
       screen: { width: target.name === 'touch-desktop-980' ? 360 : target.width, height: target.height },
       hasTouch: true,
@@ -74,7 +75,7 @@ for (const target of [
 }
 
 test('desktop com mouse mantém a bancada sem abas móveis', async ({ browser }) => {
-  const context = await browser.newContext({ viewport: { width: 1440, height: 800 }, hasTouch: false });
+  const context = await browser.newContext({ baseURL: 'http://127.0.0.1:8766', viewport: { width: 1440, height: 800 }, hasTouch: false });
   const page = await context.newPage();
   try {
     await page.goto(preview, { waitUntil: 'domcontentloaded' });
