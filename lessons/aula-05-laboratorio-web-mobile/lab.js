@@ -439,7 +439,8 @@ function registrar() {
   }
   if (legacy) {
     byId('legacy-export').hidden = false;
-    byId('legacy-export').textContent = 'Baixar meu código anterior';
+    byId('mobile-legacy-export').hidden = false;
+    byId('legacy-export').textContent = 'Recuperar rascunho antigo (.tsx)';
     byId('migration-note').hidden = false;
   }
   render();
@@ -524,6 +525,22 @@ function registrar() {
     });
   }
   byId('mobile-run-code')?.addEventListener('click',()=>run());
+  const editorTools=byId('mobile-editor-tools');
+  editorTools?.querySelectorAll('[data-editor-action]').forEach(button=>{
+    button.addEventListener('click',()=>{
+      editorTools.open=false;
+      byId(button.dataset.editorAction)?.click();
+    });
+  });
+  document.addEventListener('pointerdown',event=>{
+    if(editorTools?.open&&!editorTools.contains(event.target))editorTools.open=false;
+  });
+  editorTools?.addEventListener('keydown',event=>{
+    if(event.key==='Escape'&&editorTools.open){
+      editorTools.open=false;
+      editorTools.querySelector('summary')?.focus({preventScroll:true});
+    }
+  });
   const expandButton = byId('expand-preview');
   expandButton.addEventListener('click', () => {
     const workspace = byId('laboratorio');
