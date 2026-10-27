@@ -462,16 +462,68 @@ function registrar() {
     frame.contentWindow.postMessage({ from: 'ifma-aula05-host', type, token: nonce, ...fields }, '*');
     return true;
   }
+  // Na tela estreita a mesma área é dedicada à MISSÃO, CÓDIGO ou RESULTADO.
+  // Nenhum componente é desmontado: código, XP e estado das duas prévias ficam intactos.
+  const phoneView=window.matchMedia('(max-width:710px)');
+  function isPhone(){return phoneView.matches;}
   function setPane(which) {
     const pane = which === 'preview' ? 'preview' : 'code';
     byId('conteudo').dataset.pane = pane;
-    document.querySelectorAll('[data-pane]').forEach(button => {
+    document.querySelectorAll('.pane-switch [data-pane]').forEach(button => {
       const chosen = button.dataset.pane === pane;
       button.setAttribute('aria-selected', String(chosen));
       button.tabIndex = chosen ? 0 : -1;
     });
   }
+  function setMobileStage(which,{focusTab=false}={}){
+    const stage=['mission','code','preview'].includes(which)?which:'mission';
+    byId('conteudo').dataset.mobileStage=stage;
+    if(stage==='code')setPane('code');
+    if(stage==='preview')setPane('preview');
+    document.querySelectorAll('.mobile-stage-nav [data-mobile-stage]').forEach(button=>{
+      const chosen=button.dataset.mobileStage===stage;
+      button.setAttribute('aria-selected',String(chosen));
+      button.tabIndex=chosen?0:-1;
+      if(chosen&&focusTab)button.focus({preventScroll:true});
+    });
+  }
+  function syncEditorWrap(){codeEditor.wrap=isPhone()?'soft':'off';}
+  phoneView.addEventListener?.('change',syncEditorWrap);
+  syncEditorWrap();
   setPane('code');
+  setMobileStage('mission');
+  document.querySelectorAll('.mobile-stage-nav [data-mobile-stage]').forEach(button=>{
+    button.addEventListener('click',()=>setMobileStage(button.dataset.mobileStage));
+    button.addEventListener('keydown',event=>{
+      if(!['ArrowLeft','ArrowRight','Home','End'].includes(event.key))return;
+      event.preventDefault();
+      const names=['mission','code','preview'],current=names.indexOf(button.dataset.mobileStage);
+      const target=event.key==='Home'?'mission':event.key==='End'?'preview':
+        names[(current+(event.key==='ArrowRight'?1:2))%names.length];
+      setMobileStage(target,{focusTab:true});
+    });
+  });
+  const toolsMenu=byId('mobile-tools-menu');
+  if(toolsMenu){
+    toolsMenu.querySelectorAll('[data-forward-action]').forEach(item=>{
+      item.addEventListener('click',()=>{
+        const target=byId(item.dataset.forwardAction);
+        toolsMenu.open=false;
+        toolsMenu.querySelector('summary')?.focus({preventScroll:true});
+        target?.click();
+      });
+    });
+    document.addEventListener('pointerdown',event=>{
+      if(toolsMenu.open&&!toolsMenu.contains(event.target))toolsMenu.open=false;
+    });
+    toolsMenu.addEventListener('keydown',event=>{
+      if(event.key==='Escape'&&toolsMenu.open){
+        event.preventDefault();toolsMenu.open=false;
+        toolsMenu.querySelector('summary')?.focus({preventScroll:true});
+      }
+    });
+  }
+  byId('mobile-run-code')?.addEventListener('click',()=>run());
   const expandButton = byId('expand-preview');
   expandButton.addEventListener('click', () => {
     const workspace = byId('laboratorio');
@@ -480,7 +532,10 @@ function registrar() {
     expandButton.setAttribute('aria-pressed', String(expanded));
     expandButton.textContent = expanded ? 'Voltar à divisão' : 'Ampliar prévias';
   });
-  document.querySelectorAll('[data-pane]').forEach(button => button.addEventListener('click', () => setPane(button.dataset.pane)));
+  document.querySelectorAll('.pane-switch [data-pane]').forEach(button => button.addEventListener('click', () => {
+    setPane(button.dataset.pane);
+    if(isPhone())setMobileStage(button.dataset.pane==='preview'?'preview':'code');
+  }));
   function locate() {
     const task = activeTask();
     showFile('shared');
@@ -493,6 +548,7 @@ function registrar() {
     const linesBefore = panels.shared.slice(0, pos).split('\n').length;
     const lineHeight = Number.parseFloat(getComputedStyle(codeEditor).lineHeight) || 21;
     setPane('code');
+    if(isPhone())setMobileStage('code');
     byId('laboratorio').dataset.expandedPreview = 'false';
     expandButton.setAttribute('aria-pressed', 'false');
     expandButton.textContent = 'Ampliar prévias';
@@ -696,7 +752,10 @@ function registrar() {
         reviewAfterCompile = false;
         startReview();
       }
-      if (lastCompiled && revealPreviewAfterExplicitRun && window.matchMedia('(max-width: 1040px)').matches) setPane('preview');
+      if (lastCompiled && revealPreviewAfterExplicitRun && window.matchMedia('(max-width: 1040px)').matches) {
+        setPane('preview');
+        if(isPhone())setMobileStage('preview');
+      }
       revealPreviewAfterExplicitRun = false;
     } else if (data.type === 'CHECKED' && data.stage === pending) {
       const id = pending;
@@ -803,6 +862,7 @@ function registrar() {
     }
     byId('component-dialog').close();
     setPane('code');
+    if(isPhone())setMobileStage('code');
     codeEditor.focus({ preventScroll: true });
     codeEditor.setSelectionRange(pos, pos + marker.length);
     const line = panels.shared.slice(0, pos).split('\n').length;
