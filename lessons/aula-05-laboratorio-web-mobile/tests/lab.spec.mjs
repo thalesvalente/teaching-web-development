@@ -289,10 +289,36 @@ test('smartphone: localizar linha abre CÓDIGO, executar abre RESULTADO sem apag
   await page.locator('#mobile-run-code').click();
   await expect(page.locator('#compiler-status')).toContainText('Executado',{timeout:30000});
   await expect(page.locator('#mobile-tab-preview')).toHaveAttribute('aria-selected','true');
+  await expect(page.locator('#mobile-tab-preview')).toBeFocused();
   await expect(page.locator('#preview')).toBeVisible();
   await page.locator('#mobile-tab-code').click();
   expect(await page.locator('#code').inputValue()).toBe(before);
+  await page.locator('#code').focus();
+  await page.keyboard.press('Control+Enter');
+  await expect(page.locator('#mobile-tab-preview')).toHaveAttribute('aria-selected','true');
+  await expect(page.locator('#mobile-tab-preview')).toBeFocused();
   await expect(page.locator('#xp-top')).toHaveText('0');
+});
+
+test('smartphone: restaurar JSON enquanto Resultado está aberto exibe Código e mantém fonte',async({page})=>{
+  await page.setViewportSize({width:360,height:740});
+  await open(page);
+  const original=await page.locator('#code').inputValue();
+  const evidence=await page.evaluate(()=>window.WebLabEvidence.snapshot());
+  await page.locator('#mobile-tab-preview').click();
+  await expect(page.locator('#code')).toBeHidden();
+  await page.evaluate(()=>{window.confirm=()=>true;});
+  await page.locator('#progress-file').setInputFiles({
+    name:'aula05-checkpoint-local.json',
+    mimeType:'application/json',
+    buffer:Buffer.from(JSON.stringify(evidence))
+  });
+  await expect(page.locator('#mobile-tab-code')).toHaveAttribute('aria-selected','true');
+  await expect(page.locator('#mobile-tab-code')).toBeFocused();
+  await expect(page.locator('#code')).toBeVisible();
+  await expect(page.locator('#result-panel')).toBeHidden();
+  await expect(page.locator('#progress-status')).toContainText('Progresso retomado');
+  expect(await page.locator('#code').inputValue()).toBe(original);
 });
 
 test('smartphone: menu de ferramentas mantém acesso a equipe, evidências e ajuda',async({page})=>{
