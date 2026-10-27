@@ -465,7 +465,7 @@
 /* MOBILE-STAGE-2026-10-27 — Uma tarefa por tela: Missão | Código | Resultado.
    Desktop (>=711px) preserva a bancada dupla existente. */
 .mobile-stage-nav,.mobile-tools-menu,.mobile-run-code{display:none}
-@media screen and (max-width:710px){
+@media screen and (max-width:710px), screen and (pointer:coarse) and (max-width:1100px){
   /* Header de duas linhas, sem faixa de 8 atalhos em rolagem horizontal. */
   .app-shell{
     display:grid;grid-template-rows:auto 50px minmax(0,1fr);
@@ -668,7 +668,7 @@
 .legacy-recovery>summary:focus-visible{outline:3px solid #d9a12a;outline-offset:2px}
 .legacy-recovery>p{margin:8px 0 10px}
 .legacy-recovery .btn{min-height:44px;max-width:100%}
-@media screen and (max-width:710px){
+@media screen and (max-width:710px), screen and (pointer:coarse) and (max-width:1100px){
   /* Três ações em uma linha: Executar | Ampliar | Opções. */
   .lab-grid .workspace-toolbar{
     position:relative;z-index:10;
