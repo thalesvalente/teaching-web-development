@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Resultado do mesmo componente em duas larguras</title>
+<style>
+*{box-sizing:border-box}html{height:100%}body{margin:0;color:#244234;background:#edf4ee;font:13px/1.4 system-ui,Arial,sans-serif}
+/* A versão anterior empilhava as prévias quando o iframe tinha menos de 650px,
+   escondendo o resultado móvel. Agora as duas ficam VISÍVEIS simultaneamente
+   sempre que couberem com pelo menos 210px cada. */
+.dual{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px;padding:8px;align-items:start;min-width:0}
+.display{min-width:0;border:1px solid #bdd2c3;border-radius:10px;background:white;overflow:hidden;box-shadow:0 6px 18px #1c503510}
+.top{display:flex;gap:5px;align-items:center;padding:8px 7px;background:#dcece2;border-bottom:1px solid #cbdbcd;font-size:10px;line-height:1.2;font-weight:850;min-height:31px}
+.dot{width:7px;height:7px;border-radius:50%;background:#8dbda2;flex:0 0 7px}
+.viewport{background:#f1f7f2;padding:6px;min-height:390px}
+#web-root,#mobile-root{width:100%;min-width:0}
+.phone{margin:0 auto;border:4px solid #293932;max-width:330px;border-radius:17px;padding:6px 4px 5px;background:#fff;min-height:470px;min-width:0}
+.notch{height:5px;width:55px;background:#364a3f;border-radius:20px;margin:0 auto 8px}
+.mobile-wrapper{background:#f1f7f2;min-height:390px;padding:5px 3px 10px}
+small{display:block;padding:7px 8px;color:#53675b;background:white;font-size:10px;line-height:1.4}
+/* Desktop: as duas prévias seguem lado a lado. Mobile: um dispositivo por vez. */
+.preview-device-tabs{display:none}
+@media screen and (max-width:445px){
+  .preview-device-tabs{
+    position:sticky;top:0;z-index:5;display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;
+    padding:8px;background:#ecf5ee;border-bottom:1px solid #bbd2c2;
+  }
+  .preview-device-tabs button{
+    min-height:44px;display:flex;align-items:center;justify-content:center;
+    gap:6px;border:1px solid #8bb6a0;border-radius:9px;
+    background:#fff;color:#0d4e32;font-size:13px;font-weight:800;
+  }
+  .preview-device-tabs button[aria-selected="true"]{
+    background:#0d6843;color:#fff;border-color:#0b5e3c;
+  }
+  .preview-device-tabs button:focus-visible{outline:3px solid #d9a12a;outline-offset:1px}
+  .dual{display:block;grid-template-columns:1fr;gap:0;padding:8px}
+  .dual[data-active-preview="web"] #mobile-display,
+  .dual[data-active-preview="mobile"] #web-display{display:none}
+  .viewport,.mobile-wrapper{min-height:0;padding:7px}
+  .phone{width:100%;max-width:375px;min-height:0;padding:8px 5px;border-width:3px}
+  .top{min-height:34px;padding:9px 10px;font-size:12px}
+  small{font-size:11px;line-height:1.45}
+}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important}}
+</style>
+</head>
+<body>
+<nav class="preview-device-tabs" role="tablist" aria-label="Selecionar prévia do laboratório">
+  <button type="button" id="preview-device-web" role="tab" aria-controls="web-display" aria-selected="true">Web</button>
+  <button type="button" id="preview-device-mobile" role="tab" aria-controls="mobile-display" aria-selected="false" tabindex="-1">Mobile</button>
+</nav>
+<div class="dual" id="preview-devices" data-active-preview="web">
+  <section class="display" id="web-display" aria-label="Interface Web executada no navegador">
+    <div class="top"><span class="dot"></span><strong>WEB</strong> · navegador</div>
+    <div class="viewport"><div id="web-root"></div></div>
+    <small>React Native Web: execução da mesma fonte.</small>
+  </section>
+  <section class="display" id="mobile-display" aria-label="Prévia de largura móvel executada no navegador">
+    <div class="top"><span class="dot"></span><strong>MOBILE</strong> · largura estreita</div>
+    <div class="mobile-wrapper"><div class="phone"><div class="notch" aria-hidden="true"></div><div id="mobile-root"></div></div></div>
+    <small>Prévia no navegador. Não é Android/iOS nativo.</small>
+  </section>
+</div>
+<script src="../../lessons/aula-05-laboratorio-web-mobile/assets/vendor.js"></script>
+<script src="./preview.js"></script>
+<script>
+(() => {
+  'use strict';
+  const stages=['web','mobile'],bar=document.querySelector('.preview-device-tabs');
+  const holder=document.getElementById('preview-devices');
+  if(!bar||!holder)return;
+  function select(stage,focus=false){
+    const next=stages.includes(stage)?stage:'web';
+    holder.dataset.activePreview=next;
+    for(const name of stages){
+      const button=document.getElementById('preview-device-'+name);
+      button.setAttribute('aria-selected',String(name===next));
+      button.tabIndex=name===next?0:-1;
+      if(focus&&name===next)button.focus({preventScroll:true});
+    }
+    window.scrollTo(0,0);
+  }
+  for(const name of stages){
+    const tab=document.getElementById('preview-device-'+name);
+    tab.addEventListener('click',()=>select(name));
+    tab.addEventListener('keydown',event=>{
+      if(!['ArrowLeft','ArrowRight','Home','End'].includes(event.key))return;
+      event.preventDefault();
+      const next=event.key==='Home'?'web':event.key==='End'?'mobile':
+        stages[(stages.indexOf(name)+(event.key==='ArrowRight'?1:stages.length-1))%stages.length];
+      select(next,true);
+    });
+  }
+})();
+</script>
+</body>
+</html>

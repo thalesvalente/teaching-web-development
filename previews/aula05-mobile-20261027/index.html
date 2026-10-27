@@ -1,0 +1,276 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="Aula 05: Laboratório Vivo com tutorial guiado, código React Native comentado, regras visíveis e duas prévias interativas Web e Mobile.">
+  <meta name="theme-color" content="#10472e">
+  <title>[PRÉVIA DE TESTE] Aula 05 · Laboratório Vivo · Tutorial Web ↔ Mobile | IFMA</title>
+  <link rel="stylesheet" href="./style.css?v=web-mobile-ux-01">
+  <link rel="stylesheet" href="./identity-http.css?v=web-mobile-ux-01">
+  <script defer src="./entrega-config.js?v=web-mobile-ux-01"></script>
+  <script defer src="./report-print.js?v=web-mobile-ux-01"></script>
+  <script defer src="./roster-client.js?v=web-mobile-ux-01"></script>
+  <script defer src="./equipe-roster.js?v=web-mobile-ux-01"></script>
+  <script defer src="./equipe.js?v=web-mobile-ux-01"></script>
+  <script defer src="./lab.js?v=web-mobile-ux-01"></script>
+  <script defer src="./production-gate.js?v=web-mobile-ux-01"></script>
+  <script defer src="./entrega-appscript.js?v=web-mobile-ux-01"></script>
+  <meta name="robots" content="noindex,nofollow">
+</head>
+<body>
+  <a class="skip" href="#missao-atual">Pular para a missão atual</a>
+  <div class="app-shell">
+    <header class="app-header">
+      <a href="../../index.html" class="brand" aria-label="Voltar ao portal Web do IFMA"><strong>IFMA</strong><span>Aula 05 <span class="brand-separator">/</span> PRÉVIA MOBILE</span></a>
+      <div class="overall" aria-label="Progresso formativo">
+        <div class="overall-caption"><span id="score-summary">0 de 14 exercícios concluídos</span><strong><span id="xp-top">0</span> / 100 XP</strong></div>
+        <div class="progress" id="progress" role="progressbar" aria-label="XP formativos" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div id="progress-fill"></div></div>
+      </div>
+      <nav class="header-tools" aria-label="Recursos do laboratório">
+        <button type="button" id="team-open" class="header-action emphasis">Equipe e integrantes <span id="team-count">(preencher)</span></button>
+        <button type="button" id="component-open" class="header-action">Componentes básicos</button>
+        <button type="button" id="help-open" class="header-action"><span aria-hidden="true">?</span> Como funciona</button>
+        <button type="button" id="save-progress" class="header-action emphasis">Salvar progresso</button>
+        <button type="button" id="review-xp" class="header-action" title="Rever as missões técnicas no código atual sem apagar XP conquistados">Conferir progresso</button>
+        <button type="button" id="load-progress" class="header-action">Retomar arquivo</button>
+        <button type="button" id="quick-pdf" class="header-action" title="Consulte as matrículas e confirme os nomes antes de enviar online. O recebimento depende da liberação pelo professor.">Gerar PDF e Enviar</button>
+        <button type="button" id="evidence-open" class="header-action">Evidências <span aria-hidden="true">↗</span></button>
+        <input type="file" id="progress-file" accept=".json,application/json" hidden aria-label="Selecionar arquivo JSON de progresso">
+      </nav>
+      <details class="mobile-tools-menu" id="mobile-tools-menu">
+        <summary aria-label="Abrir ferramentas e entregas da Aula 05"><span aria-hidden="true">☰</span> Menu</summary>
+        <div class="mobile-tools-panel" aria-label="Ferramentas do laboratório">
+          <button type="button" data-forward-action="team-open">Equipe e integrantes</button>
+          <button type="button" data-forward-action="save-progress">Salvar progresso</button>
+          <button type="button" data-forward-action="load-progress">Retomar arquivo</button>
+          <button type="button" data-forward-action="evidence-open">Evidências e pontuação</button>
+          <button type="button" data-forward-action="review-xp">Conferir progresso</button>
+          <button type="button" data-forward-action="quick-pdf">Gerar PDF e Enviar</button>
+          <button type="button" data-forward-action="component-open">Componentes básicos</button>
+          <button type="button" data-forward-action="help-open">Como funciona</button>
+        </div>
+      </details>
+    </header>
+
+    <nav class="mobile-stage-nav" role="tablist" aria-label="Etapas do laboratório no celular">
+      <button type="button" role="tab" data-mobile-stage="mission" id="mobile-tab-mission" aria-controls="missao-atual" aria-selected="true"><span aria-hidden="true">01</span> Missão</button>
+      <button type="button" role="tab" data-mobile-stage="code" id="mobile-tab-code" aria-controls="code-panel" aria-selected="false" tabindex="-1"><span aria-hidden="true">02</span> Código</button>
+      <button type="button" role="tab" data-mobile-stage="preview" id="mobile-tab-preview" aria-controls="result-panel" aria-selected="false" tabindex="-1"><span aria-hidden="true">03</span> Resultado</button>
+    </nav>
+
+    <main class="lab-grid" id="conteudo" data-mobile-stage="mission">
+      <aside class="mission-panel" id="missao-atual" aria-labelledby="guide-title" tabindex="-1">
+        <div class="mission-copy" id="mission-copy">
+          <div class="mission-overline"><span id="guide-number">MISSÃO 01 / 14 · CICLO 1</span><span class="xp-pill" id="guide-time">4 min · 5 XP</span></div>
+          <h1 id="guide-title">Primeiro contato: execute o projeto</h1>
+          <p class="mission-intro">Tutorial vivo: compreenda uma ideia, encontre o código, experimente nas duas telas e confira o resultado sem sair desta bancada.</p>
+          <div class="key-concept" aria-labelledby="concept-title">
+            <strong id="concept-title">Conceito-chave de agora</strong>
+            <p id="guide-concept">Um componente é uma função que descreve uma parte da interface.</p>
+          </div>
+          <div class="mission-directions">
+            <section class="direction do" aria-labelledby="label-do"><h2 id="label-do"><span>1</span> Faça</h2><p id="guide-do">Execute nas duas telas.</p></section>
+            <section class="direction see" aria-labelledby="label-observe"><h2 id="label-observe"><span>2</span> Observe</h2><p id="guide-observe">As duas renderizações usam um arquivo.</p></section>
+            <section class="direction why" aria-labelledby="label-why"><h2 id="label-why"><span>3</span> Entenda</h2><p id="guide-why">Relacione mudança e resultado.</p></section>
+          </div>
+          <p class="mission-test" id="guide-test"><strong>Teste concreto:</strong> Digite uma entrada curta e compare o resultado nas duas telas.</p>
+          <p class="code-location" id="guide-line">shared/ProjetoUniversal.tsx · seção [06]</p>
+          <div id="quiz-bank" class="inline-quiz" aria-label="Perguntas desta missão" hidden></div>
+          <details id="guide-hint-box" class="hint"><summary>Preciso de uma pista</summary><p id="guide-hint">Encontre o comentário [06] no código.</p></details>
+        </div>
+
+        <div class="mission-footer">
+          <p class="mission-feedback" id="guide-feedback" role="status" aria-live="polite">Pendente · execute e confira nesta bancada</p>
+          <div class="mission-actions">
+            <button type="button" id="guide-locate" class="btn secondary"><span aria-hidden="true">⌕</span> Localizar linha</button>
+            <button type="button" id="run" class="btn run"><span aria-hidden="true">▶</span> Executar</button>
+            <button type="button" id="guide-check" class="btn check">Conferir missão</button>
+          </div>
+          <div class="mission-nav">
+            <label for="mission-select">Escolha um exercício</label>
+            <select id="mission-select" aria-label="Escolha um dos 14 exercícios"></select>
+            <div class="mission-next"><button type="button" id="guide-prev">← Anterior</button><span id="mission-counter">01 / 14</span><button type="button" id="guide-next">Próxima →</button></div>
+          </div>
+        </div>
+      </aside>
+
+      <section class="workspace" id="laboratorio" aria-label="Código editável e resultados lado a lado">
+        <div class="workspace-toolbar">
+          <div class="workspace-identity"><strong>ProjetoUniversal.tsx</strong><span>Um arquivo TSX · duas instâncias</span></div>
+          <div class="pane-switch" role="tablist" aria-label="Alternar entre edição e resultado em telas estreitas">
+            <button type="button" role="tab" data-pane="code" aria-selected="true" aria-controls="code-panel" id="view-code">Código</button>
+            <button type="button" role="tab" data-pane="preview" aria-selected="false" aria-controls="result-panel" id="view-preview">Resultado</button>
+          </div>
+          <div class="toolbar-buttons"><button type="button" class="mobile-run-code" id="mobile-run-code"><span aria-hidden="true">▶</span> Executar</button><button type="button" class="text-button" id="reset">Restaurar código</button><button type="button" class="text-button" id="download-code">Baixar .tsx</button><button type="button" class="text-button legacy" id="legacy-export" hidden>Baixar meu código anterior</button></div>
+        </div>
+        <div class="workspace-panes">
+          <section class="code-panel" id="code-panel" role="tabpanel" aria-labelledby="view-code">
+            <div class="panel-caption"><span class="status-dot green" aria-hidden="true"></span><strong>Código completo e comentado · siga [01]–[07]</strong><span class="editable-chip">EDITÁVEL</span></div>
+            <div class="file-tabs" role="tablist" aria-label="Arquivos completos do projeto">
+              <button type="button" role="tab" aria-selected="true" aria-controls="editor-source" id="tab-shared" data-file="shared">ProjetoUniversal.tsx</button>
+              <button type="button" role="tab" aria-selected="false" aria-controls="editor-source" id="tab-route" data-file="route">Rota Expo</button>
+              <button type="button" role="tab" aria-selected="false" aria-controls="editor-source" id="tab-vue" data-file="vue">Comparar Vue</button>
+            </div>
+            <p id="editor-context" class="editor-context">Código completo: localize as seções [01] a [07]; a execução atualiza as duas prévias.</p>
+            <p id="migration-note" class="migration-note" role="status" hidden>Seu código anterior foi preservado. Esta versão abre com a orientação visual corrigida; use “Baixar meu código anterior” para recuperar sua versão anterior sem sobrescrevê-la.</p>
+            <div class="source-container" id="editor-source" role="tabpanel" aria-labelledby="tab-shared">
+              <label for="code" class="sr-only">Edite o código completo do componente React Native</label>
+              <textarea id="code" spellcheck="false" autocomplete="off" autocapitalize="off" autocorrect="off" wrap="off" aria-describedby="code-help"></textarea>
+              <pre id="readonly-code" hidden class="readonly-source" tabindex="0"></pre>
+            </div>
+            <p id="code-help" class="sr-only">Use o botão Localizar linha, edite e clique Executar na missão à esquerda. Este é o arquivo completo. O placeholder é um exemplo; o accessibilityHint é para tecnologia assistiva; a regra visual aparece em um Text.</p>
+          </section>
+          <section class="result-panel" id="result-panel" role="tabpanel" aria-labelledby="view-preview">
+            <div class="panel-caption"><span class="status-dot blue" aria-hidden="true"></span><strong>Resultado vivo · Web e prévia móvel</strong><span class="preview-kind">Web + largura móvel</span><button type="button" id="expand-preview" class="expand-preview" aria-pressed="false">Ampliar prévias</button></div>
+            <iframe id="preview" title="Duas prévias reais do mesmo componente usando React Native Web" src="./preview.html" referrerpolicy="no-referrer" sandbox="allow-scripts"></iframe>
+            <p class="preview-caveat">As duas telas executam <strong>React Native Web</strong>. A tela estreita <strong>não</strong> é Android/iOS nativo.</p>
+          </section>
+        </div>
+        <p id="compiler-status" class="compiler-status" role="status" aria-live="polite">Preparando código e duas prévias…</p>
+      </section>
+    </main>
+  </div>
+
+  <dialog class="resource-dialog team-dialog" id="team-dialog" aria-labelledby="team-title" aria-describedby="team-intro">
+    <div class="team-panel">
+      <header class="team-panel-head">
+        <div class="team-head-brand"><span class="team-logo" aria-hidden="true">IF</span><span class="team-head-eyebrow">IFMA · LABORATÓRIO VIVO · AULA 05</span></div>
+        <button type="button" class="close-dialog team-close" data-close-dialog="team-dialog" aria-label="Fechar identificação da equipe">×</button>
+        <div class="team-head-content">
+          <div class="team-head-icon" aria-hidden="true"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+          <div><p class="team-kicker">Seu grupo, sua entrega</p><h2 id="team-title">Identificação da equipe</h2><p id="team-intro">Sem login ou conta institucional: informe o nome da equipe e somente a matrícula de cada integrante. O nome completo será mostrado para conferência, sem campo para digitar ou editar. Somente o professor altera o cadastro.</p></div>
+        </div>
+        <div class="team-head-progress" aria-label="Progresso de identificação da equipe">
+          <span id="team-progress-caption">Informe a equipe e consulte as matrículas dos integrantes</span>
+          <strong id="team-progress-label">Em preparação</strong>
+        </div>
+        <div class="team-progress-track" role="progressbar" id="team-progress" aria-label="Identificação preenchida" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span id="team-progress-fill"></span></div>
+      </header>
+      <div class="team-panel-body">
+        <section class="team-section team-identity" aria-labelledby="team-identity-label">
+          <div class="team-section-heading"><span class="team-step" aria-hidden="true">01</span><div><h3 id="team-identity-label">Nome da equipe</h3><p>Como sua equipe será identificada na atividade e no relatório.</p></div></div>
+          <div class="team-core">
+            <label for="web-team" class="sr-only">Nome da equipe</label>
+            <input id="web-team" type="text" maxlength="80" autocomplete="off" placeholder="Ex.: Equipe Horizonte" aria-describedby="team-name-hint" aria-required="true">
+            <p id="team-name-hint" class="team-field-hint"><span aria-hidden="true">✦</span> Obrigatório: pelo menos 3 caracteres.</p>
+          </div>
+        </section>
+        <section class="team-section team-members-section" aria-labelledby="team-members-heading">
+          <div class="team-section-heading team-section-heading-members"><span class="team-step" aria-hidden="true">02</span><div><h3 id="team-members-heading">Integrantes <span id="team-members-count" class="team-members-pill">0/8</span></h3><p>Informe somente a matrícula completa, com ponto e letras ITA. O nome será consultado no cadastro do professor, sem opção de edição.</p></div></div>
+          <div id="web-members" class="team-roster" aria-labelledby="team-members-heading"></div>
+          <button type="button" id="web-add-member" class="team-add-member"><span class="team-add-icon" aria-hidden="true">+</span><span>Adicionar integrante</span><span id="team-remaining" class="team-add-remaining"></span></button>
+        </section>
+        <div class="team-summary-card" aria-live="polite" aria-atomic="true">
+          <div class="team-summary-symbol" aria-hidden="true">✓</div><div><strong id="team-summary-title">Identificação em andamento</strong><p id="team-summary-copy">Os nomes são consultados no cadastro docente. Confira cada nome antes da entrega; PDF e JSON gerados por você podem incluir os dados confirmados.</p></div>
+        </div>
+        <p id="team-feedback" class="team-feedback" role="alert" aria-live="assertive">Informe somente a matrícula de cada integrante, consulte o nome cadastrado e confirme se está correto. Você também pode salvar o progresso parcial.</p>
+        <p class="team-privacy"><span aria-hidden="true">●</span> Nomes consultados e matrículas não são salvos automaticamente neste navegador. PDF e JSON gerados por você podem conter esses dados: não publique os arquivos. Ao recarregar, preencha as matrículas novamente ou retome seu JSON.</p>
+      </div>
+      <footer class="team-panel-footer">
+        <span class="team-footer-label">Matrícula + confirmação do nome · 1 a 8 integrantes</span>
+        <button type="button" id="team-done" class="btn run team-submit">Concluir identificação <span aria-hidden="true">→</span></button>
+      </footer>
+    </div>
+  </dialog>
+
+  <dialog class="resource-dialog component-dialog" id="component-dialog" aria-labelledby="component-title">
+    <div class="dialog-header"><h2 id="component-title">Componentes básicos — veja no código e nas duas telas</h2><button type="button" class="close-dialog" data-close-dialog="component-dialog" aria-label="Fechar componentes">×</button></div>
+    <div class="dialog-body">
+      <p>Um <strong>componente</strong> é um bloco de interface. Nesta aula, <code>ProjetoUniversal()</code> reúne os elementos sem exigir criar arquivos novos. Os componentes de <code>react-native</code> abaixo aparecem no <strong>mesmo TSX</strong> que roda nas duas prévias.</p>
+      <div class="component-choices" role="group" aria-label="Escolher um componente para localizar">
+        <button type="button" data-component="View">View · grupo</button>
+        <button type="button" data-component="Text">Text · texto</button>
+        <button type="button" data-component="TextInput">TextInput · entrada</button>
+        <button type="button" data-component="Pressable">Pressable · botão</button>
+      </div>
+      <section class="component-description" aria-live="polite" aria-atomic="true">
+        <h3 id="component-name">View · agrupa elementos</h3>
+        <p id="component-explanation">Organiza conteúdo como uma seção. Em Web, pense em uma região como div; em React Native usamos View.</p>
+        <p><strong>No código completo:</strong> <code id="component-fragment">&lt;View style={styles.pagina}&gt;</code></p>
+        <p id="component-observe">Observe o grupo que contém título, formulário e resumo nas duas telas.</p>
+      </section>
+      <button type="button" id="component-locate" class="btn run">Localizar este componente no código completo</button>
+      <p class="privacy">Use o botão para destacar onde o componente é usado; depois clique Executar e observe o resultado. São os mesmos exercícios existentes: nenhum exercício ou XP foi acrescentado.</p>
+    </div>
+  </dialog>
+
+  <dialog class="resource-dialog" id="help-dialog" aria-labelledby="help-title">
+    <div class="dialog-header"><h2 id="help-title">Como funciona a bancada</h2><button type="button" class="close-dialog" data-close-dialog="help-dialog" aria-label="Fechar ajuda">×</button></div>
+    <div class="dialog-body">
+      <p><strong>Aprendizagem sem caça ao editor:</strong> no computador, leia a missão, edite e confira o resultado na mesma bancada. No celular, use as três abas <strong>Missão → Código → Resultado</strong>; cada área ocupa praticamente a tela toda. Em Resultado, escolha <strong>Web</strong> ou <strong>Mobile</strong> para observar a mesma fonte sem comprimir duas prévias lado a lado. O feedback e os XP continuam na missão.</p>
+      <h3>Como experimentar em 4 passos</h3>
+      <p><strong>1 — Observe:</strong> leia o exemplo, a regra visível e o contador abaixo do campo.
+      <strong>2 — Digite:</strong> teste um texto de quatro caracteres e outro válido.
+      <strong>3 — Execute:</strong> edite a constante de mínimo no TSX e clique em Executar.
+      <strong>4 — Comprove:</strong> veja a orientação mudar nas duas prévias e use Conferir missão.</p>
+      <h3>O caminho da informação</h3>
+      <div class="concept-flow"><span>TextInput</span><b>→</b><span>onChangeText</span><b>→</b><span>useState</span><b>→</b><span>validarTitulo</span><b>→</b><span>Mensagem</span></div>
+      <h3>Uma entrada, cinco conceitos diferentes</h3>
+      <dl class="glossary">
+        <div><dt>Rótulo</dt><dd>“Título da memória” identifica o campo na tela. <code>accessibilityLabel</code> fornece um nome equivalente ao leitor de tela.</dd></div>
+        <div><dt>Placeholder</dt><dd>“Ex.: Feira de ciências” é só um exemplo que desaparece quando você digita. Ele não informa os limites.</dd></div>
+        <div><dt>Regra visível</dt><dd>O texto abaixo do campo diz o mínimo e o máximo. Ele permanece visível ao digitar e muda quando você altera as constantes.</dd></div>
+        <div><dt>accessibilityHint</dt><dd>É orientação complementar para tecnologias assistivas. Não é desenhada automaticamente na interface e não substitui a regra visível.</dd></div>
+        <div><dt>Mensagem de erro</dt><dd>Surge depois de tentar registrar uma entrada inválida. Quando você edita novamente, o erro anterior é limpo.</dd></div>
+      </dl>
+      <h3>Ponte com a Aula 4</h3>
+      <div class="compare-table"><p><strong>Vue</strong><br><code>ref()</code> guarda o valor; <code>v-model</code> acompanha a digitação.</p><p><strong>React Native</strong><br><code>useState()</code> guarda o valor; <code>onChangeText</code> chama o atualizador.</p></div>
+      <p>Para ver os <strong>arquivos inteiros</strong>, use as abas <em>Comparar Vue</em>, <em>Rota Expo</em> e <em>ProjetoUniversal.tsx</em> dentro da bancada.</p>
+      <h3>Mesmo código, plataformas diferentes</h3>
+      <pre class="tree"><code>shared/ProjetoUniversal.tsx  ← fonte única
+app/lab05.tsx               ← importa o componente
+       ↙ Web (React Native Web)
+       ↘ Mobile (Expo em dispositivo real)</code></pre>
+      <p>A prévia móvel da bancada é uma renderização estreita no navegador, não um teste nativo. Também não há sincronização entre os contadores: as duas instâncias têm estado próprio.</p>
+      <p><strong>XP acumulativos:</strong> ao modificar o código ou executar uma nova missão, os XP já conquistados permanecem. Uma conferência reprovada explica o problema atual, mas não apaga uma conquista anterior. Se seu progresso antigo foi afetado, clique <em>Conferir progresso</em>: o laboratório testa novamente as missões técnicas em conjunto e credita as que forem aprovadas, sem exigir navegação missão por missão. O resultado é formativo, não certificação do código atual.</p>
+      <p><strong>Ritmo sugerido:</strong> exercícios 01–08 durante os 100 minutos; 09–14 como aprofundamento, sem obrigação de 100 XP na mesma aula.</p>
+      <p><a href="./docs/GUIA_ALUNO.md" target="_blank" rel="noopener">Guia de consulta</a> · <a href="https://thalesvalente.github.io/teaching-mobile/" target="_blank" rel="noopener">Portal Mobile</a></p>
+    </div>
+  </dialog>
+
+  <dialog class="resource-dialog evidence-dialog" id="evidence-dialog" aria-labelledby="evidence-title">
+    <div class="dialog-header"><h2 id="evidence-title">Evidências do laboratório</h2><button type="button" class="close-dialog" data-close-dialog="evidence-dialog" aria-label="Fechar evidências">×</button></div>
+    <div class="dialog-body">
+      <p><strong>Continue de onde parou:</strong> use <strong>Salvar progresso</strong> para baixar um JSON que guarda código, respostas, missão atual e XP formativos. Em outro momento ou dispositivo, clique em <strong>Retomar arquivo</strong>. O PDF segue o modelo institucional A4 do IFMA e pode conter missões pendentes. O botão <strong>Gerar PDF e Enviar</strong> abre a impressão (escolha Salvar como PDF) e tenta enviar <strong>as evidências JSON</strong> se o recebimento estiver habilitado. O PDF não é anexado. Somente o recibo confirma entrega. Para continuar editando, use o JSON.</p>
+      <p>Pode manter exercícios e reflexões <strong>pendentes</strong>, sem perder XP; o PDF local pode registrar integrantes ainda não conferidos; para envio online, consulte as matrículas e confirme todos os nomes.</p>
+      <p id="progress-status" class="progress-status" role="status" aria-live="polite">Rascunho salvo automaticamente neste navegador quando disponível. Salve um JSON para levar a outro dispositivo.</p>
+      <div class="evidence-actions priority-actions"><button type="button" id="dialog-save-progress" class="btn run">Salvar progresso (.json)</button><button type="button" id="dialog-load-progress" class="btn secondary">Retomar (.json)</button><button type="button" id="dialog-pdf" class="btn secondary">Gerar PDF parcial (A4)</button><button type="button" id="download-team-json" class="btn secondary">Baixar JSON da equipe (.json)</button></div>
+      <div class="evidence-score"><strong><span id="xp-evidence">0</span>/100 XP</strong><span id="evidence-count">0 concluídos · 14 pendentes</span></div>
+      <p class="xp-explanation">Os XP são <strong>acumulativos</strong>: cada missão aprovada credita pontos uma vez. Alterar o código ou testar outra missão não reduz esses pontos. Conferências novas informam se o código atual atende aos critérios.</p>
+      <div class="review-controls">
+        <button type="button" id="review-xp-dialog" class="btn secondary">Conferir todas as missões técnicas</button>
+        <p id="review-status" role="status" aria-live="polite">Você pode verificar as missões técnicas de uma vez para recuperar aprovações demonstráveis pelo código atual. Os XP anteriores não serão apagados.</p>
+      </div>
+      <label for="observacao">O que mudou no código e o que aconteceu nas duas prévias?</label>
+      <textarea id="observacao" rows="4" placeholder="Descreva a linha alterada e o comportamento que você observou."></textarea>
+      <label for="limite-real">O que ainda deve ser testado em um celular real?</label>
+      <textarea id="limite-real" rows="3" placeholder="Ex.: teclado e acessibilidade no Expo Go."></textarea>
+      <fieldset class="web-submission-fields" id="web-submission-fields" aria-describedby="web-delivery-explanation">
+        <legend>Entrega da equipe (Google Sheets)</legend>
+        <p><strong>Identificação simples:</strong> preencha nome da equipe e matrícula de cada integrante e confirme o nome consultado. Não é necessário entrar no SUAP ou usar conta institucional.</p>
+        <p id="web-team-summary" class="team-summary" role="status">Nenhuma equipe identificada. Use “Equipe e integrantes” no cabeçalho.</p>
+        <button type="button" id="team-open-evidence" class="btn secondary">Preencher ou revisar integrantes</button>
+        <p id="web-delivery-explanation" class="web-submission-explanation">
+          A equipe envia uma única atividade com as matrículas confirmadas; os nomes são obtidos do cadastro docente. O servidor converte a pontuação em <strong>nota de 0 a 10</strong>,
+          preserva a maior nota por estudante e atividade e atualiza a média. O cadastro é informado pelo professor; a equipe confirma os nomes sem autenticação institucional. A matrícula não comprova autoria; o professor pode conferir inconsistências e validar as notas.
+          Não inclua senhas, documentos pessoais ou informações sigilosas no código.
+        </p>
+        <button type="button" class="btn run" id="web-submit">
+          Gerar PDF e Enviar
+        </button>
+        <p id="web-delivery-status" role="status" aria-live="polite" tabindex="-1">
+          O recebimento será verificado antes do envio. O PDF pode ser salvo localmente após identificar a equipe.
+          Exportação local continua disponível.
+        </p>
+      </fieldset>
+      <details><summary>Ver situação de cada exercício</summary><ul id="evidence-list" class="evidence-list"></ul></details>
+      <div class="evidence-actions"><button type="button" id="export-json" class="btn secondary">Exportar evidências JSON</button><button type="button" id="export-md" class="btn secondary">Exportar Markdown</button><button type="button" id="print" class="btn secondary">Imprimir / salvar PDF A4</button></div>
+      <p class="privacy">Rascunho salvo somente neste navegador, se o armazenamento estiver disponível. Quando o envio estiver habilitado, clicar em “Gerar PDF e Enviar” transmite as matrículas confirmadas, o código e as evidências ao Apps Script; o servidor obtém os nomes do cadastro docente. Os dados serão usados pelo professor para registrar a entrega e as notas. Não informe CPF, senha ou dados sensíveis nas respostas. Para correções, procure o professor. Os dados podem ser gravados mesmo se o recibo não chegar; somente um recibo válido confirma o recebimento nesta tela. XP já conquistados são preservados; a conferência do código atual pode ser repetida quando desejar.</p>
+      <p id="evidence-status" role="status" aria-live="polite"></p>
+    </div>
+  </dialog>
+  <div class="print-only" id="print-report" aria-hidden="true" role="document"></div>
+  <noscript>Este laboratório exige JavaScript para editar, executar código e verificar exercícios.</noscript>
+</body>
+</html>
