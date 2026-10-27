@@ -47,3 +47,27 @@ test('snapshot corresponde à versão mobile candidata, sem dependência de URLs
   assert.match(read('lab.js'),/mobile-editor-focus/);
   assert.match(read('index.html'),/web-mobile-editor-03/);
 });
+
+test('código da prévia usa fonte compacta sem modificar a tipografia das instruções',()=>{
+  const css=read('style.css');
+  const html=read('index.html');
+  const mobile=[
+    '  .lab-grid .code-panel .source-container textarea,',
+    '  .lab-grid .code-panel .readonly-source{',
+    '    width:100%;height:100%;min-height:0;padding:11px 13px;',
+    '    font-size:14px;line-height:1.45;'
+  ].join(String.fromCharCode(10));
+  const narrow=[
+    '@media screen and (max-width:365px){',
+    '  .lab-grid .code-panel .source-container textarea,',
+    '  .lab-grid .code-panel .readonly-source{',
+    '    font-size:13px;'
+  ].join(String.fromCharCode(10));
+  assert.ok(css.includes(mobile),'regra móvel de 14px não encontrada');
+  assert.ok(css.includes(narrow),'regra móvel estreita de 13px não encontrada');
+  assert.ok(html.includes('./style.css?v=web-mobile-editor-04'),'CSS sem atualização de cache');
+  assert.match(html,/id="code"/);
+  assert.match(html,/id="readonly-code"/);
+  assert.match(html,/id="legacy-recovery"/);
+  assert.match(read('lab.js'),/ifma-web-aula05-lab-v4/);
+});
