@@ -38,34 +38,20 @@ const html=await get(health.toString());
 // top.postMessage. Ancorar pelo canal conhecido, não pela posição do wrapper.
 // Apps Script HtmlService pode serializar o JSON em string JavaScript.
 // Descodificar escapes JSON apenas como dados, sem executar código remoto.
-const versions=[html];
-for(let i=0;i<3;i++){
-  const prev=versions[versions.length-1];
-  const next=prev.replace(/&quot;/g,'"').replace(/\\u0022/gi,'"')
-    .replace(/\\\"/g,'"').replace(/\\\\/g,'\\');
-  if(next===prev)break;
-  versions.push(next);
-}
+// Google HtmlService codifica o documento em JavaScript com escapes \xHH,
+// inclusive chaves e aspas; decodificar como TEXTO, sem avaliar JavaScript.
+const decoded=html.replace(/\\x([0-9a-f]{2})/gi,(_,hex)=>String.fromCharCode(parseInt(hex,16)))
+  .replace(/\\u0022/gi,'"').replace(/\\+"/g,'"').replace(/&quot;/g,'"');
+const objects=decoded.match(/\{[^{}]{0,4000}\}/g)||[];
 let status=null;
-for(const v of versions){
-  const objects=v.match(/\\{[^{}]{0,4000}\\}/g)||[];
-  for(const raw of objects){
-    if(!raw.includes('web-status-aula05'))continue;
-    try{const candidate=JSON.parse(raw);if(candidate.channel==='web-status-aula05'){status=candidate;break;}}catch{}
-  }
-  if(status)break;
+for(const raw of objects){
+  if(!raw.includes('web-status-aula05'))continue;
+  try{
+    const candidate=JSON.parse(raw);
+    if(candidate.channel==='web-status-aula05'){status=candidate;break;}
+  }catch{}
 }
-if(!status){
-  const at=html.indexOf('web-status-aula05');
-  const context=at>=0?html.slice(Math.max(0,at-160),Math.min(html.length,at+230)):'';
-  // Apenas status health público: omitir nonce antes de registrar a estrutura.
-  console.error('WEB_A05_HEALTH_CONTEXT '+JSON.stringify(context.replaceAll(nonce,'[NONCE]')));
-  console.error('WEB_A05_HEALTH_SHAPE '+JSON.stringify({bytes:html.length,
-    hasChannel:html.includes('web-status-aula05'),hasNonce:html.includes(nonce),
-    hasEscapedQuotes:html.includes('\\\"'),hasUnicodeQuotes:html.includes('\\u0022'),
-    hasCurly:html.includes('{'),hasPostMessage:html.includes('postMessage')}));
-  throw Error('WEB_A05_BLOCKED: health JSON não interpretável');
-}
+if(!status)throw Error('WEB_A05_BLOCKED: JSON health inválido após decodificação HtmlService');
 if(status.ok!==true||status.channel!=='web-status-aula05'||status.nonce!==nonce||
    status.version!=='web-notas-3.2.0'||status.mode!=='PROD'||
    status.activity!=='WEB-AULA05-2026'||status.enabled!==false)
