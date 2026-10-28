@@ -465,7 +465,7 @@
 /* MOBILE-STAGE-2026-10-27 — Uma tarefa por tela: Missão | Código | Resultado.
    Desktop (>=711px) preserva a bancada dupla existente. */
 .mobile-stage-nav,.mobile-tools-menu,.mobile-run-code{display:none}
-@media screen and (max-width:710px){
+@media screen and (max-width:710px), screen and (pointer:coarse) and (max-width:1100px){
   /* Header de duas linhas, sem faixa de 8 atalhos em rolagem horizontal. */
   .app-shell{
     display:grid;grid-template-rows:auto 50px minmax(0,1fr);
@@ -668,7 +668,7 @@
 .legacy-recovery>summary:focus-visible{outline:3px solid #d9a12a;outline-offset:2px}
 .legacy-recovery>p{margin:8px 0 10px}
 .legacy-recovery .btn{min-height:44px;max-width:100%}
-@media screen and (max-width:710px){
+@media screen and (max-width:710px), screen and (pointer:coarse) and (max-width:1100px){
   /* Três ações em uma linha: Executar | Ampliar | Opções. */
   .lab-grid .workspace-toolbar{
     position:relative;z-index:10;
@@ -748,6 +748,29 @@
   .lab-grid .code-panel .readonly-source{
     font-size:13px;
     padding:9px 10px;
+  }
+}
+/* Smartphone em navegador com viewport lógico de computador.
+   Não afeta desktop, tablet ou smartphone com viewport normal. */
+@media screen and (pointer:coarse) and (min-width:711px) and (max-width:1100px){
+  html.a05-touch-desktop-viewport .app-shell{
+    width:var(--a05-touch-width)!important;
+    height:var(--a05-touch-height)!important;
+    max-width:none;
+    transform:scale(var(--a05-touch-scale));
+    transform-origin:top left;
+  }
+  /* Diálogos vivem fora de .app-shell: precisam da mesma escala. */
+  html.a05-touch-desktop-viewport dialog[open]{
+    position:fixed!important;
+    margin:0!important;
+    top:0!important;
+    left:0!important;
+    width:var(--a05-touch-width)!important;
+    max-width:var(--a05-touch-width)!important;
+    max-height:var(--a05-touch-height)!important;
+    transform:scale(var(--a05-touch-scale));
+    transform-origin:top left;
   }
 }
 @media print{

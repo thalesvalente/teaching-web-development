@@ -1,0 +1,42 @@
+name: QA | Aula 05 prévia mobile real
+on:
+  pull_request:
+    paths:
+      - 'previews/aula05-mobile-20261027/**'
+      - 'lessons/aula-05-laboratorio-web-mobile/tests/preview-responsive.spec.mjs'
+      - 'lessons/aula-05-laboratorio-web-mobile/playwright.preview-mobile.config.mjs'
+      - 'tests/web-a05-id03/preview-aula05-isolation.test.cjs'
+      - '.github/workflows/qa-aula05-preview-responsive.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  preview-browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 16
+    defaults:
+      run:
+        working-directory: lessons/aula-05-laboratorio-web-mobile
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: lessons/aula-05-laboratorio-web-mobile/package-lock.json
+      - name: Instalar dependências
+        run: npm ci --no-audit --no-fund
+      - name: Verificar isolamento e recuperação da prévia
+        run: node --test ../../tests/web-a05-id03/preview-aula05-isolation.test.cjs
+      - name: Instalar Chromium para medições reais
+        run: npx playwright install --with-deps chromium
+      - name: Testar etapas, largura e altura do editor em Chromium touch
+        run: npx playwright test --config playwright.preview-mobile.config.mjs
+      - name: Capturas das telas testadas
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: aula05-preview-responsive-screenshots
+          path: lessons/aula-05-laboratorio-web-mobile/test-artifacts/preview-responsive/
+          if-no-files-found: ignore
+          retention-days: 10
