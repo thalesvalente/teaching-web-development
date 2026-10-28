@@ -34,7 +34,7 @@
         <button type="button" id="save-progress" class="header-action emphasis">Salvar progresso</button>
         <button type="button" id="review-xp" class="header-action" title="Rever as missões técnicas no código atual sem apagar XP conquistados">Conferir progresso</button>
         <button type="button" id="load-progress" class="header-action">Retomar arquivo</button>
-        <button type="button" id="quick-pdf" class="header-action" title="Consulte as matrículas e confirme os nomes antes de enviar online. O recebimento depende da liberação pelo professor.">Gerar PDF e Enviar</button>
+        <button type="button" id="quick-pdf" class="header-action" title="Prévia isolada: prepara PDF e JSON localmente, sem consulta de matrícula ou envio ao Apps Script.">Gerar PDF (sem envio)</button>
         <button type="button" id="evidence-open" class="header-action">Evidências <span aria-hidden="true">↗</span></button>
         <input type="file" id="progress-file" accept=".json,application/json" hidden aria-label="Selecionar arquivo JSON de progresso">
       </nav>
@@ -46,7 +46,7 @@
           <button type="button" data-forward-action="load-progress">Retomar arquivo</button>
           <button type="button" data-forward-action="evidence-open">Evidências e pontuação</button>
           <button type="button" data-forward-action="review-xp">Conferir progresso</button>
-          <button type="button" data-forward-action="quick-pdf">Gerar PDF e Enviar</button>
+          <button type="button" data-forward-action="quick-pdf">Gerar PDF (sem envio)</button>
           <button type="button" data-forward-action="component-open">Componentes básicos</button>
           <button type="button" data-forward-action="help-open">Como funciona</button>
         </div>
@@ -150,7 +150,7 @@
         <button type="button" class="close-dialog team-close" data-close-dialog="team-dialog" aria-label="Fechar identificação da equipe">×</button>
         <div class="team-head-content">
           <div class="team-head-icon" aria-hidden="true"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
-          <div><p class="team-kicker">Seu grupo, sua entrega</p><h2 id="team-title">Identificação da equipe</h2><p id="team-intro">Sem login ou conta institucional: informe o nome da equipe e somente a matrícula de cada integrante. O nome completo será mostrado para conferência, sem campo para digitar ou editar. Somente o professor altera o cadastro.</p></div>
+          <div><p class="team-kicker">Seu grupo, sua entrega</p><h2 id="team-title">Identificação da equipe</h2><p id="team-intro">Esta é uma prévia de usabilidade sem conexão com o cadastro da turma. Para testar, use equipe e matrículas fictícias. O nome não será consultado, e nenhum registro ou nota será enviado. Na aula oficial, o professor disponibilizará a consulta autorizada.</p></div>
         </div>
         <div class="team-head-progress" aria-label="Progresso de identificação da equipe">
           <span id="team-progress-caption">Informe a equipe e consulte as matrículas dos integrantes</span>
@@ -243,7 +243,7 @@ app/lab05.tsx               ← importa o componente
   <dialog class="resource-dialog evidence-dialog" id="evidence-dialog" aria-labelledby="evidence-title">
     <div class="dialog-header"><h2 id="evidence-title">Evidências do laboratório</h2><button type="button" class="close-dialog" data-close-dialog="evidence-dialog" aria-label="Fechar evidências">×</button></div>
     <div class="dialog-body">
-      <p><strong>Continue de onde parou:</strong> use <strong>Salvar progresso</strong> para baixar um JSON que guarda código, respostas, missão atual e XP formativos. Em outro momento ou dispositivo, clique em <strong>Retomar arquivo</strong>. O PDF segue o modelo institucional A4 do IFMA e pode conter missões pendentes. O botão <strong>Gerar PDF e Enviar</strong> abre a impressão (escolha Salvar como PDF) e tenta enviar <strong>as evidências JSON</strong> se o recebimento estiver habilitado. O PDF não é anexado. Somente o recibo confirma entrega. Para continuar editando, use o JSON.</p>
+      <p><strong>Continue de onde parou:</strong> use <strong>Salvar progresso</strong> para baixar um JSON com código, respostas, missão atual e XP formativos. Em outro dispositivo, use <strong>Retomar arquivo</strong>. O PDF A4 pode incluir missões pendentes. Nesta prévia, <strong>Gerar PDF (sem envio)</strong> prepara apenas arquivos locais: não consulta matrículas, não envia evidências ao Apps Script e não registra nota. Para continuar editando, use o JSON.</p>
       <p>Pode manter exercícios e reflexões <strong>pendentes</strong>, sem perder XP; o PDF local pode registrar integrantes ainda não conferidos; para envio online, consulte as matrículas e confirme todos os nomes.</p>
       <p id="progress-status" class="progress-status" role="status" aria-live="polite">Rascunho salvo automaticamente neste navegador quando disponível. Salve um JSON para levar a outro dispositivo.</p>
       <div class="evidence-actions priority-actions"><button type="button" id="dialog-save-progress" class="btn run">Salvar progresso (.json)</button><button type="button" id="dialog-load-progress" class="btn secondary">Retomar (.json)</button><button type="button" id="dialog-pdf" class="btn secondary">Gerar PDF parcial (A4)</button><button type="button" id="download-team-json" class="btn secondary">Baixar JSON da equipe (.json)</button></div>
@@ -263,26 +263,26 @@ app/lab05.tsx               ← importa o componente
       <label for="limite-real">O que ainda deve ser testado em um celular real?</label>
       <textarea id="limite-real" rows="3" placeholder="Ex.: teclado e acessibilidade no Expo Go."></textarea>
       <fieldset class="web-submission-fields" id="web-submission-fields" aria-describedby="web-delivery-explanation">
-        <legend>Entrega da equipe (Google Sheets)</legend>
-        <p><strong>Identificação simples:</strong> preencha nome da equipe e matrícula de cada integrante e confirme o nome consultado. Não é necessário entrar no SUAP ou usar conta institucional.</p>
+        <legend>Prévia — arquivos locais, sem Google Sheets</legend>
+        <p><strong>Teste local:</strong> informe uma equipe fictícia. Nesta prévia, os nomes não são consultados nem confirmados. Para a versão oficial, o aluno informará a matrícula completa e confirmará o nome cadastrado pelo professor.</p>
         <p id="web-team-summary" class="team-summary" role="status">Nenhuma equipe identificada. Use “Equipe e integrantes” no cabeçalho.</p>
         <button type="button" id="team-open-evidence" class="btn secondary">Preencher ou revisar integrantes</button>
         <p id="web-delivery-explanation" class="web-submission-explanation">
-          A equipe envia uma única atividade com as matrículas confirmadas; os nomes são obtidos do cadastro docente. O servidor converte a pontuação em <strong>nota de 0 a 10</strong>,
+          Na versão oficial, após liberação docente, a equipe poderá enviar uma atividade com matrículas confirmadas. O servidor converterá a pontuação em <strong>nota de 0 a 10</strong>,
           preserva a maior nota por estudante e atividade e atualiza a média. O cadastro é informado pelo professor; a equipe confirma os nomes sem autenticação institucional. A matrícula não comprova autoria; o professor pode conferir inconsistências e validar as notas.
           Não inclua senhas, documentos pessoais ou informações sigilosas no código.
         </p>
         <button type="button" class="btn run" id="web-submit">
-          Gerar PDF e Enviar
+          Gerar PDF (sem envio)
         </button>
         <p id="web-delivery-status" role="status" aria-live="polite" tabindex="-1">
-          O recebimento será verificado antes do envio. O PDF pode ser salvo localmente após identificar a equipe.
+          Prévia isolada: sem envio ao Apps Script e sem registro de notas. O PDF pode ser salvo localmente; nomes não conferidos não comprovam entrega.
           Exportação local continua disponível.
         </p>
       </fieldset>
       <details><summary>Ver situação de cada exercício</summary><ul id="evidence-list" class="evidence-list"></ul></details>
       <div class="evidence-actions"><button type="button" id="export-json" class="btn secondary">Exportar evidências JSON</button><button type="button" id="export-md" class="btn secondary">Exportar Markdown</button><button type="button" id="print" class="btn secondary">Imprimir / salvar PDF A4</button></div>
-      <p class="privacy">Rascunho salvo somente neste navegador, se o armazenamento estiver disponível. Quando o envio estiver habilitado, clicar em “Gerar PDF e Enviar” transmite as matrículas confirmadas, o código e as evidências ao Apps Script; o servidor obtém os nomes do cadastro docente. Os dados serão usados pelo professor para registrar a entrega e as notas. Não informe CPF, senha ou dados sensíveis nas respostas. Para correções, procure o professor. Os dados podem ser gravados mesmo se o recibo não chegar; somente um recibo válido confirma o recebimento nesta tela. XP já conquistados são preservados; a conferência do código atual pode ser repetida quando desejar.</p>
+      <p class="privacy">Rascunho salvo somente neste navegador, se o armazenamento estiver disponível. Esta prévia nunca envia dados ao Apps Script. No laboratório oficial, o envio dependerá de autorização do professor, consulta de matrícula e recibo validado. Os dados serão usados pelo professor para registrar a entrega e as notas. Não informe CPF, senha ou dados sensíveis nas respostas. Para correções, procure o professor. Os dados podem ser gravados mesmo se o recibo não chegar; somente um recibo válido confirma o recebimento nesta tela. XP já conquistados são preservados; a conferência do código atual pode ser repetida quando desejar.</p>
       <p id="evidence-status" role="status" aria-live="polite"></p>
     </div>
   </dialog>
