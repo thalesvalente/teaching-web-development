@@ -1,0 +1,24 @@
+name: WEB-A05 — smoke health real sem dados pessoais
+on:
+  pull_request:
+    paths:
+      - 'lessons/aula-05-laboratorio-web-mobile/a05-live-health-smoke.mjs'
+      - '.github/workflows/web-a05-live-health-smoke.yml'
+      - 'lessons/aula-05-laboratorio-web-mobile/production-gate.js'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  health-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - working-directory: lessons/aula-05-laboratorio-web-mobile
+        run: npm ci && npx playwright install --with-deps chromium firefox webkit
+      - name: Verificar health real no Chrome sem enviar matrículas
+        working-directory: lessons/aula-05-laboratorio-web-mobile
+        run: node a05-live-health-smoke.mjs
