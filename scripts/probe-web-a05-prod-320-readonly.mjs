@@ -27,23 +27,21 @@ const health=new URL(endpoint);
 health.searchParams.set('action','health');
 health.searchParams.set('nonce',nonce);
 const html=await get(health.toString());
-const start=html.indexOf('top.postMessage('),end=html.indexOf(',"https://thalesvalente.github.io"',start);
-if(start<0||end<0){
-  // Somente metadados técnicos: nunca imprimir HTML, nome, matrícula, HMAC ou token.
-  const diagnostics={
-    bytes:html.length,
-    hasPostMessage:html.includes('postMessage'),
-    hasChannel:html.includes('web-status-aula05'),
-    hasNonce:html.includes(nonce),
+// Google HtmlService envolve scripts em um documento maior; o espaço e o
+// encapsulamento de top.postMessage podem variar entre implantações.
+// Buscar o objeto do canal específico, nunca executar HTML/JS recebido.
+const candidate=html.match(/\\{[^{}]{0,600}"channel"\\s*:\\s*"web-status-aula05"[^{}]{0,600}\\}/);
+if(!candidate){
+  console.error('WEB_A05_PROD_HEALTH_DIAGNOSTIC '+JSON.stringify({
+    bytes:html.length,hasPostMessage:html.includes('postMessage'),
+    hasChannel:html.includes('web-status-aula05'),hasNonce:html.includes(nonce),
     hasVersion:html.includes('web-notas-3.2.0'),
-    hasEnabledField:html.includes('enabled'),
     looksLikeLogin:/ServiceLogin|Sign in|accounts.google.com/i.test(html)
-  };
-  console.error('WEB_A05_PROD_HEALTH_DIAGNOSTIC '+JSON.stringify(diagnostics));
-  throw Error('WEB_A05_BLOCKED: resposta health não reconhecida');
+  }));
+  throw Error('WEB_A05_BLOCKED: health não reconhecido');
 }
 let status;
-try{status=JSON.parse(html.slice(start+'top.postMessage('.length,end));}
+try{status=JSON.parse(candidate[0]);}
 catch{throw Error('WEB_A05_BLOCKED: health JSON inválido');}
 if(status.ok!==true||status.channel!=='web-status-aula05'||status.nonce!==nonce||
    status.version!=='web-notas-3.2.0'||status.mode!=='PROD'||
