@@ -8,5 +8,5 @@
 - Em celular: usar abas **Missão → Código → Resultado**. O ajuste mobile cobre viewports até 710 px ou dispositivos touch com viewport lógico ampliado. Código editável 14 px (13 px até 365 px); `Ampliar` recolhe abas de arquivos.
 - Salvamento JSON, XP, PDF e recuperação opcional de código legado são locais. O arquivo antigo nunca substitui automaticamente o código corrente.
 - O arquivo `preview.html` usa React Native Web em largura móvel; isso não equivale a Android/iOS nativo.
-- Cache de interface: `web-mobile-layout-05` para CSS principal, lógica do laboratório e iframe; outros módulos mantêm `web-mobile-editor-03`.
+- Cache de interface: `web-mobile-layout-05` para CSS principal, lógica do laboratório e iframe; `equipe-roster.js` usa `web-mobile-offline-06` para invalidar cache do navegador; outros módulos mantêm `web-mobile-editor-03`.
 - Gates para publicação: CI da prévia, HTTP 200, hashes SHA-256 do GitHub Pages e validação docente em celular físico. **Não usar esta prévia para entrega de notas.**
