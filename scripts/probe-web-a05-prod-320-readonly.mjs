@@ -56,6 +56,10 @@ for(const v of versions){
   if(status)break;
 }
 if(!status){
+  const at=html.indexOf('web-status-aula05');
+  const context=at>=0?html.slice(Math.max(0,at-160),Math.min(html.length,at+230)):'';
+  // Apenas status health público: omitir nonce antes de registrar a estrutura.
+  console.error('WEB_A05_HEALTH_CONTEXT '+JSON.stringify(context.replaceAll(nonce,'[NONCE]')));
   console.error('WEB_A05_HEALTH_SHAPE '+JSON.stringify({bytes:html.length,
     hasChannel:html.includes('web-status-aula05'),hasNonce:html.includes(nonce),
     hasEscapedQuotes:html.includes('\\\"'),hasUnicodeQuotes:html.includes('\\u0022'),
