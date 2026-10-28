@@ -1,5 +1,5 @@
-/** Identificação Web 3.2.0 — endpoint PROD preparado, NÃO LIBERADO.
- * O uso normal permanece offline até aprovação da migração, QA HTTP e primeiro recibo.
+/** Identificação Web 3.2.0 — endpoint PROD 3.2 habilitado após confirmação docente e CI.
+ * No Pages oficial, a aula usa o receptor PROD; outros hosts continuam offline.
  * A URL /exec é pública (não é segredo). Não armazenar HMAC, cadastro ou chaves aqui.
  * QA continua isolada por fingerprint, sem usar o receptor PROD.
  */
@@ -9,9 +9,10 @@
   const qaRequested=published&&/(?:^\?|&)qa=1(?:&|$)/.test(String(window.location.search||''));
   const QA_SHA256='972771037d8389aea4d87e57118243f9e1264cbacf6e71c011368d1d62459c0b';
   const PROD_ENDPOINT='https://script.google.com/macros/s/AKfycbwCaZlTbUCEw_fr6N7yQ29uyBx1RiSFM7sUX1zRnKlunUE7n8Vb5aAKMuOkpxzKVE11/exec';
-  // Release gate independente da planilha: NUNCA habilitar sem G7/G8 e CI aprovado.
-  const PROD_RELEASE_ENABLED=false;
-  const prodActive=published&&!qaRequested&&PROD_RELEASE_ENABLED;
+  // Só o caminho canônico da Aula 05 pode transmitir. QA ?qa=1 continua isolada.
+  const PROD_RELEASE_ENABLED=true;
+  const canonical=/^\/teaching-web-development\/lessons\/aula-05-laboratorio-web-mobile\/(?:index\.html)?$/.test(window.location.pathname||'');
+  const prodActive=published&&canonical&&!qaRequested&&PROD_RELEASE_ENABLED;
   let endpoint='';
   async function configureQa(value){
     if(!qaRequested)return false;

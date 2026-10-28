@@ -10,7 +10,7 @@ import {randomUUID} from 'node:crypto';
 const config=readFileSync(new URL('../lessons/aula-05-laboratorio-web-mobile/entrega-config.js',import.meta.url),'utf8');
 const urlMatch=config.match(/\bPROD_ENDPOINT='(https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]+\/exec)'/);
 if(!urlMatch)throw Error('WEB_A05_BLOCKED: endpoint PROD não registrado exatamente no frontend');
-if(!/\bPROD_RELEASE_ENABLED=false;/.test(config))throw Error('WEB_A05_BLOCKED: gate frontend já habilitado');
+if(!/\bPROD_RELEASE_ENABLED=true;/.test(config))throw Error('WEB_A05_INVALID: site ainda não aponta ao receptor PROD');
 const endpoint=urlMatch[1];
 const nonce=randomUUID();
 async function get(url) {
@@ -20,7 +20,7 @@ async function get(url) {
   return (await response.text()).trim();
 }
 const text=(await get(endpoint)).replace(/\s+/g,' ');
-if(!/^Web web-notas-3\.2\.0 — PROD — recebimento bloqueado — matrícula pré-cadastrada; cadastro somente leitura; notas 0–10 e maior nota$/.test(text))
+if(!/^Web web-notas-3\.2\.0 — PROD — recebimento habilitado — matrícula pré-cadastrada; cadastro somente leitura; notas 0–10 e maior nota$/.test(text))
   throw Error('WEB_A05_BLOCKED: resposta GET fora do contrato de produção bloqueada');
 
 const health=new URL(endpoint);
@@ -54,6 +54,6 @@ for(const raw of objects){
 if(!status)throw Error('WEB_A05_BLOCKED: JSON health inválido após decodificação HtmlService');
 if(status.ok!==true||status.channel!=='web-status-aula05'||status.nonce!==nonce||
    status.version!=='web-notas-3.2.0'||status.mode!=='PROD'||
-   status.activity!=='WEB-AULA05-2026'||status.enabled!==false)
+   status.activity!=='WEB-AULA05-2026'||status.enabled!==true)
   throw Error('WEB_A05_BLOCKED: health incorreto ou receptor habilitado');
-console.log('WEB_A05_PROD_320_GET_HEALTH_PASS | health enabled=false validado por JSON e nonce | sem POST');
+console.log('WEB_A05_PROD_320_GET_HEALTH_PASS | health enabled=true validado por JSON e nonce | sem POST');
