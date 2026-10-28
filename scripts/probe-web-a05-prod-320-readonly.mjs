@@ -30,7 +30,7 @@ const html=await get(health.toString());
 // Google HtmlService envolve scripts em um documento maior; o espaço e o
 // encapsulamento de top.postMessage podem variar entre implantações.
 // Buscar o objeto do canal específico, nunca executar HTML/JS recebido.
-const candidate=html.match(/\\{[^{}]{0,600}"channel"\\s*:\\s*"web-status-aula05"[^{}]{0,600}\\}/);
+const candidate=html.match(/\{[^{}]{0,600}"channel"\s*:\s*"web-status-aula05"[^{}]{0,600}\}/);
 if(!candidate){
   console.error('WEB_A05_PROD_HEALTH_DIAGNOSTIC '+JSON.stringify({
     bytes:html.length,hasPostMessage:html.includes('postMessage'),
