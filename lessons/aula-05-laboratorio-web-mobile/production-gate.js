@@ -11,7 +11,12 @@
       return Promise.reject(Error('Endereço de recebimento inválido. Avise o professor.'));
     return new Promise((resolve,reject)=>{
       const nonce=crypto.randomUUID(),frame=document.createElement('iframe');
-      frame.hidden=true;frame.title='Verificação do recebimento da atividade';
+      frame.title='Verificação do recebimento da atividade';
+      frame.setAttribute('aria-hidden','true');
+      frame.tabIndex=-1;
+      // hidden/display:none pode impedir execução do HtmlService em navegadores.
+      // Manter layout não interativo, fora da tela, sem expor o iframe ao usuário.
+      frame.style.cssText='position:absolute;width:1px;height:1px;left:-10000px;top:0;border:0;opacity:0;pointer-events:none';
       let finished=false;
       const done=error=>{if(finished)return;finished=true;clearTimeout(timer);
         window.removeEventListener('message',receive);frame.remove();error?reject(error):resolve();};
