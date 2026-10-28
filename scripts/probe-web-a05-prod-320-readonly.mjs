@@ -36,22 +36,18 @@ const html=await get(health.toString());
 // o objeto literal, sem avaliar scripts nem depender de espaços do wrapper.
 // O Google encapsula a chamada em HTML e pode reescrever a sintaxe de
 // top.postMessage. Ancorar pelo canal conhecido, não pela posição do wrapper.
-const channelPos=html.indexOf('web-status-aula05');
-if(channelPos<0)throw Error('WEB_A05_BLOCKED: canal health ausente');
-const jsonStart=html.lastIndexOf('{',channelPos);
-if(jsonStart<0||channelPos-jsonStart>1000)throw Error('WEB_A05_BLOCKED: objeto health ausente');
-let jsonEnd=-1,quoted=false,escaped=false,depth=0;
-for(let i=jsonStart;i<html.length&&i<jsonStart+4096;i++){
-  const c=html[i];
-  if(escaped){escaped=false;continue;}
-  if(quoted&&c==='\\'){escaped=true;continue;}
-  if(c==='"'){quoted=!quoted;continue;}
-  if(!quoted){if(c==='{')depth++;else if(c==='}'&&--depth===0){jsonEnd=i;break;}}
+const candidates=[html,html.replace(/&quot;/g,'"'),html.replace(/\\\"/g,'"')];
+let status=null;
+for(const candidate of candidates){
+  const matches=candidate.match(/\\{[^{}]{0,2000}\\}/g)||[];
+  for(const match of matches){
+    if(!match.includes('web-status-aula05'))continue;
+    try{const parsed=JSON.parse(match);if(parsed.channel==='web-status-aula05'){status=parsed;break;}}
+    catch{continue;}
+  }
+  if(status)break;
 }
-if(jsonEnd<0)throw Error('WEB_A05_BLOCKED: JSON health incompleto');
-let status;
-try{status=JSON.parse(html.slice(jsonStart,jsonEnd+1));}
-catch{throw Error('WEB_A05_BLOCKED: health JSON inválido');}
+if(!status)throw Error('WEB_A05_BLOCKED: JSON health não interpretável; sem liberação');
 if(status.ok!==true||status.channel!=='web-status-aula05'||status.nonce!==nonce||
    status.version!=='web-notas-3.2.0'||status.mode!=='PROD'||
    status.activity!=='WEB-AULA05-2026'||status.enabled!==false)
