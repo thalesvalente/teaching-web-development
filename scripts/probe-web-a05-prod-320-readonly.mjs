@@ -34,11 +34,12 @@ const html=await get(health.toString());
 // A resposta é tratada apenas como dados; não executar JavaScript remoto.
 // O Apps Script responde com JSON embutido em HtmlService. Parsear somente
 // o objeto literal, sem avaliar scripts nem depender de espaços do wrapper.
-const marker='top.postMessage(';
-const start=html.indexOf(marker);
-if(start<0)throw Error('WEB_A05_BLOCKED: postMessage ausente');
-const jsonStart=html.indexOf('{',start+marker.length);
-if(jsonStart<0||jsonStart-start>100)throw Error('WEB_A05_BLOCKED: objeto health ausente');
+// O Google encapsula a chamada em HTML e pode reescrever a sintaxe de
+// top.postMessage. Ancorar pelo canal conhecido, não pela posição do wrapper.
+const channelPos=html.indexOf('web-status-aula05');
+if(channelPos<0)throw Error('WEB_A05_BLOCKED: canal health ausente');
+const jsonStart=html.lastIndexOf('{',channelPos);
+if(jsonStart<0||channelPos-jsonStart>1000)throw Error('WEB_A05_BLOCKED: objeto health ausente');
 let jsonEnd=-1,quoted=false,escaped=false,depth=0;
 for(let i=jsonStart;i<html.length&&i<jsonStart+4096;i++){
   const c=html[i];
