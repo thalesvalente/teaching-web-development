@@ -83,15 +83,28 @@
   function open(source){fromEvidence=source==='evidence';returnFocus=document.activeElement;if(fromEvidence&&$('evidence-dialog').open)$('evidence-dialog').close();if(!modal.open)modal.showModal();$('web-team').focus();}
   function requireIdentity(options={}){if(expireConfirmations())render();try{return getIdentity(options);}catch(error){if(!modal.open)open($('evidence-dialog').open?'evidence':'header');feedback(error.message,'error');for(const issue of error.issues||[])$(issue.field)?.setAttribute('aria-invalid','true');const target=$(error.issues?.[0]?.field);target?.focus();target?.scrollIntoView({block:'nearest'});return null;}}
   function summary(){
-    const count=group.members.filter(ready).length,pct=Math.round((count+(group.team.trim().length>=3?1:0))/(group.members.length+1)*100);
-    $('team-progress').setAttribute('aria-valuenow',String(pct));$('team-progress-fill').style.width=pct+'%';
-    $('team-progress-caption').textContent='Confirme o nome de cada matrícula consultada';$('team-progress-label').textContent=count+'/'+group.members.length+' confirmados';
-    $('team-members-count').textContent=group.members.length+'/'+MAX;$('team-count').textContent='('+count+' confirmados)';
+    const active=onlineEnabled();
+    const count=group.members.filter(ready).length;
+    const pct=Math.round((count+(group.team.trim().length>=3?1:0))/(group.members.length+1)*100);
+    $('team-progress').setAttribute('aria-valuenow',String(pct));
+    $('team-progress-fill').style.width=pct+'%';
+    $('team-progress-caption').textContent=active
+      ? 'Confirme o nome de cada matrícula consultada'
+      : 'Prévia isolada: nenhuma matrícula pode ser consultada';
+    $('team-progress-label').textContent=active?count+'/'+group.members.length+' confirmados':'Rascunho local';
+    $('team-members-count').textContent=group.members.length+'/'+MAX;
+    $('team-count').textContent=active?'('+count+' confirmados)':'(modo teste)';
     $('team-remaining').textContent=group.members.length>=MAX?'Limite atingido':(MAX-group.members.length)+' vagas';
-    $('team-summary-title').textContent=pct===100?'Identificação pronta para enviar':'Identificação em andamento';
+    $('team-summary-title').textContent=active
+      ? (pct===100?'Identificação pronta para enviar':'Identificação em andamento')
+      : 'Rascunho local (sem envio)';
     const names=group.members.filter(ready).map(m=>m.name).join('; ');
-    $('team-summary-copy').textContent=names||'O nome será mostrado após consultar a matrícula. Somente o professor altera o cadastro.';
-    $('web-team-summary').textContent=group.team?'Equipe '+group.team+' · '+count+' integrante(s) confirmado(s)'+(names?': '+names:''):'Identifique a equipe e consulte as matrículas.';
+    $('team-summary-copy').textContent=active
+      ? (names||'O nome será mostrado após consultar a matrícula. Somente o professor altera o cadastro.')
+      : 'Os nomes não podem ser consultados nesta prévia. Nenhuma matrícula será confirmada ou enviada.';
+    $('web-team-summary').textContent=active
+      ? (group.team?'Equipe '+group.team+' · '+count+' integrante(s) confirmado(s)'+(names?': '+names:''):'Identifique a equipe e consulte as matrículas.')
+      : (group.team?'Equipe '+group.team+' · rascunho sem nomes confirmados':'Prévia isolada · nenhuma equipe enviada.');
     $('web-add-member').disabled=group.members.length>=MAX;
   }
   function render(focusId){
@@ -111,7 +124,9 @@
       const renewing=m.state==='found';
       const lookup=text('button',m.state==='loading'?'Consultando…':renewing?'Nova consulta':m.state==='expired'?'Consultar novamente':'Consultar matrícula','btn roster-lookup');
       lookup.type='button';lookup.id='web-member-'+i+'-lookup';
-      lookup.dataset.mode=renewing?'renew':'lookup';lookup.disabled=m.state==='loading';
+      lookup.dataset.mode=renewing?'renew':'lookup';
+      lookup.disabled=m.state==='loading'||!onlineEnabled();
+      if(!onlineEnabled())lookup.title='Consulta de matrícula desativada nesta prévia de testes';
       lookup.onclick=()=>{
         if(renewing){
           // Nova consulta é a única forma de liberar a matrícula já confirmada.

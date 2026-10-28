@@ -83,6 +83,12 @@ test('desktop com mouse mantém a bancada sem abas móveis', async ({ browser })
     await expect(page.locator('#missao-atual')).toBeVisible();
     await expect(page.locator('#code-panel')).toBeVisible();
     await expect(page.locator('#result-panel')).toBeVisible();
+    // Prévia offline: botão de consulta não deve sugerir integração real.
+    await page.locator('#team-open').click();
+    await expect(page.locator('#team-dialog')).toBeVisible();
+    await expect(page.locator('#web-member-0-lookup')).toBeDisabled();
+    await expect(page.locator('#team-summary-title')).toHaveText('Rascunho local (sem envio)');
+    await page.locator('[data-close-dialog="team-dialog"]').click();
     await page.screenshot({ path: path.join(artifactDir, 'desktop-1440.png') });
   } finally {
     await context.close();
