@@ -1,6 +1,7 @@
-import { chromium } from 'playwright';
+import { chromium, firefox, webkit } from 'playwright';
 const url='https://thalesvalente.github.io/teaching-web-development/lessons/aula-05-laboratorio-web-mobile/';
-const browser=await chromium.launch({headless:true});
+for(const [engine,driver] of Object.entries({chromium,firefox,webkit})){
+const browser=await driver.launch({headless:true});
 try{
  const page=await browser.newPage();
  const observed=[];
@@ -24,7 +25,8 @@ try{
   try{await window.WebProductionGate.ensureReady(c);result='READY'}catch(e){result='ERROR: '+String(e.message);}
   return {result,activated:c.activated,requiredMode:c.requiredMode,events:window.__a05HealthEvents};
  });
- console.log('A05_LIVE_HEALTH '+JSON.stringify(state));
- console.log('A05_BROWSER_DIAG '+JSON.stringify(observed.slice(-20)));
+ console.log('A05_LIVE_HEALTH '+JSON.stringify({engine,...state}));
+ console.log('A05_BROWSER_DIAG '+JSON.stringify({engine,events:observed.slice(-20)}));
  if(state.result!=='READY')process.exitCode=2;
 }finally{await browser.close();}
+}
