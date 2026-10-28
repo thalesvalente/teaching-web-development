@@ -28,7 +28,20 @@ health.searchParams.set('action','health');
 health.searchParams.set('nonce',nonce);
 const html=await get(health.toString());
 const start=html.indexOf('top.postMessage('),end=html.indexOf(',"https://thalesvalente.github.io"',start);
-if(start<0||end<0)throw Error('WEB_A05_BLOCKED: resposta health não reconhecida');
+if(start<0||end<0){
+  // Somente metadados técnicos: nunca imprimir HTML, nome, matrícula, HMAC ou token.
+  const diagnostics={
+    bytes:html.length,
+    hasPostMessage:html.includes('postMessage'),
+    hasChannel:html.includes('web-status-aula05'),
+    hasNonce:html.includes(nonce),
+    hasVersion:html.includes('web-notas-3.2.0'),
+    hasEnabledField:html.includes('enabled'),
+    looksLikeLogin:/ServiceLogin|Sign in|accounts.google.com/i.test(html)
+  };
+  console.error('WEB_A05_PROD_HEALTH_DIAGNOSTIC '+JSON.stringify(diagnostics));
+  throw Error('WEB_A05_BLOCKED: resposta health não reconhecida');
+}
 let status;
 try{status=JSON.parse(html.slice(start+'top.postMessage('.length,end));}
 catch{throw Error('WEB_A05_BLOCKED: health JSON inválido');}
