@@ -35,3 +35,6 @@ jobs:
         run: npx playwright test -c playwright.production.config.mjs --reporter=list
       - name: Preflight HTTP GET do receptor Web 3.2 (bloqueado, sem POST)
         run: node scripts/probe-web-a05-prod-320-readonly.mjs
+      - name: Diagnóstico GET da implantação QA 3.2 isolada (sem POST)
+        if: always()
+        run: node scripts/probe-web-a05-qa-320-readonly.mjs
