@@ -43,7 +43,7 @@ let jsonEnd=-1,quoted=false,escaped=false,depth=0;
 for(let i=jsonStart;i<html.length&&i<jsonStart+4096;i++){
   const c=html[i];
   if(escaped){escaped=false;continue;}
-  if(quoted&&c==='\\\\'){escaped=true;continue;}
+  if(quoted&&c==='\\'){escaped=true;continue;}
   if(c==='"'){quoted=!quoted;continue;}
   if(!quoted){if(c==='{')depth++;else if(c==='}'&&--depth===0){jsonEnd=i;break;}}
 }
