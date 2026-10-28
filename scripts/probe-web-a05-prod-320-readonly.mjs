@@ -32,11 +32,27 @@ const html=await get(health.toString());
 // Buscar o objeto do canal específico, nunca executar HTML/JS recebido.
 // HtmlService pode escapar aspas e incluir metadados em volta do JSON.
 // A resposta é tratada apenas como dados; não executar JavaScript remoto.
-// O GET /exec confirma modo e bloqueio; health usa wrapper HtmlService variável.
-// Para não inventar aprovação de parsing, este gate valida apenas que a resposta
-// HTTP contém os marcadores de canal, nonce e versão e não habilita envios.
-if(!html.includes('web-status-aula05')||!html.includes(nonce)||
-   !html.includes('web-notas-3.2.0')||!html.includes('enabled'))
-  throw Error('WEB_A05_BLOCKED: health sem marcadores obrigatórios');
-console.log('WEB_A05_PROD_320_HEALTH_MARKERS_PASS | conteúdo não interpretado | enabled não homologado');
-console.log('WEB_A05_PROD_320_GET_PASS | GET principal bloqueado; health marcadores presentes; sem POST');
+// O Apps Script responde com JSON embutido em HtmlService. Parsear somente
+// o objeto literal, sem avaliar scripts nem depender de espaços do wrapper.
+const marker='top.postMessage(';
+const start=html.indexOf(marker);
+if(start<0)throw Error('WEB_A05_BLOCKED: postMessage ausente');
+const jsonStart=html.indexOf('{',start+marker.length);
+if(jsonStart<0||jsonStart-start>100)throw Error('WEB_A05_BLOCKED: objeto health ausente');
+let jsonEnd=-1,quoted=false,escaped=false,depth=0;
+for(let i=jsonStart;i<html.length&&i<jsonStart+4096;i++){
+  const c=html[i];
+  if(escaped){escaped=false;continue;}
+  if(quoted&&c==='\\\\'){escaped=true;continue;}
+  if(c==='"'){quoted=!quoted;continue;}
+  if(!quoted){if(c==='{')depth++;else if(c==='}'&&--depth===0){jsonEnd=i;break;}}
+}
+if(jsonEnd<0)throw Error('WEB_A05_BLOCKED: JSON health incompleto');
+let status;
+try{status=JSON.parse(html.slice(jsonStart,jsonEnd+1));}
+catch{throw Error('WEB_A05_BLOCKED: health JSON inválido');}
+if(status.ok!==true||status.channel!=='web-status-aula05'||status.nonce!==nonce||
+   status.version!=='web-notas-3.2.0'||status.mode!=='PROD'||
+   status.activity!=='WEB-AULA05-2026'||status.enabled!==false)
+  throw Error('WEB_A05_BLOCKED: health incorreto ou receptor habilitado');
+console.log('WEB_A05_PROD_320_GET_HEALTH_PASS | health enabled=false validado por JSON e nonce | sem POST');
