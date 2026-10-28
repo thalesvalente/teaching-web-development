@@ -33,3 +33,5 @@ jobs:
       - name: Gate de produção em Chromium Firefox e WebKit (Google simulado)
         working-directory: lessons/aula-05-laboratorio-web-mobile
         run: npx playwright test -c playwright.production.config.mjs --reporter=list
+      - name: Preflight HTTP GET do receptor Web 3.2 (bloqueado, sem POST)
+        run: node scripts/probe-web-a05-prod-320-readonly.mjs
