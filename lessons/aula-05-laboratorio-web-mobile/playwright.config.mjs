@@ -2,6 +2,9 @@ import { defineConfig } from '@playwright/test';
 export default defineConfig({
   testDir: './tests',
   testMatch: ['*.spec.mjs'],
+  // A prévia isolada usa servidor/porta 8766 em playwright.preview-mobile.config.mjs.
+  // Não execute esse caso na suíte oficial (porta 8765).
+  testIgnore: ['preview-responsive.spec.mjs'],
   workers: 2,
   retries: 0,
   timeout: 45000,
