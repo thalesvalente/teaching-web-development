@@ -1,0 +1,25 @@
+name: WEB-A05 — diagnóstico HTTP somente GET (QA 3.2 e PROD 3.2)
+on:
+  pull_request:
+    paths:
+      - 'scripts/probe-web-a05-qa-320-readonly.mjs'
+      - 'scripts/probe-web-a05-prod-320-readonly.mjs'
+      - 'lessons/aula-05-laboratorio-web-mobile/entrega-config.js'
+      - '.github/workflows/web-a05-get-readonly.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  read-only:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verificar URL QA pelo fingerprint e consultar GET sem dados
+        run: node scripts/probe-web-a05-qa-320-readonly.mjs
+      - name: Conferir produção bloqueada e resposta health com nonce sem dados
+        if: always()
+        run: node scripts/probe-web-a05-prod-320-readonly.mjs
