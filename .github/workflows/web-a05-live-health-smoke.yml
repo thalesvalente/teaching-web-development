@@ -18,7 +18,7 @@ jobs:
         with:
           node-version: '22'
       - working-directory: lessons/aula-05-laboratorio-web-mobile
-        run: npm ci && npx playwright install --with-deps chromium
+        run: npm ci && npx playwright install --with-deps chromium firefox webkit
       - name: Verificar health real no Chrome sem enviar matrículas
         working-directory: lessons/aula-05-laboratorio-web-mobile
         run: node a05-live-health-smoke.mjs
