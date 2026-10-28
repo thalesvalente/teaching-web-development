@@ -30,18 +30,16 @@ const html=await get(health.toString());
 // Google HtmlService envolve scripts em um documento maior; o espaço e o
 // encapsulamento de top.postMessage podem variar entre implantações.
 // Buscar o objeto do canal específico, nunca executar HTML/JS recebido.
-const candidate=html.match(/\{[^{}]{0,600}"channel"\s*:\s*"web-status-aula05"[^{}]{0,600}\}/);
-if(!candidate){
-  console.error('WEB_A05_PROD_HEALTH_DIAGNOSTIC '+JSON.stringify({
-    bytes:html.length,hasPostMessage:html.includes('postMessage'),
-    hasChannel:html.includes('web-status-aula05'),hasNonce:html.includes(nonce),
-    hasVersion:html.includes('web-notas-3.2.0'),
-    looksLikeLogin:/ServiceLogin|Sign in|accounts.google.com/i.test(html)
-  }));
-  throw Error('WEB_A05_BLOCKED: health não reconhecido');
-}
+// HtmlService pode escapar aspas e incluir metadados em volta do JSON.
+// A resposta é tratada apenas como dados; não executar JavaScript remoto.
+const decoded=html.replace(/&quot;/g,'"').replace(/\\\"/g,'"');
+const channel=decoded.indexOf('web-status-aula05');
+const nonceSeen=decoded.includes(nonce);
+if(channel<0||!nonceSeen)throw Error('WEB_A05_BLOCKED: health sem canal/nonce');
+const start=decoded.lastIndexOf('{',channel),end=decoded.indexOf('}',channel);
+if(start<0||end<0||end-start>2000)throw Error('WEB_A05_BLOCKED: JSON health ausente');
 let status;
-try{status=JSON.parse(candidate[0]);}
+try{status=JSON.parse(decoded.slice(start,end+1));}
 catch{throw Error('WEB_A05_BLOCKED: health JSON inválido');}
 if(status.ok!==true||status.channel!=='web-status-aula05'||status.nonce!==nonce||
    status.version!=='web-notas-3.2.0'||status.mode!=='PROD'||
