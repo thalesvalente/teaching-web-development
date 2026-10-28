@@ -7,6 +7,9 @@ const OTHER='https://script.google.com/macros/s/ANOTHER_UNAPPROVED/exec';
 const QA_HASH=createHash('sha256').update(QA,'utf8').digest('hex');
 // Synthetic, never a real deployment: inject the fixture's fingerprint only for this test.
 assert.match(source,/QA_SHA256='[a-f0-9]{64}'/);
+const prodExpected='https://script.google.com/macros/s/AKfycbwCaZlTbUCEw_fr6N7yQ29uyBx1RiSFM7sUX1zRnKlunUE7n8Vb5aAKMuOkpxzKVE11/exec';
+assert.ok(source.includes("PROD_ENDPOINT='"+prodExpected+"'"),'URL de implantação PROD precisa corresponder ao receptor aprovado');
+assert.match(source,/PROD_RELEASE_ENABLED=false;/,'gate de publicação PROD deve permanecer desligado neste PR');
 const fixtureSource=source.replace(/QA_SHA256='[a-f0-9]{64}'/,"QA_SHA256='"+QA_HASH+"'");
 function load(origin,search='',inputSource=fixtureSource){
   const window={location:{origin,search},crypto:webcrypto};
