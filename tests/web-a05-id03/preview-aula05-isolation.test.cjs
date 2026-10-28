@@ -90,6 +90,7 @@ test('prévia nunca apresenta o botão como envio real de notas',()=>{
   const html=read('index.html');
   const config=read('entrega-config.js');
   assert.match(html,/Gerar PDF \(sem envio\)/);
+  assert.match(html,/equipe-roster\\.js\\?v=web-mobile-offline-06/);
   assert.match(html,/Prévia — arquivos locais, sem Google Sheets/);
   assert.match(html,/nomes não são consultados nem confirmados/);
   assert.doesNotMatch(html,/Gerar PDF e Enviar/);
